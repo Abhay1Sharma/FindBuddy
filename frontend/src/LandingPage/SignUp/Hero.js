@@ -8,6 +8,8 @@ import Login from "../Login/Hero.js";
 import axios from "axios";
 import { useAuth } from '../../AuthjsContext.js';
 
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
 function Hero() {
     const [formData, setFormData] = useState({
         username: '',
@@ -31,7 +33,6 @@ function Hero() {
         return value;
     });
 
-      const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
