@@ -8,14 +8,13 @@ import Login from "../Login/Hero.js";
 import axios from "axios";
 import { useAuth } from '../../AuthjsContext.js';
 
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+const backendUrl = "https://findbuddy-back.onrender.com";
 
 function Hero() {
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: ''
-    });
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const [formData, setFormData] = useState({ username: '', email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [checkbtn, setCheckbtn] = useState(false);
     const [count, setCount] = useState(() => {
@@ -115,9 +114,6 @@ function Hero() {
         }
     };
 
-    const navigate = useNavigate();
-    const { login } = useAuth();
-    // const { setUser } = useAuth();
 
     return (
         <div className="container">
