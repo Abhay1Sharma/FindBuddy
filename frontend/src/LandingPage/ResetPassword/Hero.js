@@ -8,22 +8,24 @@ function ResetPassword() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    
+
+    const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
     const navigate = useNavigate();
     const token = searchParams.get('token');
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        
+
         if (newPassword !== confirmPassword) {
             return toast.error("Passwords do not match!");
         }
 
         setLoading(true);
         try {
-            await axios.post('http://localhost:3001/api/reset-password', { 
-                token, 
-                newPassword 
+            await axios.post(`${backendUrl}/api/reset-password`, {
+                token,
+                newPassword
             });
             toast.success("Password changed successfully!");
             navigate('/login');
@@ -87,7 +89,7 @@ function ResetPassword() {
                         required
                         style={inputStyle}
                     />
-                    
+
                     <button type="submit" disabled={loading} style={btnStyle}>
                         {loading ? 'Updating...' : 'Update Password'}
                     </button>

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
-function Hero () {
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
+function Hero() {
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState('verifying'); // 'verifying', 'success', or 'error'
     const [message, setMessage] = useState('Please wait while we verify your email...');
     const navigate = useNavigate();
+
 
     useEffect(() => {
         const verifyToken = async () => {
@@ -20,7 +23,7 @@ function Hero () {
 
             try {
                 // Calling your backend on Port 3001
-                const response = await fetch(`http://localhost:3001/api/verify-email?token=${token}`);
+                const response = await fetch(`${backendUrl}/api/verify-email?token=${token}`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -82,13 +85,13 @@ function Hero () {
             <div style={styles.card}>
                 {/* Visual Feedback Icons */}
                 {status === 'verifying' && <span style={styles.icon}>⏳</span>}
-                {status === 'success' && <span style={{...styles.icon, color: '#28a745'}}>✅</span>}
-                {status === 'error' && <span style={{...styles.icon, color: '#dc3545'}}>❌</span>}
+                {status === 'success' && <span style={{ ...styles.icon, color: '#28a745' }}>✅</span>}
+                {status === 'error' && <span style={{ ...styles.icon, color: '#dc3545' }}>❌</span>}
 
                 <h2 style={{ marginBottom: '10px', color: '#333' }}>
                     {status === 'verifying' ? 'Verifying...' : status === 'success' ? 'Success!' : 'Oops!'}
                 </h2>
-                
+
                 <p style={{ color: '#666', lineHeight: '1.5' }}>{message}</p>
 
                 {status === 'success' && (
@@ -98,8 +101,8 @@ function Hero () {
                 )}
 
                 {status === 'error' && (
-                    <button 
-                        style={styles.button} 
+                    <button
+                        style={styles.button}
                         onClick={() => navigate('/signup')}
                         onMouseOver={(e) => e.target.style.backgroundColor = '#0056b3'}
                         onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}

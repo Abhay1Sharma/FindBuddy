@@ -5,42 +5,15 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../AuthjsContext";
 import { useNavigate } from "react-router-dom";
 
-function Hero() {
 
+function Hero() {
+  
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // const start = async () => {
-  //   if (!user) {
-  //     toast.info("Please Login first");
-  //     navigate("/login");
-  //     return;
-  //   }
-  //   try {
-  //     const token = localStorage.getItem('token');
-  //     console.log(token);
-  //     const res = await axios.get("http://localhost:3001/user/me", {      // Fetch current user details from /user/me
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-
-  //     console.log("Respons ", res.data);
-  //     console.log(res.data.hasCompleteProfile);
-
-  //     const profileCompleted = await res.data.hasCompleteProfile;
-  //     console.log(profileCompleted);
-
-  //     if (!profileCompleted) {
-  //       navigate("http://localhost:3002/complete-profile");        // Redirect to form if it's a new user
-  //     } else {
-  //       navigate("http://localhost:3002");        // Otherwise, show the home dashboard
-  //     }
-
-  //   } catch (err) {
-  //     window.location.href = "http://localhost:3000/login";
-  //   }
-  // };
-
-  // useEffect( () => { checkLogin() });
+  const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+  const dashboardUrl = "https://findbuddy-dash.onrender.com" || "http://localhost:3002";
+  const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http:localhost:3000";
 
   const start = async () => {
     if (!user) {
@@ -53,7 +26,7 @@ function Hero() {
       const token = localStorage.getItem('token');
 
       // 1. Verify user with backend (Port 3001)
-      const res = await axios.get("http://localhost:3001/user/me", {
+      const res = await axios.get(`${backendUrl}/user/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -62,16 +35,16 @@ function Hero() {
       // 2. Redirect with Token Hand-off
       // We use window.location.href to jump ports
       if (!hasCompletedProfile) {
-        window.location.href = `http://localhost:3002/complete-profile?token=${token}`;
+        window.location.href = `${dashboardUrl}/complete-profile?token=${token}`;
       } else {
-        window.location.href = `http://localhost:3002/?token=${token}`;
+        window.location.href = `${dashboardUrl}/?token=${token}`;
       }
 
     } catch (err) {
       console.error("Auth error:", err);
       // If the token on 3000 is actually bad, clear it and log in again
       localStorage.removeItem('token');
-      window.location.href = "http://localhost:3000/login";
+      window.location.href = `${frontendUrl}/login`;
     }
   };
 

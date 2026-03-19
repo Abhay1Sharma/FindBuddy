@@ -5,6 +5,8 @@ import { jwtDecode } from "jwt-decode";
 import socket from "../socket";
 import ChatBox from "../ChatBox";
 
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
 // 1. Add Styles for the floating overlay
 const chatOverlayStyles = {
     position: 'fixed',
@@ -46,10 +48,10 @@ function Hero({ search }) {
         const token = localStorage.token;
         if (!token) return;
         const jwtDecodeToken = jwtDecode(token);
-        
+
         try {
-            const res = await axios.get("http://localhost:3001/allFormData");
-            const user = await axios.get('http://localhost:3001/user/me', {
+            const res = await axios.get(`${backendUrl}/allFormData`);
+            const user = await axios.get(`${backendUrl}/user/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUserData(user.data);
@@ -131,7 +133,7 @@ function Hero({ search }) {
                         <span style={{ fontWeight: 'bold' }}>Chat: {activeChat.recipientName}</span>
                         <button style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveChat(null)}>×</button>
                     </div>
-                    
+
                     <ChatBox
                         socket={socket}
                         roomId={activeChat.roomId}

@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 
 function Hero() {
 
+      const dashboardUrl = "https://findbuddy-dash.onrender.com" || "http://localhost:3002";
+
+
     const handlelogout = () => {
         localStorage.clear();
         // Redirecting to the logout sync endpoint
-        window.location.href = "http://localhost:3002/logout-sync";
+        window.location.href = `${dashboardUrl}/logout-sync`;
     };
 
     return (

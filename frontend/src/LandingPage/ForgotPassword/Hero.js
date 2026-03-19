@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-import LoginPage from '../Login/LoginPage';
+
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
 
 function Hero() {
     const [email, setEmail] = useState('');
@@ -11,7 +11,7 @@ function Hero() {
         e.preventDefault();
         setStatus('loading');
         try {
-            const res = await axios.post('http://localhost:3001/api/forgot-password', { email });
+            const res = await axios.post(`${backendUrl}/api/forgot-password`, { email });
             if (res.status === 200) setStatus('success');
         } catch (err) {
             setStatus('error');

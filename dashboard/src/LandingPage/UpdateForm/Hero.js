@@ -3,6 +3,9 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
 
 function Hero() {
     const navigate = useNavigate();
@@ -52,9 +55,9 @@ function Hero() {
 
     const fetchUser = async () => {
         try {
-            const response = await axios.post("http://localhost:3001/loggedUser", decode);
+            const response = await axios.post(`${backendUrl}/loggedUser`, decode);
             const Id = response.data.formId;
-            const getForm = await axios.post("http://localhost:3001/getUserForm", { Id });
+            const getForm = await axios.post(`${backendUrl}/getUserForm`, { Id });
             setformData(getForm.data.data);
         } catch (error) {
             console.log(error);
@@ -83,7 +86,7 @@ function Hero() {
             });
 
             // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
-            const res = await axios.post("http://localhost:3001/updateForm", data, {
+            const res = await axios.post(`${backendUrl}/updateForm`, data, {
                 withCredentials: true,
                 // Axios will automatically set the boundary for multipart/form-data
             });

@@ -11,6 +11,7 @@ import UpdateForm from './LandingPage/UpdateForm/UpdateForm';
 import LogoutSync from './LandingPage/LogoutSync/LogoutSync';
 import { useState, useEffect } from "react";
 
+const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 function App() {
@@ -32,7 +33,7 @@ function App() {
       setReady(true);
     } else {
       // Case 3: No token anywhere, redirect to login
-      window.location.href = "http://localhost:3000/login";
+      window.location.href = `${frontendUrl}/login`;
     }
   }, []);
 

@@ -1,39 +1,9 @@
-// import { createContext, useState, useEffect, useContext } from 'react';
-// import axios from 'axios';
-
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//     const [user, setUser] = useState(null);
-
-//     const fetchUser = async () => {
-//         const token = localStorage.getItem('token');
-//         if (!token) return;
-//         try {
-//             const res = await axios.get('http://localhost:3001/user/me', {
-//                 headers: { Authorization: `Bearer ${token}` }
-//             });
-//             setUser(res.data);
-//         } catch (err) {
-//             localStorage.removeItem('token');
-//         }
-//     };
-
-//     useEffect(() => { fetchUser(); }, []);
-
-//     return (
-//         <AuthContext.Provider value={{ user, setUser, fetchUser }}>
-//             {children}
-//         </AuthContext.Provider>
-//     );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -46,7 +16,7 @@ export const AuthProvider = ({ children }) => {
             return;
         }
         try {
-            const res = await axios.get('http://localhost:3001/user/me', {
+            const res = await axios.get(`${backendUrl}/user/me`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setUser(res.data);

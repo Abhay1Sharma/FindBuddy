@@ -1,43 +1,18 @@
-import { toast } from "react-toastify";
 import { useAuth } from '../../AuthjsContext';
 import { Link } from 'react-router-dom';
 
+  const dashboardUrl = "https://findbuddy-dash.onrender.com" || "http://localhost:3002";
+
 const Navbar = () => {
-
-  // const handlelogout = async () => {
-  //   try {
-  //     // 1. Call backend (optional for JWT, but good for session cleanup)
-  //     localStorage.removeItem('token');
-  //     localStorage.clear();
-  //     // console.log(localStorage.key("token"));
-  //     toast.success("Logout Succesfully");
-  //     setUser(null);
-
-  //     window.location.href = "http://localhost:3002/logout-sync";
-  //     // 4. Optionally redirect
-  //     // navigate("/login"); 
-  //   } catch (err) {
-  //     console.error("Logout failed", err);
-  //   }
-  // };
 
 const handlelogout = () => {
   localStorage.clear();
   setUser(null); // Clear context
   // Bounce to 3002 to clear it, which then redirects back to 3000/login
-  window.location.href = "http://localhost:3002/logout-sync";
+  window.location.href = `${dashboardUrl}/logout-sync`;
 };
 
-  // const onLoginSuccess = (responseData) => {
-  //   localStorage.setItem('token', responseData.token);
-  //   // This line is what makes the Navbar name appear instantly!
-  //   setUser(responseData.user);
-  //   navigate("/");
-  // };
   const { user, setUser } = useAuth(); // Destructure setUser from your context
-  // console.log("user", user);
-
-  // const navigate = useNavigate();
 
   return (
 

@@ -13,6 +13,9 @@ function Hero() {
         password: ''
     });
 
+      const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
+
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -24,7 +27,7 @@ function Hero() {
         setLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:3001/login',
+            const res = await axios.post(`${backendUrl}/login`,
                 formData, // Contains username and password
                 { withCredentials: true } // CRITICAL: This allows the session cookie to be saved
             );

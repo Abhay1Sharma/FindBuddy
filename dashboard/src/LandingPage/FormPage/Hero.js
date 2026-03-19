@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 
+const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+
 function Hero() {
     const navigate = useNavigate();
     const storedToken = localStorage.token;
@@ -88,7 +90,7 @@ function Hero() {
             });
 
             // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
-            const res = await axios.post("http://localhost:3001/formdata", data, {
+            const res = await axios.post(`${backendUrl}/formdata`, data, {
                 withCredentials: true,
                 // Axios will automatically set the boundary for multipart/form-data
             });

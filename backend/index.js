@@ -20,10 +20,14 @@ const PORT = 3001;
 const app = express();
 const httpServer = createServer(app); // Create the HTTP server
 
+const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
+const backendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3001";
+const dashboardUrl = "https://findbuddy-dash.onrender.com" || "http://localhost:3002";
+
 // 1. Initialize Socket.io
 const io = new Server(httpServer, {
     cors: {
-        origin: ["http://localhost:3000", "http://localhost:3002"],
+        origin: [frontendUrl, dashboardUrl],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -39,7 +43,7 @@ main()
     .catch((err) => console.log("Database Connection Error ❌", err));
 
 // 3. Middlewares
-app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:3002'], credentials: true }));
+app.use(cors({ origin: [`${frontendUrl}`, `${dashboardUrl}`], credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
