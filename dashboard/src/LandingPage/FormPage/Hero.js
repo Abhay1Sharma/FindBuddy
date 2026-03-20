@@ -90,7 +90,7 @@ function Hero() {
             });
 
             // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
-            const res = await axios.post(`${backendUrl}/formdata`, data, {
+            const res = await axios.post(`${backendUrl}formdata`, data, {
                 withCredentials: true,
                 // Axios will automatically set the boundary for multipart/form-data
             });
