@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+const backendUrl = "https://findbuddy-back.onrender.com";
 
 const socket = io(`${backendUrl}`, {
     withCredentials: true,

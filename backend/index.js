@@ -20,11 +20,11 @@ const PORT = 3001;
 const app = express();
 const httpServer = createServer(app); // Create the HTTP server
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
-const dashboardUrl = "https://findbuddy-dash.onrender.com" || "http://localhost:3002";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+const backendUrl = "https://findbuddy-back.onrender.com";
+const dashboardUrl = "https://findbuddy-dash.onrender.com";
 
-// 1. Initialize Socket.io
+// 1. Initialize Socket.io[]
 const io = new Server(httpServer, {
     cors: {
         origin: [frontendUrl, dashboardUrl],

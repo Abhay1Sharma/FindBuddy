@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+const backendUrl = "https://findbuddy-back.onrender.com";
 
 
 export const AuthProvider = ({ children }) => {

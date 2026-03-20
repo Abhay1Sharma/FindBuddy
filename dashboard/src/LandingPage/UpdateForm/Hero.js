@@ -3,8 +3,8 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
-const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+const backendUrl = "https://findbuddy-back.onrender.com";
 
 
 function Hero() {

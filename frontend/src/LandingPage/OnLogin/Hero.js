@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 function Hero() {
 
-      const dashboardUrl = "https://findbuddy-dash.onrender.com" || "http://localhost:3002";
+      const dashboardUrl = "https://findbuddy-dash.onrender.com";
 
 
     const handlelogout = () => {

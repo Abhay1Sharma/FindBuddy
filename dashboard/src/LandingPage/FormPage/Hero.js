@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+const backendUrl = "https://findbuddy-back.onrender.com";
 
 function Hero() {
     const navigate = useNavigate();

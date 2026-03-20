@@ -59,7 +59,7 @@ router.post("/signup", async (req, res) => {
             { expiresIn: '15m' }
         );
 
-        const verificationUrl = `http://localhost:3000/verify-email?token=${emailToken}`;
+        const verificationUrl = `https://findbuddy-lsdc.onrender.com/verify-email?token=${emailToken}`;
 
         // 3. Send the Email via Resend
         const emaildetails = await resend.emails.send({
@@ -138,7 +138,7 @@ router.post("/api/resend-verification", async (req, res) => {
 
     // Send email again (same as Step 3)
 
-    const verificationUrl = `http://localhost:3000/verify-email?token=${newToken}`;
+    const verificationUrl = `https://findbuddy-lsdc.onrender.com/verify-email?token=${newToken}`;
 
     await resend.emails.send({
         from: 'FindBuddy <onboarding@resend.dev>',
@@ -197,7 +197,7 @@ router.post('/api/forgot-password', async (req, res) => {
         }
 
         const token = jwt.sign({ id: user._id }, jwtsecret, { expiresIn: '7d' });
-        const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
+        const resetUrl = `https://findbuddy-lsdc.onrender.com/reset-password?token=${token}`;
 
         await resend.emails.send({
             from: 'FindBuddy <security@resend.dev>',

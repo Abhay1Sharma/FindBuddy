@@ -13,7 +13,7 @@ function Hero() {
         password: ''
     });
 
-      const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+      const backendUrl = "https://findbuddy-back.onrender.com";
 
 
     const [loading, setLoading] = useState(false);

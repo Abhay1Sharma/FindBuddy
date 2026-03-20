@@ -2,7 +2,7 @@ import express from "express";
 import passport from "passport";
 import  { signUpUser, logOutUser, loginPage, loginUser } from "../controllers/User.js";
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
 const router = express.Router();
 
 router.route("/login")

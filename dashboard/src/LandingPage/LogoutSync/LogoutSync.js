@@ -1,7 +1,7 @@
 // src/components/LogoutSync.js
 import { useEffect } from "react";
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
 const LogoutSync = () => {
     useEffect(() => {
         localStorage.clear(); // Clears Port 3002

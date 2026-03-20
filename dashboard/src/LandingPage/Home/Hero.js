@@ -5,7 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import socket from "../socket";
 import ChatBox from "../ChatBox";
 
-const backendUrl = "https://findbuddy-back.onrender.com" || "http://localhost:3001";
+const backendUrl = "https://findbuddy-back.onrender.com";
 
 // 1. Add Styles for the floating overlay
 const chatOverlayStyles = {

@@ -11,7 +11,7 @@ import UpdateForm from './LandingPage/UpdateForm/UpdateForm';
 import LogoutSync from './LandingPage/LogoutSync/LogoutSync';
 import { useState, useEffect } from "react";
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com" || "http://localhost:3000";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 function App() {
