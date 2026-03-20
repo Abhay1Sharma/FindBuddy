@@ -103,7 +103,80 @@ app.get("/allFormData", async (req, res) => {
     }
 });
 
-// ... Keep your other app.post routes here ...
+app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
+
+    try {
+        const photoBase64 = req.file ? "data:image/webp;base64," + req.file.buffer.toString("base64") : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+
+        const {
+            name, gender, age, fitnessLevel, goal, gymname,
+            typeOfBuddy, city, state, country, shifts, userId
+        } = req.body;
+
+        console.log(req.body);
+
+        const newForm = await new Form({
+            name, gender, age, fitnessLevel, goal,
+            typeOfBuddy, city, state, country, shifts,
+            userId, gymname,
+            profilePicture: photoBase64, // Use the Base64 string here!
+
+        }).save();
+
+        const user = await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id });
+        // console.log(user);
+        res.status(200).json({ message: "Data received successfully!" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Server error during profile creation." });
+    }
+
+});
+
+app.post("/loggedUser", async (req, res) => {
+    const { decode } = req.body;
+    console.log(req.body);
+    try {
+        const Id = req.body.id;
+        const logged = await User.findOne({ _id: Id });
+        res.status(200).json(logged);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+app.post("/getUserForm", async (req, res) => {
+    const { Id } = req.body;
+    const getForm = await Form.findById({ _id: Id });
+    console.log(getForm);
+    res.status(200).json({ data: getForm });
+})
+
+app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
+    const {
+        name, gender, age, fitnessLevel, goal,
+        typeOfBuddy, city, state, country, shifts, userId
+    } = req.body;
+
+    const photoBase64 = req.file ? "data:image/webp;base64," + req.file.buffer.toString("base64") : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+
+    const user = await User.findById({ _id: userId });
+    const _id = user.formId;
+    const form = await Form.findByIdAndUpdate(_id, {
+        name, gender, age, fitnessLevel, goal,
+        typeOfBuddy, city, state, country, shifts, userId,
+        profilePicture: photoBase64
+
+    });
+
+    const formUpdate = await Form.findByIdAndUpdate({})
+    const newForm = await new Form({
+        name, gender, age, fitnessLevel, goal,
+        typeOfBuddy, city, state, country, shifts,
+        userId,
+        profilePicture: photoBase64, // Use the Base64 string here!
+    }).save();
+});
 
 // 8. START THE SERVER (Use httpServer, only once)
 httpServer.listen(PORT, () => {
