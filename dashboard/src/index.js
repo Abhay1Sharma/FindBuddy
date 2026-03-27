@@ -10,6 +10,9 @@ import NotFound from "./LandingPage/NotFound/Hero";
 import UpdateForm from './LandingPage/UpdateForm/UpdateForm';
 import LogoutSync from './LandingPage/LogoutSync/LogoutSync';
 import { useState, useEffect } from "react";
+import UserProfile from './LandingPage/UserProfile/UserProfile';
+import Chats from './LandingPage/Chats/Chats';
+
 
 const frontendUrl = "https://findbuddy-lsdc.onrender.com";
 const root = ReactDOM.createRoot(document.getElementById('root'));
