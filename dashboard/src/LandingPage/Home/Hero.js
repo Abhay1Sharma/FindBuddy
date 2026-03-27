@@ -120,27 +120,12 @@ function Hero({ search }) {
                         <div className="locationName"><i className="fas fa-map-marker-alt"></i> {items.city}, {items.state}</div>
                     </div>
 
-                    <Button className="connectNow-btn" onClick={() => handleConnect(items)}>
-                        Connect Now
-                    </Button>
+                    <div className="button" >
+                        <Link className="connectNow-button left" to={`/userProfile/${items.userId}`}> VIEW PROFILE </Link>
+                        <Link className="connectNow-button right" to={`/userChats/${items.userId}`}> MESSAGE </Link>
+                    </div>
                 </div>
             ))}
-
-            {/* 3. Floating Private Chat Overlay (Doesn't hide the list) */}
-            {activeChat && (
-                <div className="chat-overlay" style={chatOverlayStyles}>
-                    <div className="chat-header" style={{ background: '#FF3D00', color: 'white', padding: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 'bold' }}>Chat: {activeChat.recipientName}</span>
-                        <button style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '18px' }} onClick={() => setActiveChat(null)}>×</button>
-                    </div>
-
-                    <ChatBox
-                        socket={socket}
-                        roomId={activeChat.roomId}
-                        myId={userData.formId}
-                    />
-                </div>
-            )}
         </>
     );
 };

@@ -245,7 +245,6 @@ function Hero() {
                             <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Find your Buddy</button>
                         </form>
                     </div>
-                    {/* <div className="col-lg-2"></div> */}
                 </div >
             </div >
         </>

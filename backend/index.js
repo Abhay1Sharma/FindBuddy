@@ -15,6 +15,7 @@ import LocalStrategy from "passport-local";
 import Auth from "./routers/Auth.js";
 import { Form } from './src/models/FormModel.js';
 import { User } from "./src/models/UserSchema.js";
+import { Profile } from './src/models/ProfileModel.js';
 
 const PORT = 3001;
 const app = express();
@@ -145,12 +146,32 @@ app.post("/loggedUser", async (req, res) => {
     }
 });
 
+app.post("/user", async (req, res) => {
+    try {
+        const Id = req.body.id;
+        const logged = await User.findById(Id);
+        res.status(200).json(logged);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+app.post("/profile", async (req, res) => {
+    const { Id } = req.body;
+    try {
+        const profile = await Profile.findOne(Id);
+        res.status(200).json(profile);
+    } catch (err) {
+        console.log(err);
+    }
+});
+
 app.post("/getUserForm", async (req, res) => {
     const { Id } = req.body;
     const getForm = await Form.findById({ _id: Id });
     console.log(getForm);
     res.status(200).json({ data: getForm });
-})
+});
 
 app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
     const {
@@ -176,6 +197,62 @@ app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
         userId,
         profilePicture: photoBase64, // Use the Base64 string here!
     }).save();
+});
+
+const uploadFields = upload.fields([
+    { name: 'profileImage' },
+    { name: 'backgroundImage' }
+]);
+
+app.post("/updateIntro", uploadFields, async (req, res) => {
+    try {
+        const { userId, intro, about } = req.body;
+
+        // 1. Check if files exist in the request
+        const profileFile = req.files?.['profileImage']?.[0];
+        const backgroundFile = req.files?.['backgroundImage']?.[0];
+
+        const updateData = {};
+
+        // 2. Only update text fields if they are provided and aren't the string "undefined"
+        if (intro && intro !== 'undefined') {
+            updateData.introContent = intro;
+        }
+        if (about && about !== 'undefined') {
+            updateData.aboutContent = about;
+        }
+
+        // 3. Process Images (Convert to Base64 only if new files were uploaded)
+        if (profileFile) {
+            updateData.profileImage = `data:${profileFile.mimetype};base64,${profileFile.buffer.toString("base64")}`;
+        }
+        if (backgroundFile) {
+            updateData.backgroundImage = `data:${backgroundFile.mimetype};base64,${backgroundFile.buffer.toString("base64")}`;
+        }
+
+        // 4. Database Operations
+        // First, find the user to get their profileId
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update the profile using the profileId stored in the User document
+        const updatedProfile = await Profile.findByIdAndUpdate(
+            user.profileId, 
+            { $set: updateData }, 
+            { new: true } // Returns the updated document
+        );
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            profile: updatedProfile
+        });
+
+    } catch (err) {
+        console.error("Route Error:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
 
 // 8. START THE SERVER (Use httpServer, only once)
