@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-function Hero({ userFormData }) {
+function Hero() {
     const { id: recipientId } = useParams(); // Destructure for cleaner code
     const [ready, setReady] = useState(false);
     const [userData, setUserData] = useState(null); // Initialize as null to check status

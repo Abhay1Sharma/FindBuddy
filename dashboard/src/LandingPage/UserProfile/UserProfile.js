@@ -1,9 +1,9 @@
 import Hero from "./Hero";
 
-function UserProfile({ setUserFormData }) {
+function UserProfile() {
 
     return (
-        <Hero setUserFormData={ setUserFormData } />
+        <Hero />
     )
 }
 

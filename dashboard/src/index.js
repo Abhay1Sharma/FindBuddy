@@ -61,8 +61,8 @@ function App() {
             <Route path="/complete-profile" element={<FormData />} />
             <Route path="/update-profile" element={<UpdateForm />} />
             <Route path="/logout-sync" element={<LogoutSync />} />
-            <Route path="/userChats/:id" element={<Chats setIsUserType={setIsUserType} />} />
-            <Route path="/userProfile/:id" element={ <UserProfile isUserType={isUserType} /> } />
+            <Route path="/userChats/:id" element={<Chats />} />
+            <Route path="/userProfile/:id" element={ <UserProfile /> } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
