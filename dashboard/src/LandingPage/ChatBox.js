@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from 'react';
 const ChatBox = ({ socket, roomId, myId }) => {
     const [msg, setMsg] = useState("");
     const [messages, setMessages] = useState([]);
-    const scrollRef = useRef();
 
     useEffect(() => {
         // 1. Define the handler for incoming messages
@@ -26,11 +25,6 @@ const ChatBox = ({ socket, roomId, myId }) => {
         };
     }, [socket, roomId]); // Re-run if room changes
 
-    // Auto-scroll logic
-    useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-
     const handleSend = () => {
         if (msg.trim() === "") return;
 
@@ -49,57 +43,81 @@ const ChatBox = ({ socket, roomId, myId }) => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '350px', background: 'white' }}>
+        <div className="messageContainer" style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '15px',
+            background: '#ffffff',
+            display: 'flex',
+            paddingBottom: 0,
+            flexDirection: 'column'
+        }}>
             {/* Message Area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '15px' }}>
+            <div className="messageBox" style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '15px',
+                background: '#ffffff',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
                 {messages.map((m, i) => (
-                    <div key={i} style={{ 
-                        textAlign: m.senderId === myId ? 'right' : 'left', 
-                        marginBottom: '10px' 
+                    <div key={i} style={{
+                        alignSelf: m.senderId === myId ? 'flex-end' : 'flex-start',
+                        marginBottom: '10px',
+                        maxWidth: '85%' // Increased for mobile readability
                     }}>
-                        <div style={{
-                            display: 'inline-block',
-                            padding: '8px 12px',
-                            borderRadius: '12px',
+                        <div className="msg" style={{
+                            padding: '10px 14px',
+                            borderRadius: m.senderId === myId ? '18px 18px 2px 18px' : '18px 18px 18px 2px',
                             backgroundColor: m.senderId === myId ? '#FF3D00' : '#f1f5f9',
                             color: m.senderId === myId ? 'white' : '#1e293b',
-                            maxWidth: '80%',
-                            fontSize: '14px',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                            fontSize: '0.95rem', // Better scaling font
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                         }}>
                             {m.text}
                         </div>
                     </div>
                 ))}
-                <div ref={scrollRef} />
             </div>
 
             {/* Input Area */}
-            <div style={{ padding: '10px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: '8px' }}>
-                <input 
+            <div className='inputArea' style={{
+                padding: '5px',
+                borderTop: '1px solid #eee',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                background: 'white'
+            }}>
+                <input
                     type="text"
                     value={msg}
                     onChange={(e) => setMsg(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     placeholder="Type a message..."
-                    style={{ 
-                        flex: 1, 
-                        border: '1px solid #e2e8f0', 
-                        borderRadius: '20px', 
-                        padding: '8px 15px',
-                        outline: 'none'
+                    style={{
+                        flex: 1,
+                        border: '1px solid #ddd',
+                        borderRadius: '25px',
+                        padding: '10px 15px',
+                        outline: 'none',
+                        fontSize: '16px' // Prevents iOS from zooming in on focus
                     }}
                 />
-                <button 
+                <button
                     onClick={handleSend}
-                    style={{ 
-                        background: '#FF3D00', 
-                        color: 'white', 
-                        border: 'none', 
-                        borderRadius: '50%', 
-                        width: '35px', 
-                        height: '35px',
-                        cursor: 'pointer'
+                    style={{
+                        background: '#FF3D00',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        minWidth: '40px',
+                        height: '40px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                     }}
                 >
                     <i className="fas fa-paper-plane"></i>
