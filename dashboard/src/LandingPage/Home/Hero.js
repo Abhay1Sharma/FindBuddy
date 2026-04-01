@@ -4,7 +4,7 @@ import { Button } from "@mui/material";
 import { jwtDecode } from "jwt-decode";
 import socket from "../socket";
 import ChatBox from "../ChatBox";
-import { Link } from "react-router-dom";r
+import { Link } from "react-router-dom";
 
 const backendUrl = "https://findbuddy-back.onrender.com";
 
