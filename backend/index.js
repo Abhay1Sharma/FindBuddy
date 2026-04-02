@@ -21,9 +21,9 @@ const PORT = 3001;
 const app = express();
 const httpServer = createServer(app); // Create the HTTP server
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com";
-const backendUrl = "https://findbuddy-back.onrender.com";
-const dashboardUrl = "https://findbuddy-dash.onrender.com";
+const frontendUrl = "http://localhost:3000";
+const backendUrl = "http://localhost:3001";
+const dashboardUrl = "http://localhost:3002";
 
 // 1. Initialize Socket.io[]
 const io = new Server(httpServer, {
@@ -172,6 +172,10 @@ app.post("/getUserForm", async (req, res) => {
     console.log(getForm);
     res.status(200).json({ data: getForm });
 });
+
+app.post("/postContent", upload.single("media"), async (req, res) => {
+    console.log(req.body);
+})
 
 app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
     const {

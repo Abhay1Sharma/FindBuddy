@@ -33,11 +33,11 @@ function Hero() {
     useEffect(() => {
         const userData = async () => {
             try {
-                const user = await axios.post("https://findbuddy-back.onrender.com/user", Id);
+                const user = await axios.post("http://localhost:3001/user", Id);
                 const profileId = user.data.profileId;
                 const formId = user.data.formId;
-                const userProfile = await axios.post("https://findbuddy-back.onrender.com/profile", profileId);
-                const userForm = await axios.post("https://findbuddy-back.onrender.com/getUserForm", { Id: formId });
+                const userProfile = await axios.post("http://localhost:3001/profile", profileId);
+                const userForm = await axios.post("http://localhost:3001/getUserForm", { Id: formId });
                 setUserInfo(user.data);
                 setFormData(userForm.data.data);
                 setUserProfile(userProfile.data);
@@ -59,7 +59,7 @@ function Hero() {
             data.append("profileImage", content.profileImage);
             data.append("backgroundImage", content.backgroundImage);
             console.log(data);
-            const res = await axios.post("https://findbuddy-back.onrender.com/updateIntro", data, {
+            const res = await axios.post("http://localhost:3001/updateIntro", data, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 }

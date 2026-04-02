@@ -23,8 +23,6 @@ import LogoutSync from "./LandingPage/LogOutSync/LogoutSync";
 
 const clientId = process.env.REACT_APP_CLIENTID;
 const root = ReactDOM.createRoot(document.getElementById('root'));
-const token = localStorage.token;
-console.log(token);
 
 function App() {
 

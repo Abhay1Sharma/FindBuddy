@@ -20,7 +20,6 @@ const ProfileSchema = mongoose.Schema(
             type: String,
             default: "Hi, I'm a fitness enthusiast looking for a dedicated partner to stay consistent, share motivation, and crush our gym goals together."
         },
-
         
         userId: {
             type: mongoose.Schema.Types.ObjectId,

@@ -6,7 +6,7 @@ import socket from "../socket";
 import ChatBox from "../ChatBox";
 import { Link } from "react-router-dom";
 
-const backendUrl = "https://findbuddy-back.onrender.com";
+const backendUrl = "http://localhost:3001";
 
 // 1. Add Styles for the floating overlay
 const chatOverlayStyles = {
@@ -67,11 +67,13 @@ function Hero({ search }) {
 
     if (!ready) {
         return (
-            <div className='root'>
-                <div className="loaderContent">
-                    <div className="loader"></div>
+            <>
+                <div className='root'>
+                    <div className="loaderContent">
+                        <div className="loader"></div>
+                    </div>
                 </div>
-            </div>
+            </>
         );
     }
 
@@ -89,41 +91,43 @@ function Hero({ search }) {
         <>
             {/* 2. User Card List */}
             {filteredUsers.filter((items) => items._id !== userData.formId).map((items) => (
-                <div className="card mb-4" key={items._id}>
-                    <div className="profile">
-                        <div className="profile-pic">
-                            <img src={items.profilePicture} alt={items.name} />
+                <div className="allCards m-4">
+                    <div className="card" key={items._id || items.id}>
+                        <div className="profile">
+                            <div className="profile-pic">
+                                <img src={items.profilePicture} alt={items.name} />
+                            </div>
+                            <div className="userBio">
+                                <h4 style={{ fontWeight: 700 }}>{items.name}</h4>
+                                <small style={{ color: "#64748b" }}>Passionate about fitness and peak potential.</small>
+                            </div>
                         </div>
-                        <div className="userBio">
-                            <h4 style={{ fontWeight: 700 }}>{items.name}</h4>
-                            <small style={{ color: "#64748b" }}>Passionate about fitness and peak potential.</small>
+
+                        <div className="gym-info-bar">
+                            <div className="gym-tag">
+                                <i className="fas fa-dumbbell" style={{ marginRight: '8px', color: "#FF3D00" }}></i>
+                                <span>{items.gymname}</span>
+                            </div>
+                            <div className="availability-dot">
+                                <span className="dot"></span> Active Now
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="gym-info-bar">
-                        <div className="gym-tag">
-                            <i className="fas fa-dumbbell" style={{ marginRight: '8px', color: "#FF3D00" }}></i>
-                            <span>{items.gymname}</span>
+                        <div className="allGoal">
+                            <div className="goal"><i class="fa-duotone fa-solid fa-chart-line"></i><small>{items.fitnessLevel}</small></div>
+                            <div className="goal"><i class="fa-solid fa-bullseye"></i><small>{items.goal}</small></div>
+                            <div className="goal"><i class="fa-solid fa-person"></i><small>{items.typeOfBuddy}</small></div>
+                            <div className="goal"><i class="fa-solid fa-clock"></i><small>{items.shifts}</small></div>
                         </div>
-                        <div className="availability-dot">
-                            <span className="dot"></span> Active Now
+
+                        <div className="location">
+                            <div className="locationName"><i className="fas fa-map-marker-alt"></i> {items.city}, {items.state}</div>
                         </div>
-                    </div>
 
-                    <div className="allGoal">
-                        <div className="goal"><i class="fa-duotone fa-solid fa-chart-line"></i><small>{items.fitnessLevel}</small></div>
-                        <div className="goal"><i class="fa-solid fa-bullseye"></i><small>{items.goal}</small></div>
-                        <div className="goal"><i class="fa-solid fa-person"></i><small>{items.typeOfBuddy}</small></div>
-                        <div className="goal"><i class="fa-solid fa-clock"></i><small>{items.shifts}</small></div>
-                    </div>
-
-                    <div className="location">
-                        <div className="locationName"><i className="fas fa-map-marker-alt"></i> {items.city}, {items.state}</div>
-                    </div>
-
-                    <div className="button" >
-                        <Link className="connectNow-button left" to={`/userProfile/${items.userId}`}> VIEW PROFILE </Link>
-                        <Link className="connectNow-button right" to={`/userChats/${items.userId}`}> MESSAGE </Link>
+                        <div className="button" >
+                            <Link className="connectNow-button left" to={`/userProfile/${items.userId}`}> VIEW PROFILE </Link>
+                            <Link className="connectNow-button right" to={`/userChats/${items.userId}`}> MESSAGE </Link>
+                        </div>
                     </div>
                 </div>
             ))}

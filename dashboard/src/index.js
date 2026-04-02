@@ -12,9 +12,11 @@ import LogoutSync from './LandingPage/LogoutSync/LogoutSync';
 import { useState, useEffect } from "react";
 import UserProfile from './LandingPage/UserProfile/UserProfile';
 import Chats from './LandingPage/Chats/Chats';
+import CreatePost from './LandingPage/CreatePost/CreatePost';
+import AllContent from './LandingPage/AllContent/AllContent';
 
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+const frontendUrl = "http://localhost:3000";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 function App() {
@@ -58,11 +60,13 @@ function App() {
         <div className="content">
           <Routes>
             <Route path="/" element={<Home search={search} />} />
+            <Route path="/allContent" element={ <AllContent />} />
             <Route path="/complete-profile" element={<FormData />} />
             <Route path="/update-profile" element={<UpdateForm />} />
             <Route path="/logout-sync" element={<LogoutSync />} />
             <Route path="/userChats/:id" element={<Chats />} />
             <Route path="/userProfile/:id" element={ <UserProfile /> } />
+            <Route path="/createPost" element={ <CreatePost /> } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

@@ -19,7 +19,7 @@ function Hero() {
         try {
             const token = localStorage.token;
             const jwtToken = jwtDecode(token);
-            const profile = await axios.post("https://findbuddy-back.onrender.com/user", { id: jwtToken.id });
+            const profile = await axios.post("http://localhost:3001/user", { id: jwtToken.id });
             setUserData(profile.data);
         } catch (err) {
             console.error("Fetch Error:", err);
