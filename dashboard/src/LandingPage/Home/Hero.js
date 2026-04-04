@@ -83,10 +83,12 @@ function Hero({ search }) {
             item.city?.toString().toLowerCase().includes(query) ||
             item.state?.toString().toLowerCase().includes(query) ||
             item.gymname?.toString().toLowerCase().includes(query) ||
-            item.goal?.toString().toLowerCase().includes(query)
+            item.goal?.toString().toLowerCase().includes(query) ||
+            item.shifts?.toString().toLowerCase().includes(query)
         );
     });
 
+    console.log(filteredUsers);
     return (
         <>
             {/* 2. User Card List */}

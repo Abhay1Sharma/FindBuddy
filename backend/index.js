@@ -3,6 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import sharp from 'sharp';
 import mongoose from "mongoose";
 import passport from "passport";
 import session from "express-session";
@@ -14,8 +15,17 @@ import LocalStrategy from "passport-local";
 // Import your models and routers
 import Auth from "./routers/Auth.js";
 import { Form } from './src/models/FormModel.js';
+import { Post } from './src/models/PostModel.js';
 import { User } from "./src/models/UserSchema.js";
 import { Profile } from './src/models/ProfileModel.js';
+import fs from 'fs';
+import path from 'path';
+
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+    console.log("📁 Created 'uploads' folder automatically.");
+}
 
 const PORT = 3001;
 const app = express();
@@ -45,9 +55,11 @@ main()
 
 // 3. Middlewares
 app.use(cors({ origin: [`${frontendUrl}`, `${dashboardUrl}`], credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use(flash());
 
 const sessionOptions = {
@@ -61,6 +73,7 @@ const sessionOptions = {
     },
 };
 app.use(session(sessionOptions));
+app.use('/uploads', express.static('uploads'));
 
 // 4. Passport Setup
 app.use(passport.initialize());
@@ -92,8 +105,12 @@ io.on("connection", (socket) => {
 });
 
 // 7. API Endpoints (Keeping your existing logic)
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+// Change storage to disk
+const diskStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage: diskStorage });
 
 app.get("/allFormData", async (req, res) => {
     try {
@@ -105,33 +122,30 @@ app.get("/allFormData", async (req, res) => {
 });
 
 app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
-
     try {
-        const photoBase64 = req.file ? "data:image/webp;base64," + req.file.buffer.toString("base64") : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+        // Use the file URL if it exists, otherwise use the default avatar string
+        const profilePath = req.file
+            ? `${backendUrl}/uploads/${req.file.filename}`
+            : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
 
         const {
             name, gender, age, fitnessLevel, goal, gymname,
             typeOfBuddy, city, state, country, shifts, userId
         } = req.body;
 
-        console.log(req.body);
-
         const newForm = await new Form({
             name, gender, age, fitnessLevel, goal,
             typeOfBuddy, city, state, country, shifts,
             userId, gymname,
-            profilePicture: photoBase64, // Use the Base64 string here!
-
+            profilePicture: profilePath,
         }).save();
 
-        const user = await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id });
-        // console.log(user);
+        await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id });
         res.status(200).json({ message: "Data received successfully!" });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ message: "Server error during profile creation." });
     }
-
 });
 
 app.post("/loggedUser", async (req, res) => {
@@ -146,11 +160,20 @@ app.post("/loggedUser", async (req, res) => {
     }
 });
 
+app.get("/allPost", async (req, res) => {
+    try {
+        const allPost = await Post.find({});
+        res.status(200).json(allPost);
+    } catch (error) {
+        res.json(504).json({ message: "Some Error Occurred" });
+    }
+})
+
 app.post("/user", async (req, res) => {
     try {
         const Id = req.body.id;
         const logged = await User.findById(Id);
-        res.status(200).json(logged);
+        res.status(200).json(logged);cd
     } catch (error) {
         console.log(error);
     }
@@ -169,13 +192,32 @@ app.post("/profile", async (req, res) => {
 app.post("/getUserForm", async (req, res) => {
     const { Id } = req.body;
     const getForm = await Form.findById({ _id: Id });
-    console.log(getForm);
     res.status(200).json({ data: getForm });
 });
 
 app.post("/postContent", upload.single("media"), async (req, res) => {
-    console.log(req.body);
-})
+    try {
+        console.log("File received:", req.file); // Check your terminal for this!
+        console.log("Body received:", req.body);
+
+        const data = {
+            userId: req.body.userId,
+            about: req.body.about?.trim()
+        };
+
+        if (req.file) {
+            // We use a relative path or hardcoded string to be safe
+            // This assumes you have app.use('/uploads', express.static('uploads'))
+            data.media = `http://localhost:3001/uploads/${req.file.filename}`;
+        }
+
+        const savePost = await new Post(data).save();
+        res.status(200).json({ message: "Post Created", savePost });
+    } catch (error) {
+        console.error("DETAILED BACKEND ERROR:", error); // Look at your NODE terminal
+        res.status(500).json({ error: error.message });
+    }
+});
 
 app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
     const {
@@ -243,8 +285,8 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
 
         // Update the profile using the profileId stored in the User document
         const updatedProfile = await Profile.findByIdAndUpdate(
-            user.profileId, 
-            { $set: updateData }, 
+            user.profileId,
+            { $set: updateData },
             { new: true } // Returns the updated document
         );
 

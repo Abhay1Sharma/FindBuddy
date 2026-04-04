@@ -9,8 +9,14 @@ const PostSchema = mongoose.Schema(
 
         media: {
             type: String,
-        }
-    }, { timeStamps: true }
+        },
+        
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+
+    }, { timestamps: true }
 );
 
 export { PostSchema };

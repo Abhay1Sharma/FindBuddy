@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from "react-toastify";
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
+import imageCompression from "browser-image-compression";
 
 const frontendUrl = "http://localhost:3000";
 const backendUrl = "http://localhost:3001";
@@ -11,9 +12,10 @@ const Navbar = ({ setSearch }) => {
   const [userData, setUserData] = useState();
   const [postData, setPostData] = useState({
     about: "",
-    media: ""
+    media: "",
   });
   const [file, setFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const navigate = useNavigate();
 
   // STEP 1: Catch and Save the Token
@@ -50,7 +52,8 @@ const Navbar = ({ setSearch }) => {
       const res = await axios.get(`${backendUrl}/user/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setUserData(res.data.username);
+      setUserData(res.data);
+      setPostData({ ...postData, ["userId"]: res.data._id });
     } catch (err) {
       console.error("Fetch User Error:", err);
       localStorage.removeItem('token');
@@ -65,33 +68,78 @@ const Navbar = ({ setSearch }) => {
     window.location.href = `${frontendUrl}/logout-sync`;
   };
 
-  const handleSumbit = async () => {
+  const handleSumbit = async (e) => {
+    e.preventDefault();
+
+    if (!selectedFile && !postData.about) {
+      return toast.info("Cannot create empty Post");
+    }
+
     try {
-      console.log(postData);
+      let fileUpload = selectedFile;
+
+      if (selectedFile) {
+        // 1. Logic for IMAGES (Compress them)
+        if (selectedFile.type.startsWith('image/')) {
+          const option = {
+            maxSizeMb: 1,
+            maxWidthOrHeight: 1024,
+            useWebWorker: true
+          };
+          toast.info("Compressing Image...");
+          fileUpload = await imageCompression(selectedFile, option);
+        }
+
+        // 2. Logic for VIDEOS (Don't compress, just validate size)
+        else if (selectedFile.type.startsWith('video/')) {
+          if (selectedFile.size > 50 * 1024 * 1024) { // 50MB limit
+            return toast.error("Video is too large! Max 50MB.");
+          }
+          fileUpload = selectedFile; // Send the original video file
+        }
+      }
+
+      const data = new FormData();
+      data.append("about", postData.about);
+      data.append("userId", postData.userId);
+
+      if (fileUpload) {
+        data.append("media", fileUpload);
+      }
+
+      const res = await axios.post(`${backendUrl}/postContent`, data, {
+        timeout: 60000, // Increased to 60s for video uploads
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      toast.success("Post Created");
+
+      // Reset form
+      setFile(null);
+      setSelectedFile(null);
+      setPostData({ ...postData, about: "" });
+
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      toast.error(error.response?.status === 400 ? "Empty post not allowed" : "Post Not Created");
     }
-  }
+  };
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
 
-  const handleChange = async (e) => {
-    if (e.target.name === "media") {
-      console.log(URL.createObjectURL(e.target.files[0]));
-      // <img />
-      setFile(URL.createObjectURL(e.target.files[0]));
-      return setPostData({ ...postData, [e.target.name]: e.target.files[0] });
+    if (name === "media" && files[0]) {
+      setFile(URL.createObjectURL(files[0])); // For the preview
+      setSelectedFile(files[0]); // Save raw file for compression later
+      return;
     }
-    console.log(e.target.value);
-    return setPostData({ ...postData, [e.target.name]: e.target.value });
-  }
 
+    setPostData((prev) => ({ ...prev, [name]: value }));
+  };
   useEffect(() => { fetchUser() }, []);
 
   return (
     <>
-
-
-      < nav className="navbar navbar-expand-lg sticky-top border-bottom" style={{ backgroundColor: "white", height: "4rem", border: "none", boxShadow: "none" }
-      }>
+      < nav className="navbar navbar-expand-lg sticky-top border-bottom" style={{ backgroundColor: "white", height: "4rem", border: "none", boxShadow: "none" }}>
         <div className="container-fluid" >
           <Link className="navbar-brand" to={"/form"} style={{ width: "30%", }}><i className="fa-solid fa-dumbbell" style={{ color: "red", height: "2rem", width: "2rem" }}> < span style={{ color: "#848080ff" }}>Find</span><span style={{ color: "#FF3D00" }}>Buddy</span></i> </Link>
           <input placeholder='Enter your Interset' className="searchbar" onChange={(e) => setSearch(e.target.value)} />
@@ -101,7 +149,7 @@ const Navbar = ({ setSearch }) => {
           <div style={{ backgroundColor: 'white', border: "none" }} className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0" style={{ margin: "0 auto", backgroundColor: "white" }}>
               <li className="nav-item">
-                <Link className="nav-link active m-1.5" aria-current="page" to={frontendUrl}>Home</Link >
+                <Link className="nav-link active m-1.5" aria-current="page" to={"/allContent"}>Home</Link >
               </li>
 
               <li className="nav-item">
@@ -118,12 +166,12 @@ const Navbar = ({ setSearch }) => {
 
               {userData && <div className="user-profile">
                 <div className="user-info">
-                  <span className="user-name">{userData}</span>
+                  <span className="user-name">{userData.username}</span>
                   <span className="user-role"></span>
                 </div>
-                <img data-bs-toggle="tooltip" data-bs-placement="bottom" title={`Hello, ${userData}`}
+                <img data-bs-toggle="tooltip" data-bs-placement="bottom" title={`Hello, ${userData.username}`}
                   className="avatar"
-                  src={`https://ui-avatars.com/api/?name=${userData}&background=random&color=fff&rounded=true`}
+                  src={`https://ui-avatars.com/api/?name=${userData.username}&background=random&color=fff&rounded=true`}
                   alt="Avatar"
                 />
               </div>}
@@ -154,18 +202,25 @@ const Navbar = ({ setSearch }) => {
                       <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"></path>
                     </svg>
 
-                    { file && <img src={file} alt="Selected content" style={{ width: '100%', borderRadius: '8px' }} /> }
+                    {file && (
+                      selectedFile?.type.startsWith('video/') ? (
+                        <video src={file} controls style={{ width: '100%', borderRadius: '8px' }} />
+                      ) : (
+                        <img src={file} alt="Selected content" style={{ width: '100%', borderRadius: '8px' }} />
+                      )
+                    )}
 
                   </label>
 
                   <div id="preview-container"></div>
                 </div>
 
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="sumbit" class="btn btn-primary">Save changes</button>
+                </div>
+
               </form>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary">Save changes</button>
             </div>
           </div>
         </div>
