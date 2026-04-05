@@ -150,7 +150,7 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
 
 app.post("/loggedUser", async (req, res) => {
     const { decode } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     try {
         const Id = req.body.id;
         const logged = await User.findOne({ _id: Id });
@@ -162,18 +162,18 @@ app.post("/loggedUser", async (req, res) => {
 
 app.get("/allPost", async (req, res) => {
     try {
-        const allPost = await Post.find({});
+        const allPost = await Post.find().populate('profileId userId');
         res.status(200).json(allPost);
     } catch (error) {
-        res.json(504).json({ message: "Some Error Occurred" });
+        res.status(504).json({ message: "Some Error Occurred" });
     }
-})
+});
 
 app.post("/user", async (req, res) => {
     try {
         const Id = req.body.id;
         const logged = await User.findById(Id);
-        res.status(200).json(logged);cd
+        res.status(200).json(logged);
     } catch (error) {
         console.log(error);
     }
@@ -183,6 +183,7 @@ app.post("/profile", async (req, res) => {
     const { Id } = req.body;
     try {
         const profile = await Profile.findOne(Id);
+        console.log(profile);
         res.status(200).json(profile);
     } catch (err) {
         console.log(err);
@@ -202,6 +203,7 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
 
         const data = {
             userId: req.body.userId,
+            profileId: req.body.profileId,
             about: req.body.about?.trim()
         };
 
@@ -254,40 +256,29 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
     try {
         const { userId, intro, about } = req.body;
 
-        // 1. Check if files exist in the request
         const profileFile = req.files?.['profileImage']?.[0];
         const backgroundFile = req.files?.['backgroundImage']?.[0];
 
         const updateData = {};
 
-        // 2. Only update text fields if they are provided and aren't the string "undefined"
-        if (intro && intro !== 'undefined') {
-            updateData.introContent = intro;
-        }
-        if (about && about !== 'undefined') {
-            updateData.aboutContent = about;
-        }
+        if (intro && intro !== 'undefined') updateData.introContent = intro;
+        if (about && about !== 'undefined') updateData.aboutContent = about;
 
-        // 3. Process Images (Convert to Base64 only if new files were uploaded)
+        // ✅ FIX: Use the filename to create a URL, NOT .buffer
         if (profileFile) {
-            updateData.profileImage = `data:${profileFile.mimetype};base64,${profileFile.buffer.toString("base64")}`;
+            updateData.profileImage = `${backendUrl}/uploads/${profileFile.filename}`;
         }
         if (backgroundFile) {
-            updateData.backgroundImage = `data:${backgroundFile.mimetype};base64,${backgroundFile.buffer.toString("base64")}`;
+            updateData.backgroundImage = `${backendUrl}/uploads/${backgroundFile.filename}`;
         }
 
-        // 4. Database Operations
-        // First, find the user to get their profileId
         const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-        // Update the profile using the profileId stored in the User document
         const updatedProfile = await Profile.findByIdAndUpdate(
             user.profileId,
             { $set: updateData },
-            { new: true } // Returns the updated document
+            { new: true }
         );
 
         res.status(200).json({

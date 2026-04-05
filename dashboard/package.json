@@ -15,6 +15,7 @@
     "@mui/material": "^7.3.9",
     "axios": "^1.13.6",
     "browser-image-compression": "^2.0.2",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.3.1",
     "jsonwebtoken": "^9.0.3",
     "jwt-decode": "^4.0.0",

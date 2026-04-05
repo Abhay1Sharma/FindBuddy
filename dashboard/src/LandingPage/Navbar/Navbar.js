@@ -9,10 +9,11 @@ const frontendUrl = "http://localhost:3000";
 const backendUrl = "http://localhost:3001";
 
 const Navbar = ({ setSearch }) => {
-  const [userData, setUserData] = useState();
+  const [userData, setUserData] = useState([]);
   const [postData, setPostData] = useState({
     about: "",
     media: "",
+    userId: "",
   });
   const [file, setFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -53,13 +54,17 @@ const Navbar = ({ setSearch }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUserData(res.data);
-      setPostData({ ...postData, ["userId"]: res.data._id });
+      postData.userId = res.data._id;
+      // setPostData({ ...postData, ["userId"]: res.data._id });
+      setPostData({ ...postData, ["profileId"]: res.data.profileId });
     } catch (err) {
       console.error("Fetch User Error:", err);
       localStorage.removeItem('token');
       window.location.href = `${frontendUrl}/login`;
     }
   };
+
+  console.log(userData);
 
   const handlelogout = () => {
     localStorage.clear();
@@ -102,6 +107,7 @@ const Navbar = ({ setSearch }) => {
       const data = new FormData();
       data.append("about", postData.about);
       data.append("userId", postData.userId);
+      data.append("profileId", postData.profileId);
 
       if (fileUpload) {
         data.append("media", fileUpload);
@@ -115,9 +121,9 @@ const Navbar = ({ setSearch }) => {
       toast.success("Post Created");
 
       // Reset form
-      setFile(null);
-      setSelectedFile(null);
-      setPostData({ ...postData, about: "" });
+      // setFile(null);
+      // setSelectedFile(null);
+      // setPostData({ ...postData, about: "" });
 
     } catch (error) {
       console.error(error);
@@ -135,6 +141,7 @@ const Navbar = ({ setSearch }) => {
 
     setPostData((prev) => ({ ...prev, [name]: value }));
   };
+
   useEffect(() => { fetchUser() }, []);
 
   return (
@@ -160,11 +167,7 @@ const Navbar = ({ setSearch }) => {
                 <Link type="button" className='nav-link active m-1.5' data-bs-toggle="modal" data-bs-target="#exampleModalCenter"> Create a Post </Link>
               </li>
 
-              {userData && <li className="nav-item">
-                <Link className="nav-link active m-1.5" onClick={handlelogout}>Logout</Link >
-              </li>}
-
-              {userData && <div className="user-profile">
+              {/* {userData && <div className="user-profile">
                 <div className="user-info">
                   <span className="user-name">{userData.username}</span>
                   <span className="user-role"></span>
@@ -174,7 +177,55 @@ const Navbar = ({ setSearch }) => {
                   src={`https://ui-avatars.com/api/?name=${userData.username}&background=random&color=fff&rounded=true`}
                   alt="Avatar"
                 />
-              </div>}
+              </div>} */}
+
+              {userData && (
+                <div className="dropdown user-profile">
+                  {/* The clickable area (Trigger) */}
+                  <div
+                    className="d-flex align-items-center dropdown-toggle"
+                    id="userDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="user-info me-2 d-none d-sm-block text-end">
+                      <div className="user-name fw-bold" style={{ fontSize: '0.9rem' }}>
+                        {userData.username}
+                      </div>
+                    </div>
+
+                    <img
+                      className="avatar rounded-circle"
+                      src={`https://ui-avatars.com/api/?name=${userData.username}&background=random&color=fff`}
+                      alt="Avatar"
+                      width="40"
+                      height="40"
+                    />
+                  </div>
+
+                  {/* The Menu */}
+                  <ul className="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                    <li>
+                      <h6 className="dropdown-header">Signed in as {userData.email}</h6>
+                    </li>
+                    <li><a className="dropdown-item" href={`http://localhost:3002/userProfile/${userData._id}`}>My Profile</a></li>
+                    <li><a className="dropdown-item" href="/settings">Settings</a></li>
+                    <li><hr className="dropdown-divider" /></li>
+                    <li>
+                      <button
+                        className="dropdown-item text-danger"
+                        onClick={() => { handlelogout }}
+                      >
+                        Sign Out
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+
+
             </ul>
           </div>
         </div>
@@ -183,13 +234,13 @@ const Navbar = ({ setSearch }) => {
       <div class="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
           <div class="modal-content">
-            <div class="modal-header modalHeader">
-              <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+            <div className="modal-header modalHeader">
+              <h5 className="modal-title" id="exampleModalLongTitle">Modal title</h5>
               <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true" className='closeBtn'>X</span>
               </button>
             </div>
-            <div class="modal-body">
+            <div className="modal-body">
               <form onSubmit={handleSumbit}>
 
                 <label htmlFor="about" className="about">About Content</label>

@@ -13,8 +13,15 @@ const PostSchema = mongoose.Schema(
         
         userId: {
             type: mongoose.Schema.Types.ObjectId,
+            ref:"user",
             required: true
         },
+
+        profileId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "profile",
+            required: true
+        }
 
     }, { timestamps: true }
 );

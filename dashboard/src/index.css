@@ -989,3 +989,11 @@ b {
 #about {
   height: 200px;
 }
+
+.postHeader {
+  text-Decoration: none
+}
+
+.user-profile .dropdown-toggle::after {
+  display: none !important;
+}

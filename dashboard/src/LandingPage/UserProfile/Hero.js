@@ -12,12 +12,16 @@ function Hero() {
     const [userProfile, setUserProfile] = useState({});
     const [ready, setReady] = useState(false);
     const userId = userInfo._id;
+    const decode = localStorage.token;
+    const tokenId = jwtDecode(decode).id;
 
     const createTimeStamp = userProfile.createdAt;
     const createDate = new Date(createTimeStamp);
     const updateTimeStamp = userProfile.updatedAt;
     const updateDate = new Date(updateTimeStamp);
     const navigate = useNavigate();
+    console.log(userInfo._id);
+    console.log(tokenId);
 
     // Get a human-readable Date
     const createAtDate = createDate.toLocaleDateString();
@@ -102,9 +106,9 @@ function Hero() {
                                     <div class="profile-info-wrapper">
                                         <div class="profile-avatar-section">
                                             <div class="profileAvatar"><img className='profileImage' src={userProfile.profileImage} />
-                                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                                {userInfo._id === tokenId && <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                                     <i class="fa-solid fa-pen-to-square"></i>
-                                                </button>
+                                                </button>}
 
                                                 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                                     <div class="modal-dialog">
