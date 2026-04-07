@@ -1,86 +1,123 @@
-import React, { useState, useEffect } from 'react'
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
+import { Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import React, { useState, useEffect } from 'react';
 
 function Hero() {
     const Id = useParams();
     const [formData, setFormData] = useState({});
     const [userInfo, setUserInfo] = useState({});
     const [userProfile, setUserProfile] = useState({});
+    const [profileImageFile, setProfileImageFile] = useState(null);
+    const [backgroundImageFile, setBackgroundImageFile] = useState(null);
+    const [allPost, setAllPost] = useState(null);
     const [ready, setReady] = useState(false);
-    const userId = userInfo._id;
-    const decode = localStorage.token;
-    const tokenId = jwtDecode(decode).id;
+    const [showAllPost, setShowAllPost] = useState(false);
+    const [singlePost, setSinglePost] = useState([]);
+    const [activePostId, setActivePostId] = useState(null);
+
+    const tokenId = jwtDecode(localStorage.token).id;
+    const userId = userInfo.id;
+    console.log(singlePost[0]);
+    console.log(showAllPost);
 
     const createTimeStamp = userProfile.createdAt;
     const createDate = new Date(createTimeStamp);
     const updateTimeStamp = userProfile.updatedAt;
     const updateDate = new Date(updateTimeStamp);
     const navigate = useNavigate();
-    console.log(userInfo._id);
-    console.log(tokenId);
 
     // Get a human-readable Date
     const createAtDate = createDate.toLocaleDateString();
     const updateAtDate = updateDate.toLocaleDateString();
     const [content, setContent] = useState({
-        intro: userProfile.introContent,
-        profileImage: userProfile.profileImage,
-        backgroundImage: userProfile.backgroundImage,
-        about: userProfile.aboutContent,
+        introContent: '',
+        aboutContent: '',
         userId: userId,
+        profileImage: null,
+        backgroundImage: null,
     });
 
     useEffect(() => {
         const userData = async () => {
             try {
-                const user = await axios.post("http://localhost:3001/user", Id);
-                const profileId = user.data.profileId;
-                const formId = user.data.formId;
-                const userProfile = await axios.post("http://localhost:3001/profile", profileId);
-                const userForm = await axios.post("http://localhost:3001/getUserForm", { Id: formId });
+                const user = await axios.post("http://localhost:3001/user", { id: Id.id });
+                const posts = await axios.post("http://localhost:3001/userPosts", { id: Id.id });
+                console.log(posts);
+                setAllPost(posts.data.userposts);
                 setUserInfo(user.data);
-                setFormData(userForm.data.data);
-                setUserProfile(userProfile.data);
+                setFormData(user.data.formId);
+                setUserProfile(user.data.profileId);
+                setSinglePost(posts.data.userposts);
+
+                // FIX: Use user.data.profileId directly here
+                const profile = user.data.profileId || {};
+                setContent({
+                    introContent: profile.introContent || "",
+                    aboutContent: profile.aboutContent || "",
+                    profileImage: profile.profileImage || null,
+                    backgroundImage: profile.backgroundImage || null,
+                });
+
                 setReady(true);
             } catch (err) {
                 console.log(err);
             }
         }
-        userData()
+        userData();
     }, []);
 
+    // ... in your return statement, change the textarea values to use 'content'
+    // so that you can actually type in them:
+
     const handleSumbit = async (e) => {
+        e.preventDefault();
         try {
-            // e.preventDefault();
             const data = new FormData();
-            data.append("userId", userId);
-            data.append("about", content.about);
+
+            data.append("userId", Id.id);
+            data.append("about", content.aboutContent);
             data.append("intro", content.introContent);
-            data.append("profileImage", content.profileImage);
-            data.append("backgroundImage", content.backgroundImage);
-            console.log(data);
+
+            // FIX: Only append if the user actually uploaded a new File.
+            // This prevents sending DB URL strings to Multer.
+            if (profileImageFile) {
+                data.append("profileImage", profileImageFile);
+            }
+            if (backgroundImageFile) {
+                data.append("backgroundImage", backgroundImageFile);
+            }
+
             const res = await axios.post("http://localhost:3001/updateIntro", data, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                }
+                headers: { "Content-Type": "multipart/form-data" }
             });
-        } catch (err) {
-            console.log(err);
+
+            if (res.status === 200) {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.log("Error detail:", error.response?.data);
+            toast.error("Image not valid");
         }
     }
 
     const handleChange = (e) => {
         console.log("Handle Change occur", e);
-        if (e.target.name === "profileImage" || e.target.name === "backgroundImage") {
-            console.log(e.target.files[0]);
-            return setContent({ ...content, [e.target.name]: e.target.files[0] });
+        if (e.target.name === "profileImage") {
+            return setProfileImageFile(e.target.files[0]);
+        } else if (e.target.name === "backgroundImage") {
+            return setBackgroundImageFile(e.target.files[0]);
         }
         return setContent({ ...content, [e.target.name]: e.target.value });
     }
+
+    // if(!showallPost){
+    //     setAllPost(singlePost);
+    // }
 
     if (!ready) {
         return (
@@ -96,34 +133,34 @@ function Hero() {
         <>
             <div className="allCards">
                 <div className='container'>
-                    <div className='row g-3'>
-                        <div className='col-lg-12' >
-                            <div class="profile-container">
-                                <div class="profileCard hero-card">
+                    <div className='row g-3 profileSection'>
+                        <div className='col-lg-12 ' >
+                            <div className="profile-container">
+                                <div className="profileCard">
                                     <div className='backgroundImage'>
                                         <img className='cover-image' aria-label="Profile cover image" src={userProfile.backgroundImage} />
                                     </div>
-                                    <div class="profile-info-wrapper">
-                                        <div class="profile-avatar-section">
-                                            <div class="profileAvatar"><img className='profileImage' src={userProfile.profileImage} />
-                                                {userInfo._id === tokenId && <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <div className="profile-info-wrapper">
+                                        <div className="profile-avatar-section">
+                                            <div className="profileAvatar"><img className='profileImage' src={userProfile.profileImage} />
+                                                {userInfo._id === tokenId && <button type="button" className="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                                    <i className="fa-solid fa-pen-to-square"></i>
                                                 </button>}
 
-                                                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h1 class="modal-title fs-5" id="exampleModalLabel">Edit Intro</h1>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                                    <div className="modal-dialog">
+                                                        <div className="modal-content">
+                                                            <div className="modal-header">
+                                                                <h1 className="modal-title fs-5" id="exampleModalLabel">Edit Intro</h1>
+                                                                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
-                                                            <div class="modal-body">
+                                                            <div className="modal-body">
 
                                                                 <form onSubmit={handleSumbit}>
 
                                                                     <div className="mb-3">
                                                                         <label htmlFor="formFile" className="form-label">Choose profile photo</label>
-                                                                        <input className="form-control" name="profileImage" type="file" id="hh" accept="image/*" onChange={handleChange} />
+                                                                        <input className="form-control" name="profileImage" type="file" id="formFile" accept="image/*" onChange={handleChange} />
                                                                     </div>
 
                                                                     <div className="mb-3">
@@ -132,14 +169,22 @@ function Hero() {
                                                                     </div>
 
                                                                     <label htmlFor="headline" className="headline">Headline</label>
-                                                                    <textarea name="introContent" id="headline" className="form-control" placeholder="write your headlines..." onChange={handleChange} />
+                                                                    <textarea name="introContent"
+                                                                        id="headline"
+                                                                        className="form-control"
+                                                                        value={content.introContent} // Changed from userProfile to content
+                                                                        onChange={handleChange} />
 
                                                                     <label htmlFor="about" className="about">About Content</label>
-                                                                    <textarea name="about" id="about" className="form-control" placeholder="Write about yourself..." onChange={handleChange} />
+                                                                    <textarea name="aboutContent" // Ensure name matches state key 'aboutContent'
+                                                                        id="about"
+                                                                        className="form-control"
+                                                                        value={content.aboutContent} // Changed from userProfile to content
+                                                                        onChange={handleChange} />
 
-                                                                    <div class="modal-footer">
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                                        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Save changes</button>
+                                                                    <div className="modal-footer">
+                                                                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                        <button type="submit" className="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Save changes</button>
                                                                     </div>
                                                                 </form>
                                                             </div>
@@ -147,26 +192,26 @@ function Hero() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="profile-actions">
+                                            <div className="profile-actions">
                                                 <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#F43F5E", border: "none" }} aria-label="Open to Gym"> <i className="fas fa-dumbbell"></i> Open to Gym </button>
                                                 <Link to={`/userChats/${userId}`}> <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link>
-                                                <div class="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-                                                    <div class="modal-dialog modal-dialog-centered">
-                                                        <div class="modal-content">
-                                                            <div class="modal-footer">
-                                                                <button class="btn btn-primary" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
+                                                <div className="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
+                                                    <div className="modal-dialog modal-dialog-centered">
+                                                        <div className="modal-content">
+                                                            <div className="modal-footer">
+                                                                <button className="btn btn-primary" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabindex="-1">
-                                                    <div class="modal-dialog modal-dialog-centered">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h1 class="modal-title fs-5" id="exampleModalToggleLabel2">Account Information</h1>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <div className="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2" tabIndex="-1">
+                                                    <div className="modal-dialog modal-dialog-centered">
+                                                        <div className="modal-content">
+                                                            <div className="modal-header">
+                                                                <h1 className="modal-title fs-5" id="exampleModalToggleLabel2">Account Information</h1>
+                                                                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
-                                                            <div class="modal-body">
+                                                            <div className="modal-body">
                                                                 <span><b>Profile Created At : </b>{createAtDate}</span>
                                                                 <br /><br />
                                                                 <span><b>Profile Updated At : </b>{updateAtDate}</span>
@@ -174,25 +219,25 @@ function Hero() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button class="btn" style={{ color: "#F3F4F6", backgroundColor: "#F59E0B", border: "none" }} data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
+                                                <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#F59E0B", border: "none" }} data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
                                             </div>
                                         </div>
-                                        <div class="name-title">
+                                        <div className="name-title">
                                             <h1>{userInfo.username}</h1>
-                                            <div class="headline">{userProfile.introContent}</div>
-                                            <div class="location-info">
-                                                <span><i class="fas fa-map-marker-alt"></i> {formData.city}, {formData.state} </span>
-                                                <span><i class="fas fa-link"></i> {formData.gymname}</span>
-                                                <span><i class="fa-solid fa-clock"></i> {formData.shifts}</span>
+                                            <div className="headline">{userProfile.introContent}</div>
+                                            <div className="location-info">
+                                                <span><i className="fas fa-map-marker-alt"></i> {formData.city}, {formData.state} </span>
+                                                <span><i className="fas fa-link"></i> {formData.gymname}</span>
+                                                <span><i className="fa-solid fa-clock"></i> {formData.shifts}</span>
                                             </div>
-                                            <div class="contact-badge">
-                                                <a href="#"><i class="fas fa-envelope"></i> {userInfo.email}</a>
+                                            <div className="contact-badge">
+                                                <a href="#"><i className="fas fa-envelope"></i> {userInfo.email}</a>
                                             </div>
                                         </div>
-                                        <div class="stats-row">
-                                            <div class="stat-item"><span class="stat-number">5,432</span> followers</div>
-                                            <div class="stat-item"><span class="stat-number">1,289</span> connections</div>
-                                            <div class="stat-item"><span class="stat-number">12</span> recommendations</div>
+                                        <div className="stats-row">
+                                            <div className="stat-item"><span className="stat-number">5,432</span> followers</div>
+                                            <div className="stat-item"><span className="stat-number">1,289</span> connections</div>
+                                            <div className="stat-item"><span className="stat-number">12</span> recommendations</div>
                                         </div>
                                     </div>
                                 </div>
@@ -203,9 +248,9 @@ function Hero() {
 
 
                 <div className='container'>
-                    <div className='row g-3' >
-                        <div className='col-lg-12 mt-5' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <div className='activitySection'>
+                    <div className='row g-3 aboutSection' >
+                        <div className='col-lg-12' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <div className=''>
                                 <h4 style={{ fontWeight: 700 }}>About</h4>
                                 <span className="aboutContent">{userProfile.aboutContent}</span>
                             </div>
@@ -219,7 +264,116 @@ function Hero() {
                             <div className='activitySection'>
                                 <h4 style={{ fontWeight: 700 }}>Activity</h4>
                                 <div className='activityContent text-muted'>
-                                    <p> The feed is currently empty. Stay tuned for future updates </p>
+                                    {
+                                        allPost.map((items) => (
+                                            <div className="container mb-4" key={items._id} >
+                                                <div className="row">
+                                                    <div className="col-lg-12 post">
+                                                        <div className="linkedin-card mt-4" style={{ width: "80%" }}>
+                                                            <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId}`}>
+                                                                <div className="post-header" onClick={() => { goToProfile() }}>
+                                                                    {items.profileId &&
+                                                                        <img src={items.profileId.profileImage} alt="User Avatar" className="avatar" />
+                                                                    }
+                                                                    {items.profileId && <div className="user-information">
+                                                                        <h3 className="user-name">{items.userId && items.userId.username}</h3>
+                                                                        <p className="user-headline">{items.profileId.introContent}</p>
+                                                                        <p className="post-time">{items.createdAt ?
+                                                                            formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
+                                                                            : "Just now"} • <i className="fas fa-globe-americas"></i></p>
+                                                                    </div>}
+                                                                    <button className="options-btn">•••</button>
+                                                                </div>
+                                                            </Link>
+
+
+                                                            <div className="post-content">
+                                                                <p>
+                                                                    {items.about}
+                                                                    <span className="hashtag"> #Fitness #CodingLife #GymMotivation</span>
+                                                                </p>
+                                                                {items.media &&
+                                                                    <div className="postMedia" style={{
+                                                                        backgroundColor: '#f3f2ef',
+                                                                        display: 'flex',
+                                                                        justifyContent: 'center',
+                                                                        alignItems: 'center',
+                                                                        width: '100%',
+                                                                        maxHeight: '560px',
+                                                                        overflow: 'hidden'
+                                                                    }}>
+                                                                        {items.media && items.media.includes('.mp4') ? (
+                                                                            <video
+                                                                                src={items.media}
+                                                                                controls
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    height: '560px',       // Fixed height to match container
+                                                                                    objectFit: 'contain',  // Shows full image with bars on sides if too skinny
+                                                                                    display: 'block',
+                                                                                    borderRadius: '8px'
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <img
+                                                                                src={items.media}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    height: '560px',       // Fixed height to match container
+                                                                                    objectFit: 'contain',  // Shows full image with bars on sides if too skinny
+                                                                                    display: 'block'
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                }
+                                                            </div>
+
+                                                            <div className="post-actions">
+                                                                <button className="action-item">
+                                                                    <span className="icon">👍</span> Like
+                                                                </button>
+
+                                                                {/* Pass the items._id to the toggle function */}
+                                                                <button className="action-item" onClick={() => toggleComments(items._id)}>
+                                                                    <span className="icon">💬</span> Comment
+                                                                </button>
+
+                                                                <button className="action-item">
+                                                                    <span className="icon">🔁</span> Repost
+                                                                </button>
+                                                                <button className="action-item">
+                                                                    <span className="icon">✈️</span> Send
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Only show comments if this post's ID matches activePostId */}
+                                                            {activePostId === items._id && (
+                                                                <div className="comment-section p-3 border-top">
+                                                                    <div className="d-flex align-items-center mb-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            className="form-control form-control-sm"
+                                                                            placeholder="Add a comment..."
+                                                                        />
+                                                                    </div>
+                                                                    <ul className="list-unstyled">
+                                                                        <li className="small mb-1"><strong>Jane Doe:</strong> Great workout! Keep it up.</li>
+                                                                    </ul>
+                                                                    <button
+                                                                        className="btn btn-link btn-sm p-0 text-decoration-none"
+                                                                        onClick={() => setActivePostId(null)}
+                                                                    >
+                                                                        Hide comments
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -231,3 +385,5 @@ function Hero() {
 }
 
 export default Hero;
+
+

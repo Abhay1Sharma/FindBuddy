@@ -14,6 +14,7 @@ import LocalStrategy from "passport-local";
 
 // Import your models and routers
 import Auth from "./routers/Auth.js";
+import { storage } from './cloudinary.js';
 import { Form } from './src/models/FormModel.js';
 import { Post } from './src/models/PostModel.js';
 import { User } from "./src/models/UserSchema.js";
@@ -106,11 +107,11 @@ io.on("connection", (socket) => {
 
 // 7. API Endpoints (Keeping your existing logic)
 // Change storage to disk
-const diskStorage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage: diskStorage });
+// const diskStorage = multer.diskStorage({
+//     destination: (req, file, cb) => cb(null, 'uploads/'),
+//     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+// });
+const upload = multer({ storage: storage });
 
 app.get("/allFormData", async (req, res) => {
     try {
@@ -172,7 +173,7 @@ app.get("/allPost", async (req, res) => {
 app.post("/user", async (req, res) => {
     try {
         const Id = req.body.id;
-        const logged = await User.findById(Id);
+        const logged = await User.findById(Id).populate('formId profileId');
         res.status(200).json(logged);
     } catch (error) {
         console.log(error);
@@ -183,7 +184,7 @@ app.post("/profile", async (req, res) => {
     const { Id } = req.body;
     try {
         const profile = await Profile.findOne(Id);
-        console.log(profile);
+        // console.log(profile);
         res.status(200).json(profile);
     } catch (err) {
         console.log(err);
@@ -192,6 +193,7 @@ app.post("/profile", async (req, res) => {
 
 app.post("/getUserForm", async (req, res) => {
     const { Id } = req.body;
+    console.log(req.body);
     const getForm = await Form.findById({ _id: Id });
     res.status(200).json({ data: getForm });
 });
@@ -210,8 +212,10 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
         if (req.file) {
             // We use a relative path or hardcoded string to be safe
             // This assumes you have app.use('/uploads', express.static('uploads'))
-            data.media = `http://localhost:3001/uploads/${req.file.filename}`;
+            data.media = req.file ? req.file.path : null;
         }
+
+        console.log(data);
 
         const savePost = await new Post(data).save();
         res.status(200).json({ message: "Post Created", savePost });
@@ -220,6 +224,17 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.post("/userPosts", async (req, res) => {
+    console.log(req.body);
+    try {
+        const userposts = await Post.find({ userId: req.body.id }).populate('profileId userId');
+        console.log(userposts);
+        res.status(200).json({ userposts });
+    } catch (error) {
+        console.log(error);
+    }
+})
 
 app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
     const {
@@ -248,37 +263,53 @@ app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
 });
 
 const uploadFields = upload.fields([
-    { name: 'profileImage' },
-    { name: 'backgroundImage' }
+    { name: 'profileImage', maxCount: 1 },
+    { name: 'backgroundImage', maxCount: 1 }
 ]);
 
-app.post("/updateIntro", uploadFields, async (req, res) => {
+// We pass Multer as a middleware function so we can catch its specific errors
+app.post("/updateIntro", function (req, res, next) {
+    uploadFields(req, res, function (err) {
+        if (err) {
+            console.error("Multer Error:", err);
+            // This guarantees your frontend gets a JSON error instead of an HTML crash page
+            return res.status(400).json({ error: err.message || "File upload error" });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         const { userId, intro, about } = req.body;
 
-        const profileFile = req.files?.['profileImage']?.[0];
-        const backgroundFile = req.files?.['backgroundImage']?.[0];
-
+        // 1. Initialize update object
         const updateData = {};
 
+        // 2. Handle Text Fields
         if (intro && intro !== 'undefined') updateData.introContent = intro;
         if (about && about !== 'undefined') updateData.aboutContent = about;
 
-        // ✅ FIX: Use the filename to create a URL, NOT .buffer
-        if (profileFile) {
-            updateData.profileImage = `${backendUrl}/uploads/${profileFile.filename}`;
-        }
-        if (backgroundFile) {
-            updateData.backgroundImage = `${backendUrl}/uploads/${backgroundFile.filename}`;
+        // 3. Handle File Uploads
+        if (req.files) {
+            if (req.files['profileImage']) {
+                updateData.profileImage = `${req.files['profileImage'][0].path}`;
+            }
+            if (req.files['backgroundImage']) {
+                updateData.backgroundImage = `${req.files['backgroundImage'][0].path}`;
+            }
         }
 
+        // 4. Database Operations
         const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const profileId = user.profileId;
 
         const updatedProfile = await Profile.findByIdAndUpdate(
-            user.profileId,
+            profileId,
             { $set: updateData },
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         res.status(200).json({

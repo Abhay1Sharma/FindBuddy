@@ -32,6 +32,11 @@ const UserSchema = mongoose.Schema(
             ref: "form"
         },
 
+        profileId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "profile"
+        }
+
     }, { timestamp: true }
 );
 

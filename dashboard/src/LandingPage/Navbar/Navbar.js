@@ -74,9 +74,8 @@ const Navbar = ({ setSearch }) => {
   };
 
   const handleSumbit = async (e) => {
-    e.preventDefault();
-
     if (!selectedFile && !postData.about) {
+      e.preventDefault();
       return toast.info("Cannot create empty Post");
     }
 
@@ -118,12 +117,17 @@ const Navbar = ({ setSearch }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
+      if (res.status !== 200) {
+        e.preventDefault();
+      }
+
       toast.success("Post Created");
+      window.location.reload;
 
       // Reset form
-      // setFile(null);
-      // setSelectedFile(null);
-      // setPostData({ ...postData, about: "" });
+      setFile(null);
+      setSelectedFile(null);
+      setPostData({ ...postData, about: "" });
 
     } catch (error) {
       console.error(error);
@@ -167,18 +171,6 @@ const Navbar = ({ setSearch }) => {
                 <Link type="button" className='nav-link active m-1.5' data-bs-toggle="modal" data-bs-target="#exampleModalCenter"> Create a Post </Link>
               </li>
 
-              {/* {userData && <div className="user-profile">
-                <div className="user-info">
-                  <span className="user-name">{userData.username}</span>
-                  <span className="user-role"></span>
-                </div>
-                <img data-bs-toggle="tooltip" data-bs-placement="bottom" title={`Hello, ${userData.username}`}
-                  className="avatar"
-                  src={`https://ui-avatars.com/api/?name=${userData.username}&background=random&color=fff&rounded=true`}
-                  alt="Avatar"
-                />
-              </div>} */}
-
               {userData && (
                 <div className="dropdown user-profile">
                   {/* The clickable area (Trigger) */}
@@ -212,31 +204,26 @@ const Navbar = ({ setSearch }) => {
                     <li><a className="dropdown-item" href={`http://localhost:3002/userProfile/${userData._id}`}>My Profile</a></li>
                     <li><a className="dropdown-item" href="/settings">Settings</a></li>
                     <li><hr className="dropdown-divider" /></li>
-                    <li>
-                      <button
-                        className="dropdown-item text-danger"
-                        onClick={() => { handlelogout }}
-                      >
-                        Sign Out
-                      </button>
-                    </li>
+                    <button
+                      className="dropdown-item text-danger"
+                      onClick={() => { handlelogout() }}
+                    >
+                      Logout
+                    </button>
                   </ul>
                 </div>
               )}
-
-
-
             </ul>
           </div>
         </div>
       </nav >
 
-      <div class="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-          <div class="modal-content">
+      <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered" role="document">
+          <div className="modal-content">
             <div className="modal-header modalHeader">
               <h5 className="modal-title" id="exampleModalLongTitle">Modal title</h5>
-              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <button type="button" className="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true" className='closeBtn'>X</span>
               </button>
             </div>
@@ -246,8 +233,8 @@ const Navbar = ({ setSearch }) => {
                 <label htmlFor="about" className="about">About Content</label>
                 <textarea name="about" id="about" className="form-control mt-2" placeholder="Write about yourself..." onChange={handleChange} />
 
-                <div class="media-uploader mt-4">
-                  <label htmlFor="media-input" class="custom-button">
+                <div className="media-uploader mt-4">
+                  <label htmlFor="media-input" className="custom-button">
                     <input type="file" id="media-input" accept="image/*,video/*" name="media" hidden onChange={handleChange} />
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"></path>
@@ -266,9 +253,9 @@ const Navbar = ({ setSearch }) => {
                   <div id="preview-container"></div>
                 </div>
 
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="sumbit" class="btn btn-primary">Save changes</button>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="sumbit" className="btn btn-primary">Save changes</button>
                 </div>
 
               </form>

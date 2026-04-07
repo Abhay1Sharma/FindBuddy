@@ -57,7 +57,7 @@ function Footer() {
                         <h4 className="footer-heading">Newsletter</h4>
                         <p>Subscribe to get updates on new classes, special offers, and fitness tips.</p>
                         <form className="newsletter-form">
-                            <input type="email" placeholder="Your email address" required/>
+                            <input className="footerInput" type="email" placeholder="Your email address" required />
                             <button type="submit"><i className="fas fa-paper-plane"></i></button>
                         </form>
                     </div>

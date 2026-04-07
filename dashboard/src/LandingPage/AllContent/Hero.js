@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Link } from "react-router-dom";
 
 function Hero() {
+    const [ready, setReady] = useState(false);
     const [allPost, setAllPost] = useState([]);
     const [postUser, setPostUser] = useState([]);
     const [activePostId, setActivePostId] = useState(null);
@@ -17,8 +18,14 @@ function Hero() {
     const fetchAllPost = async () => {
         try {
             const response = await axios.get("http://localhost:3001/allPost");
-            console.log(response.data);
-            setAllPost(response.data);
+            const sortedArray = response.data.sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt) : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt) : 0;
+                return dateB - dateA;
+            });
+            console.log(sortedArray);
+            setAllPost(sortedArray);
+            setReady(true);
         } catch (error) {
             console.error("Error fetching posts:", error);
         }
@@ -47,13 +54,23 @@ function Hero() {
         fetchAllPost();
     }, []);
 
+    if (!ready) {
+        return (
+            <div className='root' >
+                <div className="loaderContent">
+                    <div className="loader"></div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             {allPost.map((items) => (
                 <div className="container mt-4 mb-4" key={items._id} >
                     <div className="row">
                         <div className="col-lg-12 post">
-                            <div className="linkedin-card">
+                            <div className="linkedin-card mt-4">
                                 <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId._id}`}>
                                     <div className="post-header" onClick={() => { goToProfile() }}>
                                         {items.profileId &&
