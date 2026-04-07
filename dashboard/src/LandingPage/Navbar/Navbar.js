@@ -74,6 +74,7 @@ const Navbar = ({ setSearch }) => {
   };
 
   const handleSumbit = async (e) => {
+    e.preventDefault();
     if (!selectedFile && !postData.about) {
       e.preventDefault();
       return toast.info("Cannot create empty Post");
@@ -117,23 +118,20 @@ const Navbar = ({ setSearch }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (res.status !== 200) {
-        e.preventDefault();
-      }
-
-      toast.success("Post Created");
-      window.location.reload;
 
       // Reset form
       setFile(null);
       setSelectedFile(null);
       setPostData({ ...postData, about: "" });
+      window.location.reload();
+      toast.success("Post Created");
 
     } catch (error) {
       console.error(error);
       toast.error(error.response?.status === 400 ? "Empty post not allowed" : "Post Not Created");
     }
   };
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 

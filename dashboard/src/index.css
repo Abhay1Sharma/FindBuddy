@@ -577,6 +577,12 @@ i {
   justify-content: center;
 }
 
+.allCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
 .profile-container {
   margin: 0 auto;
   display: flex;

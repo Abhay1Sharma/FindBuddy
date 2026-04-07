@@ -249,7 +249,7 @@ function Hero() {
 
                 <div className='container'>
                     <div className='row g-3 aboutSection' >
-                        <div className='col-lg-12' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <div className='col-lg-12' style={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
                             <div className=''>
                                 <h4 style={{ fontWeight: 700 }}>About</h4>
                                 <span className="aboutContent">{userProfile.aboutContent}</span>
@@ -263,6 +263,7 @@ function Hero() {
                         <div className='col-lg-12 mt-5' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <div className='activitySection'>
                                 <h4 style={{ fontWeight: 700 }}>Activity</h4>
+                                <hr />
                                 <div className='activityContent text-muted'>
                                     {
                                         allPost.map((items) => (
