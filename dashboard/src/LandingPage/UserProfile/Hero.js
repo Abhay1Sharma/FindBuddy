@@ -12,13 +12,13 @@ function Hero() {
     const [formData, setFormData] = useState({});
     const [userInfo, setUserInfo] = useState({});
     const [userProfile, setUserProfile] = useState({});
+    const [activePostId, setActivePostId] = useState(null);
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [backgroundImageFile, setBackgroundImageFile] = useState(null);
     const [allPost, setAllPost] = useState(null);
     const [ready, setReady] = useState(false);
     const [showAllPost, setShowAllPost] = useState(false);
     const [singlePost, setSinglePost] = useState([]);
-    const [activePostId, setActivePostId] = useState(null);
 
     const tokenId = jwtDecode(localStorage.token).id;
     const userId = userInfo.id;
@@ -266,7 +266,7 @@ function Hero() {
                                 <hr />
                                 <div className='activityContent text-muted'>
                                     {
-                                        allPost.map((items) => (
+                                        allPost.filter((items, idx) => idx === 0 || showAllPost).map((items, idx) => (
                                             <div className="container mb-4" key={items._id} >
                                                 <div className="row">
                                                     <div className="col-lg-12 post">
@@ -375,6 +375,7 @@ function Hero() {
                                             </div>
                                         ))
                                     }
+                                    {showAllPost ? <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows Less</button> : <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows All </button> }
                                 </div>
                             </div>
                         </div>

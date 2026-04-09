@@ -37,7 +37,7 @@ const UserSchema = mongoose.Schema(
             ref: "profile"
         }
 
-    }, { timestamp: true }
+    }, { timestamps: true }
 );
 
 export { UserSchema };

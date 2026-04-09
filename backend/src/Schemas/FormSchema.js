@@ -68,7 +68,7 @@ const FormSchema = mongoose.Schema(
             require: true,
         },
 
-    }, { timestamp: true }
+    }, { timestamps: true }
 );
 
 export { FormSchema };

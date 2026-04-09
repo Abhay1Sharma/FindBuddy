@@ -261,6 +261,7 @@ i {
 .footer-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  padding: 1rem;
   gap: 40px;
   margin-bottom: 50px;
 }
@@ -802,7 +803,8 @@ i {
 }
 
 .activityContent {
-  /* display: flex; */
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   margin-top: 30px;
@@ -1008,4 +1010,97 @@ b {
 
 .user-profile .dropdown-toggle::after {
   display: none !important;
+}
+
+/* Comment Section */
+
+.comment {
+  padding: 0.5rem;
+  border-radius: 11px;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.commentBtn {
+  /* Dimensions */
+  height: 2.4rem;
+  padding: 0 1.5rem;
+  margin-left: 4px;
+
+  /* Typography */
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: capitalize;
+
+  /* Styling */
+  background: linear-gradient(135deg, #6e8efb, #a777e3);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+
+  /* Animation */
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover & Active States */
+.comment-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(110, 142, 251, 0.3);
+  filter: brightness(1.1);
+}
+
+.comment-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.showAllPostBtn {
+  width: 85%;
+  border: none;
+  height: 2.3rem;
+  margin-top: 1.5rem;
+  border-radius: 5px;
+}
+
+.commentAvatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #6366f1;
+}
+
+.commentUserInfo {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.9);
+  margin: 2px 0;
+}
+
+.commentUserName {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #333;
+  margin: 0;
+  margin-left: 10px;
+}
+
+.commentContent {
+  padding-left: 60px;
+}
+
+.commentHeader {
+  display: flex;
+  padding: 5px 16px;
+  position: relative;
+}
+
+.comment {
+  padding: 0.5rem;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
 }

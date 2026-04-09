@@ -3,6 +3,8 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import fs from 'fs';
+import path from 'path';
 import sharp from 'sharp';
 import mongoose from "mongoose";
 import passport from "passport";
@@ -19,8 +21,7 @@ import { Form } from './src/models/FormModel.js';
 import { Post } from './src/models/PostModel.js';
 import { User } from "./src/models/UserSchema.js";
 import { Profile } from './src/models/ProfileModel.js';
-import fs from 'fs';
-import path from 'path';
+import { Comment } from './src/models/CommentModel.js';
 
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -198,9 +199,46 @@ app.post("/getUserForm", async (req, res) => {
     res.status(200).json({ data: getForm });
 });
 
+app.post("/userPostComments", async (req, res) => {
+    try {
+        console.log(req.body.postId);
+        const { postId } = req.body;
+        const allComments = await Comment.find({ postId: req.body.postId }).populate("userId postId profileId");
+        res.status(200).json({ message: "All Comment Post", allComments });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error });
+    }
+})
+
+app.post("/comment", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { comment, postId, profileId, userId } = req.body;
+        console.log(comment, postId, userId);
+        const saveComment = await new Comment({ comment: comment, userId: userId, postId: postId, profileId: profileId }).save();
+        console.log(saveComment);
+        res.status(200).json({ message: "comment added", saveComment });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error })
+    }
+})
+
+app.post("/editComment", async (req, res) => {
+    console.log(req.body);
+    try {
+        const res = await Comment.findByIdAndUpdate(req.body.commentId, { comment: req.body.editComment });
+        console.log(res);
+        res.status(200).json({ message: "Comment Updated!!!", res });
+    } catch (error) {
+        res.status(200).json({ error: error });
+    }
+})
+
 app.post("/postContent", upload.single("media"), async (req, res) => {
     try {
-        console.log("File received:", req.file); // Check your terminal for this!
+        console.log("File received:", req.file);
         console.log("Body received:", req.body);
 
         const data = {
@@ -210,8 +248,6 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
         };
 
         if (req.file) {
-            // We use a relative path or hardcoded string to be safe
-            // This assumes you have app.use('/uploads', express.static('uploads'))
             data.media = req.file ? req.file.path : null;
         }
 
