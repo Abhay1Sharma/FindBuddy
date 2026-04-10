@@ -194,14 +194,14 @@ app.post("/profile", async (req, res) => {
 
 app.post("/getUserForm", async (req, res) => {
     const { Id } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     const getForm = await Form.findById({ _id: Id });
     res.status(200).json({ data: getForm });
 });
 
 app.post("/userPostComments", async (req, res) => {
     try {
-        console.log(req.body.postId);
+        // console.log(req.body.postId);
         const { postId } = req.body;
         const allComments = await Comment.find({ postId: req.body.postId }).populate("userId postId profileId");
         res.status(200).json({ message: "All Comment Post", allComments });
@@ -213,11 +213,11 @@ app.post("/userPostComments", async (req, res) => {
 
 app.post("/comment", async (req, res) => {
     try {
-        console.log(req.body);
+        // console.log(req.body);
         const { comment, postId, profileId, userId } = req.body;
         console.log(comment, postId, userId);
         const saveComment = await new Comment({ comment: comment, userId: userId, postId: postId, profileId: profileId }).save();
-        console.log(saveComment);
+        // console.log(saveComment);
         res.status(200).json({ message: "comment added", saveComment });
     } catch (error) {
         console.log(error);
@@ -226,14 +226,14 @@ app.post("/comment", async (req, res) => {
 })
 
 app.post("/editComment", async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     try {
         const data = {
             comment: req.body.editComment,
             edit: true
         }
         const res = await Comment.findByIdAndUpdate(req.body.commentId, data);
-        console.log(res);
+        // console.log(res);
         res.status(200).json({ message: "Comment Updated!!!", res });
     } catch (error) {
         res.status(200).json({ error: error });
@@ -262,8 +262,8 @@ app.post("/like", async (req, res) => {
 
 app.post("/postContent", upload.single("media"), async (req, res) => {
     try {
-        console.log("File received:", req.file);
-        console.log("Body received:", req.body);
+        // console.log("File received:", req.file);
+        // console.log("Body received:", req.body);
 
         const data = {
             userId: req.body.userId,
@@ -275,7 +275,7 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
             data.media = req.file ? req.file.path : null;
         }
 
-        console.log(data);
+        // console.log(data);
 
         const savePost = await new Post(data).save();
         res.status(200).json({ message: "Post Created", savePost });
@@ -285,11 +285,33 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
     }
 });
 
+app.post("/followers", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { profileId, userId } = req.body;
+        const profile = await Profile.findById({ _id: profileId });
+
+        if (!profile) {
+            return res.status(404).json({ message: "Profile Not Found " });
+        }
+
+        const isUserFollow = profile.followers.includes(userId);
+        const updateData = isUserFollow ? { $pull: { followers: userId } } : { $addToSet: { followers: userId } };
+
+        const data = await Profile.findByIdAndUpdate(profileId, updateData, { new: true });
+        console.log(data);
+        res.status(200).json({ message: isUserFollow ? "User Unfollow the User" : "User follow the user", data });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
 app.post("/userPosts", async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     try {
         const userposts = await Post.find({ userId: req.body.id }).populate('profileId userId');
-        console.log(userposts);
+        // console.log(userposts);
         res.status(200).json({ userposts });
     } catch (error) {
         console.log(error);

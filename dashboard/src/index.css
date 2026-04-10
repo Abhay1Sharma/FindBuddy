@@ -953,6 +953,12 @@ b {
   overflow: overlay;
 }
 
+.postHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .modalHeader {
   justify-content: space-between;
   align-items: center;
@@ -1103,4 +1109,82 @@ b {
 .comment {
   padding: 0.5rem;
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+/* Container must be relative */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Hide the actual checkbox */
+.dropdown-toggle {
+  display: none;
+}
+
+/* Styling the "•••" label to look like a button */
+.options-btn {
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px 10px;
+  border-radius: 50%;
+  display: inline-block;
+  user-select: none;
+}
+
+.options-btn:hover {
+  background-color: #f3f2ef;
+}
+
+/* Hide the list by default */
+.dropdown-menu-list {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: white;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+  z-index: 1000;
+}
+
+/* MAGIC: Show the list when the checkbox is checked */
+.dropdown-toggle:checked~.dropdown-menu-list {
+  display: block;
+}
+
+/* List Item Styling */
+.dropdown-menu-list li {
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-menu-list li:hover {
+  background-color: #f3f2ef;
+  color: #000;
+}
+
+.delete-opt {
+  color: #cc0000 !important;
+  border-top: 1px solid #eee;
+}
+
+.linkedin-card {
+  /* ... your existing code ... */
+  overflow: visible;
+  /* Ensure the dropdown can 'pop out' of the card */
+}
+
+/* Ensure the dropdown-container stays on the right side of the header */
+.post-header .dropdown-container {
+  margin-left: auto;
 }

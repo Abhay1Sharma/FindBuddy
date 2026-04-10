@@ -11,24 +11,29 @@ import { useParams } from "react-router-dom";
 
 function Hero() {
     const { id: recipientId } = useParams(); // Destructure for cleaner code
+    console.log(useParams());
     const [ready, setReady] = useState(false);
     const [userData, setUserData] = useState(null); // Initialize as null to check status
     const [activeChat, setActiveChat] = useState(null);
+    console.log(recipientId);
 
     const fetchUser = async () => {
         try {
-            const token = localStorage.token;
-            const jwtToken = jwtDecode(token);
-            const profile = await axios.post("http://localhost:3001/user", { id: jwtToken.id });
+            const profile = await axios.post("http://localhost:3001/user", { id: recipientId });
+            console.log(profile);
             setUserData(profile.data);
         } catch (err) {
             console.error("Fetch Error:", err);
         } []
     };
-    
+
     // Triggered only when userData is successfully fetched
     const handleConnect = () => {
-        const myId = userData._id;
+        const token = localStorage.token;
+        const jwtToken = jwtDecode(token);
+        const myId = jwtToken._id || jwtToken.id;
+        console.log("Client Id : ", recipientId);
+        console.log("token : ", myId);
         const roomId = [myId, recipientId].sort().join("_");
 
         socket.emit("join_private_chat", { roomId });

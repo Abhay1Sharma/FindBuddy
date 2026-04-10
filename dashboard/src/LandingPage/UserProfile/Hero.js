@@ -22,7 +22,7 @@ function Hero() {
 
     const tokenId = jwtDecode(localStorage.token).id;
     const userId = userInfo.id;
-    console.log(singlePost[0]);
+    console.log();
     console.log(showAllPost);
 
     const createTimeStamp = userProfile.createdAt;
@@ -108,11 +108,30 @@ function Hero() {
     const handleChange = (e) => {
         console.log("Handle Change occur", e);
         if (e.target.name === "profileImage") {
-            return setProfileImageFile(e.target.files[0]);
+            return setProfileImageFile(e.target.files[0]);''
         } else if (e.target.name === "backgroundImage") {
             return setBackgroundImageFile(e.target.files[0]);
         }
         return setContent({ ...content, [e.target.name]: e.target.value });
+    }
+
+    const handleFollowers = async () => {
+        try {
+            // userId: token.id is the LOGGED-IN user
+            const response = await axios.post("http://localhost:3001/followers", {
+                profileId: userProfile._id,
+                userId: userInfo._id
+            });
+
+            console.log(response);
+
+            // UPDATE LOCAL STATE IMMEDIATELY
+            if (response.status === 200) {
+                setUserProfile(response.data.data)
+            }
+        } catch (error) {
+            console.log("Like error:", error);
+        }
     }
 
     // if(!showallPost){
@@ -172,14 +191,14 @@ function Hero() {
                                                                     <textarea name="introContent"
                                                                         id="headline"
                                                                         className="form-control"
-                                                                        value={content.introContent} // Changed from userProfile to content
+                                                                        value={content.introContent}
                                                                         onChange={handleChange} />
 
                                                                     <label htmlFor="about" className="about">About Content</label>
-                                                                    <textarea name="aboutContent" // Ensure name matches state key 'aboutContent'
+                                                                    <textarea name="aboutContent"
                                                                         id="about"
                                                                         className="form-control"
-                                                                        value={content.aboutContent} // Changed from userProfile to content
+                                                                        value={content.aboutContent}
                                                                         onChange={handleChange} />
 
                                                                     <div className="modal-footer">
@@ -189,12 +208,12 @@ function Hero() {
                                                                 </form>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div>/
                                                 </div>
                                             </div>
                                             <div className="profile-actions">
-                                                <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#F43F5E", border: "none" }} aria-label="Open to Gym"> <i className="fas fa-dumbbell"></i> Open to Gym </button>
-                                                <Link to={`/userChats/${userId}`}> <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link>
+                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(Id.id) ? "Unfollow" : "Wants to Follow" } </button> }
+                                                {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link> }
                                                 <div className="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
                                                     <div className="modal-dialog modal-dialog-centered">
                                                         <div className="modal-content">
@@ -235,7 +254,7 @@ function Hero() {
                                             </div>
                                         </div>
                                         <div className="stats-row">
-                                            <div className="stat-item"><span className="stat-number">5,432</span> followers</div>
+                                            <div className="stat-item"><span className="stat-number">{userProfile.followers.length}</span> followers</div>
                                             <div className="stat-item"><span className="stat-number">1,289</span> connections</div>
                                             <div className="stat-item"><span className="stat-number">12</span> recommendations</div>
                                         </div>
@@ -375,7 +394,7 @@ function Hero() {
                                             </div>
                                         ))
                                     }
-                                    {showAllPost ? <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows Less</button> : <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows All </button> }
+                                    {showAllPost ? <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows Less</button> : <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows All </button>}
                                 </div>
                             </div>
                         </div>

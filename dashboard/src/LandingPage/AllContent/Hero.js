@@ -48,15 +48,17 @@ function Hero() {
         }
     };
 
-    // const fetchUser = async () => {
-    //     try {
-    //         const response = await axios.post("http://localhost:3001/user", { id: token.id });
-    //         console.log(response);
-    //         // setPostUser(response.data);
-    //     } catch (error) {
-    //         console.error("Error fetching posts:", error);
-    //     }
-    // };
+    const handleEdit = async (items) => {
+        try {
+            const data = {
+                "postId": 
+            }
+            const response = await axios.post("http://localhost:3001/editPost", { id: token.id });
+            console.log(response);
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+        }
+    };
 
     // useEffect(() => { fetchUser() }, []);
 
@@ -151,8 +153,8 @@ function Hero() {
                     <div className="row">
                         <div className="col-lg-12 post">
                             <div className="linkedin-card mt-4">
-                                <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId._id}`}>
-                                    <div className="post-header">
+                                <div className="post-header">
+                                    <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId._id}`}>
                                         {items.profileId &&
                                             <img src={items.profileId.profileImage} alt="User Avatar" className="avatar" />
                                         }
@@ -163,9 +165,38 @@ function Hero() {
                                                 formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
                                                 : "Just now"} • <i className="fas fa-globe-americas"></i></p>
                                         </div>}
-                                        <button className="options-btn">•••</button>
+                                    </Link>
+                                    <div className="dropdown-container">
+                                        {/* Unique checkbox for each post */}
+                                        <input
+                                            type="checkbox"
+                                            id={`dropdown-${items._id}`}
+                                            className="dropdown-toggle"
+                                        />
+
+                                        {/* Label acts as the clickable button */}
+                                        <label htmlFor={`dropdown-${items._id}`} className="options-btn">
+                                            •••
+                                        </label>
+
+                                        {/* The menu list defined in your CSS */}
+                                        <ul className="dropdown-menu-list">
+                                            <li>
+                                                <i className="fas fa-bookmark"></i> Save Post
+                                            </li>
+                                            <li>
+                                                <i className="fas fa-link"></i> Copy link
+                                            </li>
+                                            {/* Check if the logged-in user owns the post to show Edit/Delete */}
+                                            {items.userId._id === token.id && (
+                                                <>
+                                                    <li onClick={}><i className="fas fa-edit"></i> Edit Post</li>
+                                                    <li className="delete-opt"><i className="fas fa-trash"></i> Delete Post</li>
+                                                </>
+                                            )}
+                                        </ul>
                                     </div>
-                                </Link>
+                                </div>
 
 
                                 <div className="post-content">
