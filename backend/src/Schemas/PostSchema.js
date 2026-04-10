@@ -10,10 +10,10 @@ const PostSchema = mongoose.Schema(
         media: {
             type: String,
         },
-        
+
         userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref:"user",
+            ref: "user",
             required: true
         },
 
@@ -21,7 +21,12 @@ const PostSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "profile",
             required: true
-        }
+        },
+
+        likes: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user"
+        }]
 
     }, { timestamps: true }
 );

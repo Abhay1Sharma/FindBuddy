@@ -60,11 +60,24 @@ function Hero() {
 
     // useEffect(() => { fetchUser() }, []);
 
-    const goToProfile = () => {
+    const handleLike = async (items) => {
         try {
-            window.location.redirect = "http://localhost:3002/userProfile"
+            // userId: token.id is the LOGGED-IN user
+            const response = await axios.post("http://localhost:3001/like", {
+                postId: items._id,
+                userId: token.id
+            });
+
+            // UPDATE LOCAL STATE IMMEDIATELY
+            if (response.status === 200) {
+                setAllPost(prevPosts =>
+                    prevPosts.map(post =>
+                        post._id === items._id ? response.data.updatedPost : post
+                    )
+                );
+            }
         } catch (error) {
-            console.log(error);
+            console.log("Like error:", error);
         }
     }
 
@@ -198,8 +211,11 @@ function Hero() {
                                 </div>
 
                                 <div className="post-actions">
-                                    <button className="action-item">
-                                        <span className="icon">👍</span> Like
+                                    <button className="action-item" onClick={() => handleLike(items)}>
+                                        {items.likes.includes(token.id) ?
+                                            <span className="icon"> <span style={{ color: "red" }}>❤️</span> {items.likes.length} likes</span> :
+                                            <span className="icon"><span style={{ color: "white" }}>🤍</span> {items.likes.length} likes</span>
+                                        }
                                     </button>
 
                                     {/* Pass the items._id to the toggle function */}
@@ -243,7 +259,7 @@ function Hero() {
                                                                     <h6 className="text-muted" style={{ fontSize: '11px', marginLeft: "10px", marginBottom: "0px" }}>{items.profileId.introContent}</h6>
                                                                     <span className="text-muted" style={{ marginLeft: "11px", fontSize: '11px' }}>{items.createdAt ?
                                                                         formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
-                                                                        : "Just now"} • <i className="fas fa-globe-americas"></i></span>
+                                                                        : "Just now"}  {items.edit && "• Edited"}</span>
                                                                 </div>}
                                                             </Link>
                                                             <button type="button" class="options-btn" data-bs-toggle="modal" data-bs-target="#staticBackdrop" style={{ fontSize: "14px" }} onClick={() => { setComment(items.comment) }} >

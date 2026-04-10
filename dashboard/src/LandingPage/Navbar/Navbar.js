@@ -200,7 +200,7 @@ const Navbar = ({ setSearch }) => {
                       <h6 className="dropdown-header">Signed in as {userData.email}</h6>
                     </li>
                     <li><a className="dropdown-item" href={`http://localhost:3002/userProfile/${userData._id}`}>My Profile</a></li>
-                    <li><a className="dropdown-item" href="/settings">Settings</a></li>
+                    <li><a className="dropdown-item" href="/settings">Any Notification</a></li>
                     <li><hr className="dropdown-divider" /></li>
                     <button
                       className="dropdown-item text-danger"

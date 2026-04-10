@@ -25,6 +25,12 @@ const CommentSchema = new Schema (
             require: true,
         },
 
+        edit: {
+            type: Boolean,
+            defalut: false,
+            require: true,
+        }
+
     }, { timestamps: true }
 );
 

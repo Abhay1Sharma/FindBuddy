@@ -228,13 +228,37 @@ app.post("/comment", async (req, res) => {
 app.post("/editComment", async (req, res) => {
     console.log(req.body);
     try {
-        const res = await Comment.findByIdAndUpdate(req.body.commentId, { comment: req.body.editComment });
+        const data = {
+            comment: req.body.editComment,
+            edit: true
+        }
+        const res = await Comment.findByIdAndUpdate(req.body.commentId, data);
         console.log(res);
         res.status(200).json({ message: "Comment Updated!!!", res });
     } catch (error) {
         res.status(200).json({ error: error });
     }
-})
+});
+
+// backend/routes/post.js (or wherever your /like route is)
+app.post("/like", async (req, res) => {
+    try {
+        const { postId, userId } = req.body;
+        const post = await Post.findById(postId);
+
+        const isLike = post.likes.includes(userId);
+        const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
+
+        // CRITICAL FIX: Add .populate() here before sending back to frontend
+        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true })
+            .populate('userId')
+            .populate('profileId');
+
+        return res.status(200).json({ updatedPost });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 
 app.post("/postContent", upload.single("media"), async (req, res) => {
     try {
@@ -256,7 +280,7 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
         const savePost = await new Post(data).save();
         res.status(200).json({ message: "Post Created", savePost });
     } catch (error) {
-        console.error("DETAILED BACKEND ERROR:", error); // Look at your NODE terminal
+        console.error("Error:", error);
         res.status(500).json({ error: error.message });
     }
 });
