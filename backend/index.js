@@ -171,6 +171,24 @@ app.get("/allPost", async (req, res) => {
     }
 });
 
+app.post("/editPost", upload.single("editMedia"), async (req, res) => {
+    try {
+        const { postId, postAbout } = req.body;
+        const post = await Post.findById({ _id: postId });
+        if (!post) return res.status(400).json({ message: "Post not exist!!! " });
+        const data = { about: postAbout };
+        if (req.file) {
+            data.media = req.file.path;
+        }
+        const updatedData = await Post.findByIdAndUpdate(postId, data);
+        console.log(updatedData);
+        res.status(200).json({ message: "Post Updated Successfully " });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message });
+    }
+})
+
 app.post("/user", async (req, res) => {
     try {
         const Id = req.body.id;
@@ -343,6 +361,16 @@ app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
         profilePicture: photoBase64, // Use the Base64 string here!
     }).save();
 });
+
+app.delete("/deletePost", async (req, res) => {
+    try {
+        console.log(req.params);
+        const deletedPost = await Post.FindByIdAndDelete(req.params.postId);
+        res.status(200).json({ message: "Post Deleted " }, deletedPost);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+})
 
 const uploadFields = upload.fields([
     { name: 'profileImage', maxCount: 1 },

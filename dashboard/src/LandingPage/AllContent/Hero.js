@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from 'date-fns';
 import React, { useState, useEffect } from "react";
+import imageCompression from "browser-image-compression";
 
 function Hero() {
     const [postId, setPostId] = useState();
@@ -16,19 +17,17 @@ function Hero() {
     const [commentUser, setCommentUser] = useState();
     const [activePostId, setActivePostId] = useState(null);
     const [commentId, setCommentId] = useState();
-
-    console.log(allPost);
-    console.log(allComment);
-    console.log(comment, postId);
+    const [postAbout, setPostAbout] = useState(null);
+    const [file, setFile] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [editingPost, setEditingPost] = useState(null);
 
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
         const postComments = await axios.post("http://localhost:3001/userPostComments", { postId: postId });
         const response = await axios.post("http://localhost:3001/user", { id: token.id });
-        console.log(response);
         setCommentUser(response.data)
         setAllComment(postComments.data.allComments);
-        console.log(postComments);
     };
 
     const fetchAllPost = async () => {
@@ -40,7 +39,6 @@ function Hero() {
                 return dateB - dateA;
             });
 
-            console.log(sortedArray);
             setAllPost(sortedArray);
             setReady(true);
         } catch (error) {
@@ -48,29 +46,13 @@ function Hero() {
         }
     };
 
-    const handleEdit = async (items) => {
-        try {
-            const data = {
-                "postId": 
-            }
-            const response = await axios.post("http://localhost:3001/editPost", { id: token.id });
-            console.log(response);
-        } catch (error) {
-            console.error("Error fetching posts:", error);
-        }
-    };
-
-    // useEffect(() => { fetchUser() }, []);
-
     const handleLike = async (items) => {
         try {
-            // userId: token.id is the LOGGED-IN user
             const response = await axios.post("http://localhost:3001/like", {
                 postId: items._id,
                 userId: token.id
             });
 
-            // UPDATE LOCAL STATE IMMEDIATELY
             if (response.status === 200) {
                 setAllPost(prevPosts =>
                     prevPosts.map(post =>
@@ -96,9 +78,7 @@ function Hero() {
                 "userId": commentUser._id,
                 "profileId": commentUser.profileId._id
             };
-            console.log(data);
             const res = await axios.post("http://localhost:3001/comment", data);
-            console.log(res);
             window.location.reload();
             setComment(null);
         } catch (error) {
@@ -110,24 +90,111 @@ function Hero() {
         return setPostId(items);
     }
 
-    const handleChange = async (e) => {
-        e.preventDefault();
-        return setComment(e.target.value);
+    const handleSumbit = async () => {
+        try {
+            console.log(items);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     const editComments = async (items) => {
         try {
-            console.log("EditComment ", comment);
             const id = items._id;
             const data = {
                 "editComment": comment,
                 "commentId": id,
             };
-            console.log(data);
             const res = await axios.post("http://localhost:3001/editComment", data);
-            console.log(res);
         } catch (error) {
             e.preventDefault();
+            console.log(error);
+        }
+    }
+
+    const handleChange = (e) => {
+        const { name, value, files } = e.target;
+
+        console.log(files);
+        if (name === "postAbout") {
+            setPostAbout(value);
+        } else if (name === "editMedia" && files[0]) {
+            console.log(files);
+            const selected = files[0];
+            setFile(URL.createObjectURL(selected));
+            setSelectedFile(selected);
+        } else if (name === "comment") {
+            setComment(value);
+        }
+    };
+
+
+    const editPost = (items) => {
+        setEditingPost(items);
+        setPostAbout(items.about);
+    };
+
+    const handleUpdatePost = async (e) => {
+        e.preventDefault();
+
+        if (!selectedFile && !postAbout) {
+            return toast.info("Cannot update to an empty post");
+        }
+
+        try {
+            // Use FormData for file uploads
+            let formData = {
+                postId: editingPost._id,
+                postAbout: postAbout
+            }
+
+            if (selectedFile) {
+                let fileToUpload = selectedFile;
+
+                if (selectedFile.type.startsWith('image/')) {
+                    const options = {
+                        maxSizeMB: 1,
+                        maxWidthOrHeight: 1024,
+                        useWebWorker: true
+                    };
+                    toast.info("Compressing Image...");
+                    fileToUpload = await imageCompression(selectedFile, options);
+                }
+                // Video size check
+                else if (selectedFile.type.startsWith('video/')) {
+                    if (selectedFile.size > 50 * 1024 * 1024) {
+                        return toast.error("Video too large! Max 50MB.");
+                    }
+                }
+                formData = {
+                    postId: editingPost._id,
+                    postAbout: postAbout,
+                    editMedia: fileToUpload,
+                }
+            }
+
+            const res = await axios.post("http://localhost:3001/editPost", formData, {
+                timeout: 60000,
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            toast.success("Post updated!");
+            setFile(null);
+            setSelectedFile(null);
+            setEditingPost(null);
+            fetchAllPost();
+        } catch (error) {
+            console.error("Update error:", error);
+            toast.error("Failed to update post");
+        }
+    };
+
+    const deletePost = async (items) => {
+        try {
+            console.log(items);
+            const res = await axios.delete("http://localhost:3001/deletePost", { postId: items._id });
+            console.log(res);
+        } catch (error) {
             console.log(error);
         }
     }
@@ -187,14 +254,64 @@ function Hero() {
                                             <li>
                                                 <i className="fas fa-link"></i> Copy link
                                             </li>
-                                            {/* Check if the logged-in user owns the post to show Edit/Delete */}
+                                            {/* Check if the logged-in user owns the post to show Edit/Delete  */}
+                                            {/* Inside the dropdown-menu-list */}
                                             {items.userId._id === token.id && (
                                                 <>
-                                                    <li onClick={}><i className="fas fa-edit"></i> Edit Post</li>
-                                                    <li className="delete-opt"><i className="fas fa-trash"></i> Delete Post</li>
+                                                    <li onClick={() => editPost(items)} data-bs-toggle="modal" data-bs-target="#modalEditPost">
+                                                        <i className="fas fa-edit"></i> Edit Post
+                                                    </li>
+                                                    <li className="delete-opt" onClick={() => { deletePost(items) }} ><i className="fas fa-trash"></i> Delete Post</li>
                                                 </>
                                             )}
                                         </ul>
+                                    </div>
+                                </div>
+
+                                <div className="modal fade" id="exampleModalCenter" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                                    <div className="modal-dialog modal-dialog-centered" role="document">
+                                        <div className="modal-content">
+                                            <div className="modal-header modalHeader">
+                                                <h5 className="modal-title" id="exampleModalLongTitle">Make a Post </h5>
+                                                <button type="button" className="close" data-bs-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true" className='closeBtn'>X</span>
+                                                </button>
+                                            </div>
+                                            <div className="modal-body">
+                                                {postAbout}
+                                                <form onSubmit={handleSumbit}>
+
+                                                    <label htmlFor="about" className="about">About Content</label>
+                                                    <textarea name="postAbout" id="about" className="form-control mt-2" placeholder="Write about yourself..." onChange={handleChange} value={items.about} />
+
+                                                    <div className="media-uploader mt-4">
+                                                        <label htmlFor="media-input" className="custom-button">
+                                                            <input type="file" id="media-input" accept="image/*,video/*" name="media" hidden onChange={handleChange} />
+                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                                                <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"></path>
+                                                            </svg>
+
+                                                            {file && (
+                                                                selectedFile?.type.startsWith('video/') ? (
+                                                                    <video src={file} controls style={{ width: '100%', borderRadius: '8px' }} />
+                                                                ) : (
+                                                                    <img src={file} alt="Selected content" style={{ width: '100%', borderRadius: '8px' }} />
+                                                                )
+                                                            )}
+
+                                                        </label>
+
+                                                        <div id="preview-container"></div>
+                                                    </div>
+
+                                                    <div className="modal-footer">
+                                                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="sumbit" className="btn btn-primary">Save changes</button>
+                                                    </div>
+
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -293,7 +410,7 @@ function Hero() {
                                                                         : "Just now"}  {items.edit && "• Edited"}</span>
                                                                 </div>}
                                                             </Link>
-                                                            <button type="button" class="options-btn" data-bs-toggle="modal" data-bs-target="#staticBackdrop" style={{ fontSize: "14px" }} onClick={() => { setComment(items.comment) }} >
+                                                            <button type="button" className="options-btn" data-bs-toggle="modal" data-bs-target="#staticBackdrop" style={{ fontSize: "14px" }} onClick={() => { setComment(items.comment) }} >
                                                                 Edit
                                                             </button>
                                                         </div>
@@ -301,25 +418,6 @@ function Hero() {
                                                         <div className="commentContent">
                                                             {items.profileId && items.profileId.username}
                                                             {items.comment}
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                                                        <div class="modal-dialog modal-dialog modal-dialog-centered">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Modal title</h1>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <form onSubmit={() => { editComments(items) }}>
-                                                                    <div class="modal-body ">
-                                                                        <input type="text" className="form-control form-control-sm comment" name="comment" onChange={handleChange} value={`${comment}`} />
-                                                                    </div>
-                                                                    <div class="modal-footer">
-                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                                                                        <button type="sumbit" class="btn btn-primary"> Edit </button>
-                                                                    </div>
-                                                                </form>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -338,6 +436,54 @@ function Hero() {
                     </div>
                 </div >
             ))}
+            {/* EDIT POST MODAL - OUTSIDE THE MAP */}
+            <div className="modal fade" id="modalEditPost" tabIndex="-1" aria-hidden="true">
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Edit your Post</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form onSubmit={handleUpdatePost}>
+                            <div className="modal-body">
+                                <label htmlFor="editAbout" className="form-label">About Content</label>
+                                <textarea
+                                    id="editAbout"
+                                    name="postAbout"
+                                    className="form-control"
+                                    rows="4"
+                                    onChange={handleChange}
+                                    value={postAbout || ""}
+                                />
+
+                                <div className="media-uploader mt-4">
+                                    <label htmlFor="editMedia" className="custom-button">
+                                        <input type="file" id="editMedia" accept="image/*,video/*" name="editMedia" hidden onChange={handleChange} />
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"></path>
+                                        </svg>
+
+                                        {file && (
+                                            selectedFile?.type.startsWith('video/') ? (
+                                                <video src={file} controls style={{ width: '100%', borderRadius: '8px' }} />
+                                            ) : (
+                                                <img src={file} alt="Selected content" style={{ width: '100%', borderRadius: '8px' }} />
+                                            )
+                                        )}
+
+                                    </label>
+
+                                    <div id="preview-container"></div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" className="btn btn-primary" data-bs-dismiss="modal">Save changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </>
     );
 }

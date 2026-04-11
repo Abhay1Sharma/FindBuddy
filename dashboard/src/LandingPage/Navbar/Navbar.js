@@ -64,8 +64,6 @@ const Navbar = ({ setSearch }) => {
     }
   };
 
-  console.log(userData);
-
   const handlelogout = () => {
     localStorage.clear();
     setUserData(null); // Clear state
@@ -220,7 +218,7 @@ const Navbar = ({ setSearch }) => {
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content">
             <div className="modal-header modalHeader">
-              <h5 className="modal-title" id="exampleModalLongTitle">Modal title</h5>
+              <h5 className="modal-title" id="exampleModalLongTitle">Make a Post</h5>
               <button type="button" className="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true" className='closeBtn'>X</span>
               </button>
