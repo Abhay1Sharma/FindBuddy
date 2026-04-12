@@ -839,6 +839,13 @@ i {
   border-radius: 18px;
 }
 
+.shareBtn {
+  border: none;
+  font-weight: bolder;
+  color: #FF3D00;
+  background-color: #0000;
+}
+
 b {
   font-size: 1.1rem;
 }

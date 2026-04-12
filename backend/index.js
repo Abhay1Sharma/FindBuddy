@@ -22,6 +22,7 @@ import { Post } from './src/models/PostModel.js';
 import { User } from "./src/models/UserSchema.js";
 import { Profile } from './src/models/ProfileModel.js';
 import { Comment } from './src/models/CommentModel.js';
+import { SavePost } from "./src/models/SavaPostModel.js";
 
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -125,10 +126,7 @@ app.get("/allFormData", async (req, res) => {
 
 app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
     try {
-        // Use the file URL if it exists, otherwise use the default avatar string
-        const profilePath = req.file
-            ? `${backendUrl}/uploads/${req.file.filename}`
-            : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+        const profilePath = req.file ? req.files?.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
 
         const {
             name, gender, age, fitnessLevel, goal, gymname,
@@ -141,6 +139,7 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
             userId, gymname,
             profilePicture: profilePath,
         }).save();
+        console.log(newForm);
 
         await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id });
         res.status(200).json({ message: "Data received successfully!" });
@@ -244,17 +243,17 @@ app.post("/comment", async (req, res) => {
 })
 
 app.post("/editComment", async (req, res) => {
-    // console.log(req.body);
+    console.log(req.body);
     try {
         const data = {
             comment: req.body.editComment,
             edit: true
         }
-        const res = await Comment.findByIdAndUpdate(req.body.commentId, data);
-        // console.log(res);
-        res.status(200).json({ message: "Comment Updated!!!", res });
+        const updatedComment = await Comment.findByIdAndUpdate(req.body.commentId, data);
+        console.log(updatedComment);
+        res.status(200).json({ message: "Comment Updated!!!", updatedComment });
     } catch (error) {
-        res.status(200).json({ error: error });
+        res.status(400).json({ error: error });
     }
 });
 
@@ -268,9 +267,8 @@ app.post("/like", async (req, res) => {
         const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
 
         // CRITICAL FIX: Add .populate() here before sending back to frontend
-        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true })
-            .populate('userId')
-            .populate('profileId');
+        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId').populate('profileId');
+        console.log(updatedPost);
 
         return res.status(200).json({ updatedPost });
     } catch (error) {
@@ -305,7 +303,7 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
 
 app.post("/followers", async (req, res) => {
     try {
-        console.log(req.body);
+        // console.log(req.body);
         const { profileId, userId } = req.body;
         const profile = await Profile.findById({ _id: profileId });
 
@@ -317,10 +315,10 @@ app.post("/followers", async (req, res) => {
         const updateData = isUserFollow ? { $pull: { followers: userId } } : { $addToSet: { followers: userId } };
 
         const data = await Profile.findByIdAndUpdate(profileId, updateData, { new: true });
-        console.log(data);
+        // console.log(data);
         res.status(200).json({ message: isUserFollow ? "User Unfollow the User" : "User follow the user", data });
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         res.status(400).json({ error: error.message });
     }
 });
@@ -333,6 +331,52 @@ app.post("/userPosts", async (req, res) => {
         res.status(200).json({ userposts });
     } catch (error) {
         console.log(error);
+        res.status(404).json({ error: error.message });
+    }
+})
+
+app.post("/savePost", async (req, res) => {
+    try {
+        const { UserId, PostId, PostUserId, ProfileId } = req.body;
+        const user = await User.findById({ _id: PostUserId });
+        if (!user) return res.status(404).json({ message: "This Post User not Exists" });
+        const post = await Post.findById({ _id: PostId });
+        if (!post) return res.status(404).json({ message: "This Post not Exists" });
+        const data = {
+            userId: UserId,
+            postId: PostId,
+            postUserId: PostUserId,
+            profileId: ProfileId,
+        }
+        const savePost = await new SavePost(data).save();
+        console.log(savePost);
+        res.status(200).json({ message: "Post Saved", savePost });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ error: error.message });
+    }
+})
+
+app.post("/allSavedPosts", async (req, res) => {
+    try {
+        const { user } = req.body;
+        const allUserSavedPosts = await SavePost.find({ userId: user }).populate("userId profileId postId");
+        console.log(allUserSavedPosts);
+        res.status(200).json({ message: "All User Save Posts ", allUserSavedPosts });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ error: error });
+    }
+});
+
+app.post("/UnSavePost", async (req, res) => {
+    try {
+        const { UserId, SavePostId } = req.body;
+        const UnSavePost = await SavePost.findByIdAndDelete(SavePostId);
+        console.log(UnSavePost);
+        res.status(200).json({ message: "Post Removed!!", UnSavePost });
+    } catch (error) {
+        res.status(404).json({ error: error.message });
     }
 })
 
@@ -358,31 +402,29 @@ app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
         name, gender, age, fitnessLevel, goal,
         typeOfBuddy, city, state, country, shifts,
         userId,
-        profilePicture: photoBase64, // Use the Base64 string here!
+        profilePicture: photoBase64,
     }).save();
 });
 
-app.delete("/deletePost", async (req, res) => {
+app.delete("/deletePost/:id", async (req, res) => {
     try {
-        console.log(req.params);
-        const deletedPost = await Post.FindByIdAndDelete(req.params.postId);
-        res.status(200).json({ message: "Post Deleted " }, deletedPost);
+        const deletedPost = await Post.findByIdAndDelete(req.params.id);
+        console.log(deletedPost);
+        res.status(200).json({ message: "Post Deleted ", deletedPost });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-})
+});
 
 const uploadFields = upload.fields([
     { name: 'profileImage', maxCount: 1 },
     { name: 'backgroundImage', maxCount: 1 }
 ]);
 
-// We pass Multer as a middleware function so we can catch its specific errors
 app.post("/updateIntro", function (req, res, next) {
     uploadFields(req, res, function (err) {
         if (err) {
             console.error("Multer Error:", err);
-            // This guarantees your frontend gets a JSON error instead of an HTML crash page
             return res.status(400).json({ error: err.message || "File upload error" });
         }
         next();
@@ -390,6 +432,7 @@ app.post("/updateIntro", function (req, res, next) {
 }, async (req, res) => {
     try {
         const { userId, intro, about } = req.body;
+        console.log(req.body);
 
         // 1. Initialize update object
         const updateData = {};
@@ -415,12 +458,15 @@ app.post("/updateIntro", function (req, res, next) {
         }
 
         const profileId = user.profileId;
+        console.log(updateData);
 
         const updatedProfile = await Profile.findByIdAndUpdate(
             profileId,
             { $set: updateData },
             { new: true, runValidators: true }
         );
+
+        console.log(updatedProfile);
 
         res.status(200).json({
             message: "Profile updated successfully",

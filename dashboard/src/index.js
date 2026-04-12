@@ -14,7 +14,7 @@ import UserProfile from './LandingPage/UserProfile/UserProfile';
 import Chats from './LandingPage/Chats/Chats';
 import CreatePost from './LandingPage/CreatePost/CreatePost';
 import AllContent from './LandingPage/AllContent/AllContent';
-
+import SavedPosts from "./LandingPage/SavedPosts/SavedPosts"
 
 const frontendUrl = "http://localhost:3000";
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -60,13 +60,14 @@ function App() {
         <div className="content">
           <Routes>
             <Route path="/" element={<Home search={search} />} />
-            <Route path="/allContent" element={ <AllContent />} />
+            <Route path="/userChats/:id" element={<Chats />} />
+            <Route path="/createPost" element={<CreatePost />} />
+            <Route path="/savedPosts" element={<SavedPosts />} />
+            <Route path="/allContent" element={<AllContent />} />
+            <Route path="/logout-sync" element={<LogoutSync />} />
             <Route path="/complete-profile" element={<FormData />} />
             <Route path="/update-profile" element={<UpdateForm />} />
-            <Route path="/logout-sync" element={<LogoutSync />} />
-            <Route path="/userChats/:id" element={<Chats />} />
-            <Route path="/userProfile/:id" element={ <UserProfile /> } />
-            <Route path="/createPost" element={ <CreatePost /> } />
+            <Route path="/userProfile/:id" element={<UserProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

@@ -13,7 +13,7 @@ const storage = new CloudinaryStorage({
     return {
       folder: 'gym_buddy_app/user_content', // Your App Folder
       resource_type: 'auto',                // This handles VIDEO + IMAGE
-      allowed_formats: ['jpg', 'png', 'mp4', 'mov', 'webp', 'avif'],
+      allowed_formats: ['jpg', 'png', 'mp4', 'mov', 'webp', 'avif', 'jpeg'],
       public_id: `file_${Date.now()}`,      // Unique name
     };
   },

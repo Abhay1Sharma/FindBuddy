@@ -20,28 +20,6 @@ function Hero() {
     const [showAllPost, setShowAllPost] = useState(false);
     const [singlePost, setSinglePost] = useState([]);
 
-    const tokenId = jwtDecode(localStorage.token).id;
-    const userId = userInfo.id;
-    console.log();
-    console.log(showAllPost);
-
-    const createTimeStamp = userProfile.createdAt;
-    const createDate = new Date(createTimeStamp);
-    const updateTimeStamp = userProfile.updatedAt;
-    const updateDate = new Date(updateTimeStamp);
-    const navigate = useNavigate();
-
-    // Get a human-readable Date
-    const createAtDate = createDate.toLocaleDateString();
-    const updateAtDate = updateDate.toLocaleDateString();
-    const [content, setContent] = useState({
-        introContent: '',
-        aboutContent: '',
-        userId: userId,
-        profileImage: null,
-        backgroundImage: null,
-    });
-
     useEffect(() => {
         const userData = async () => {
             try {
@@ -71,26 +49,61 @@ function Hero() {
         userData();
     }, []);
 
+    const tokenId = jwtDecode(localStorage.token).id;
+    const userId = userInfo.id;
+    console.log();
+    console.log(showAllPost);
+
+    const createTimeStamp = userProfile?.createdAt;
+    const createDate = new Date(createTimeStamp);
+    const updateTimeStamp = userProfile?.updatedAt;
+    const updateDate = new Date(updateTimeStamp);
+    const navigate = useNavigate();
+
+    // Get a human-readable Date
+    const createAtDate = createDate.toLocaleDateString();
+    const updateAtDate = updateDate.toLocaleDateString();
+    const [content, setContent] = useState({
+        introContent: '',
+        aboutContent: '',
+        userId: userId,
+        profileImage: null,
+        backgroundImage: null,
+    });
+
     // ... in your return statement, change the textarea values to use 'content'
     // so that you can actually type in them:
 
     const handleSumbit = async (e) => {
-        e.preventDefault();
         try {
-            const data = new FormData();
+            e.preventDefault();
 
-            data.append("userId", Id.id);
-            data.append("about", content.aboutContent);
-            data.append("intro", content.introContent);
+            const data = {
+                userId: Id.id,
+                about: content.aboutContent,
+                intro: content.introContent,
+            }
+            console.log(data);
 
-            // FIX: Only append if the user actually uploaded a new File.
-            // This prevents sending DB URL strings to Multer.
             if (profileImageFile) {
-                data.append("profileImage", profileImageFile);
+                const data = {
+                    userId: Id.id,
+                    about: content.aboutContent,
+                    intro: content.introContent,
+                    profileImage: profileImageFile
+                }
             }
             if (backgroundImageFile) {
-                data.append("backgroundImage", backgroundImageFile);
+                const data = {
+                    userId: Id.id,
+                    about: content.aboutContent,
+                    intro: content.introContent,
+                    profileImage: profileImageFile,
+                    backgroundImage: backgroundImageFile
+                }
             }
+
+            console.log(data);
 
             const res = await axios.post("http://localhost:3001/updateIntro", data, {
                 headers: { "Content-Type": "multipart/form-data" }
@@ -100,19 +113,32 @@ function Hero() {
                 window.location.reload();
             }
         } catch (error) {
-            console.log("Error detail:", error.response?.data);
-            toast.error("Image not valid");
+            console.log("Error detail:", error);
+            // toast.error("Image not valid");
         }
     }
 
     const handleChange = (e) => {
         console.log("Handle Change occur", e);
         if (e.target.name === "profileImage") {
-            return setProfileImageFile(e.target.files[0]);''
+            return setProfileImageFile(e.target.files[0]); ''
         } else if (e.target.name === "backgroundImage") {
             return setBackgroundImageFile(e.target.files[0]);
         }
         return setContent({ ...content, [e.target.name]: e.target.value });
+    }
+
+    const clickProfileLink = async () => {
+        console.log();
+        const profileLink = `${window.location.origin}/userProfile/${userInfo._id}`;
+        navigator.clipboard.writeText(profileLink)
+            .then(() => {
+                toast.success("Link copied!");
+            })
+            .catch((err) => {
+                console.error("Failed to copy!", err);
+                toast.error("Failed to copy link");
+            });
     }
 
     const handleFollowers = async () => {
@@ -157,11 +183,11 @@ function Hero() {
                             <div className="profile-container">
                                 <div className="profileCard">
                                     <div className='backgroundImage'>
-                                        <img className='cover-image' aria-label="Profile cover image" src={userProfile.backgroundImage} />
+                                        <img className='cover-image' aria-label="Profile cover image" src={userProfile?.backgroundImage} />
                                     </div>
                                     <div className="profile-info-wrapper">
                                         <div className="profile-avatar-section">
-                                            <div className="profileAvatar"><img className='profileImage' src={userProfile.profileImage} />
+                                            <div className="profileAvatar"><img className='profileImage' src={userProfile?.profileImage} />
                                                 {userInfo._id === tokenId && <button type="button" className="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                                     <i className="fa-solid fa-pen-to-square"></i>
                                                 </button>}
@@ -208,12 +234,12 @@ function Hero() {
                                                                 </form>
                                                             </div>
                                                         </div>
-                                                    </div>/
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="profile-actions">
-                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(Id.id) ? "Unfollow" : "Wants to Follow" } </button> }
-                                                {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link> }
+                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(Id.id) ? "Unfollow" : "Wants to Follow"} </button>}
+                                                {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link>}
                                                 <div className="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
                                                     <div className="modal-dialog modal-dialog-centered">
                                                         <div className="modal-content">
@@ -243,18 +269,19 @@ function Hero() {
                                         </div>
                                         <div className="name-title">
                                             <h1>{userInfo.username}</h1>
-                                            <div className="headline">{userProfile.introContent}</div>
+                                            <div className="headline">{userProfile?.introContent}</div>
                                             <div className="location-info">
                                                 <span><i className="fas fa-map-marker-alt"></i> {formData.city}, {formData.state} </span>
-                                                <span><i className="fas fa-link"></i> {formData.gymname}</span>
+                                                <span><i className="fas fa-link"></i> {formData?.gymname}</span>
                                                 <span><i className="fa-solid fa-clock"></i> {formData.shifts}</span>
                                             </div>
                                             <div className="contact-badge">
-                                                <a href="#"><i className="fas fa-envelope"></i> {userInfo.email}</a>
+                                                <a href="#"><i className="fas fa-envelope"></i> {userInfo?.email}</a>
+                                                <button className="shareBtn" onClick={() => { clickProfileLink() }}>Share Profile <i class="fa-regular fa-share-from-square"></i></button>
                                             </div>
                                         </div>
                                         <div className="stats-row">
-                                            <div className="stat-item"><span className="stat-number">{userProfile.followers.length}</span> followers</div>
+                                            <div className="stat-item"><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
                                             <div className="stat-item"><span className="stat-number">1,289</span> connections</div>
                                             <div className="stat-item"><span className="stat-number">12</span> recommendations</div>
                                         </div>
@@ -271,7 +298,7 @@ function Hero() {
                         <div className='col-lg-12' style={{ display: 'flex', justifyContent: 'start', alignItems: 'center' }}>
                             <div className=''>
                                 <h4 style={{ fontWeight: 700 }}>About</h4>
-                                <span className="aboutContent">{userProfile.aboutContent}</span>
+                                <span className="aboutContent">{userProfile?.aboutContent}</span>
                             </div>
                         </div>
                     </div>

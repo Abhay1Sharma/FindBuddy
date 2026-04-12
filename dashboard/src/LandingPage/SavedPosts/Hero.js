@@ -1,9 +1,9 @@
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import { toast } from "react-toastify";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { formatDistanceToNow } from 'date-fns';
-import React, { useState, useEffect } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "react-toastify";
 import imageCompression from "browser-image-compression";
 
 function Hero() {
@@ -21,6 +21,27 @@ function Hero() {
     const [file, setFile] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
+    const [isRemove, setIsRemove] = useState(false);
+
+    const userId = jwtDecode(localStorage.token).id;
+
+    const allSavePost = async () => {
+        try {
+            const allSavedPost = await axios.post("http://localhost:3001/allSavedPosts", { user: userId });
+            console.log(allSavedPost);
+            const sortedArray = allSavedPost.data.allUserSavedPosts.sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt) : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt) : 0;
+                return dateB - dateA;
+            });
+            console.log(sortedArray);
+            setAllPost(sortedArray);
+            setReady(true);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
@@ -30,38 +51,44 @@ function Hero() {
         setAllComment(postComments.data.allComments);
     };
 
-    const fetchAllPost = async () => {
+    const handleLike = async (post) => {
         try {
-            const response = await axios.get("http://localhost:3001/allPost");
-            const sortedArray = response.data.sort((a, b) => {
-                const dateA = a.createdAt ? new Date(a.createdAt) : 0;
-                const dateB = b.createdAt ? new Date(b.createdAt) : 0;
-                return dateB - dateA;
-            });
-
-            setAllPost(sortedArray);
-            setReady(true);
-        } catch (error) {
-            console.error("Error fetching posts:", error);
-        }
-    };
-
-    const handleLike = async (items) => {
-        try {
+            // 1. Send the request to the backend
             const response = await axios.post("http://localhost:3001/like", {
-                postId: items._id,
-                userId: token.id
+                postId: post._id,
+                userId: userId
             });
 
             if (response.status === 200) {
+                const updatedPostData = response.data.updatedPost;
+
                 setAllPost(prevPosts =>
-                    prevPosts.map(post =>
-                        post._id === items._id ? response.data.updatedPost : post
-                    )
+                    prevPosts.map(item => {
+                        if (item.postId && item.postId._id === post._id) {
+                            return {
+                                ...item,
+                                postId: updatedPostData
+                            };
+                        }
+                        return item;
+                    })
                 );
             }
         } catch (error) {
-            console.log("Like error:", error);
+            console.error("Like error:", error);
+            toast.error("Failed to update like");
+        }
+    };
+
+    const postsId = async (items) => {
+        return setPostId(items);
+    }
+
+    const handleSumbit = async () => {
+        try {
+            console.log(items);
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -81,18 +108,6 @@ function Hero() {
             const res = await axios.post("http://localhost:3001/comment", data);
             window.location.reload();
             setComment(null);
-        } catch (error) {
-            console.log(error);
-        }
-    }
-
-    const postsId = async (items) => {
-        return setPostId(items);
-    }
-
-    const handleSumbit = async () => {
-        try {
-            console.log(items);
         } catch (error) {
             console.log(error);
         }
@@ -121,8 +136,7 @@ function Hero() {
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-
-        console.log(name, value);
+        console.log(files);
         if (name === "postAbout") {
             setPostAbout(value);
         } else if (name === "editMedia" && files[0]) {
@@ -135,18 +149,18 @@ function Hero() {
         }
     };
 
-    const savePost = async (items) => {
+    const UnsavePost = async (items) => {
         try {
             // console.log(items);
             const postIds = {
                 UserId: token.id,
-                PostId: items._id,
-                PostUserId: items.userId._id,
-                ProfileId: items.profileId._id,
+                SavePostId: items._id,
             }
             console.log(postIds);
-            const sendPost = await axios.post("http://localhost:3001/savePost", postIds);
+            const sendPost = await axios.post("http://localhost:3001/UnSavePost", postIds);
             console.log(sendPost);
+            setIsRemove(true);
+            setTimeout(() => { window.location.reload(); }, 1000);
         } catch (error) {
             console.log(error);
         }
@@ -206,7 +220,6 @@ function Hero() {
             setFile(null);
             setSelectedFile(null);
             setEditingPost(null);
-            fetchAllPost();
         } catch (error) {
             console.error("Update error:", error);
             toast.error("Failed to update post");
@@ -240,9 +253,7 @@ function Hero() {
             });
     };
 
-    useEffect(() => {
-        fetchAllPost();
-    }, []);
+    useEffect(() => { allSavePost() }, []);
 
     if (!ready) {
         return (
@@ -254,11 +265,34 @@ function Hero() {
         );
     }
 
+    if (allPost.length === 0) {
+        return (
+            <>
+                <div className="container NotFound" style={{ userSelect: "none" }}>
+
+                    <div className="row">
+
+                        <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
+                            <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" />
+                        </div>
+
+                        <div className="colo-lg-6" style={{ textAlign: "center" }}>
+                            <h2>Everything you save will appear right here</h2>
+                            <p>Your collection is empty. Bookmark posts to see them here later</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </>
+        )
+    }
+
     return (
         <>
             {allPost.map((items) => (
                 <div className="container mt-4 mb-4" key={items._id} >
-                    <div className="row">
+                    <div className="row" style={{ marginBottom: "1rem" }}>
                         <div className="col-lg-12 post">
                             <div className="linkedin-card mt-4">
                                 <div className="post-header">
@@ -289,14 +323,12 @@ function Hero() {
 
                                         {/* The menu list defined in your CSS */}
                                         <ul className="dropdown-menu-list">
-                                            <li onClick={() => { savePost(items) }}>
-                                                <i className="fas fa-bookmark"></i> Save Post
+                                            <li onClick={() => { UnsavePost(items) }}>
+                                                <i className="fas fa-bookmark"></i> {isRemove ? "Removed ✅" : "Unsave Post"}
                                             </li>
                                             <li onClick={() => { copyPostLink(items._id) }}>
                                                 <i className="fas fa-link"></i> Copy link
                                             </li>
-                                            {/* Check if the logged-in user owns the post to show Edit/Delete  */}
-                                            {/* Inside the dropdown-menu-list */}
                                             {items.userId._id === token.id && (
                                                 <>
                                                     <li onClick={() => editPost(items)} data-bs-toggle="modal" data-bs-target="#modalEditPost">
@@ -359,10 +391,10 @@ function Hero() {
 
                                 <div className="post-content">
                                     <p>
-                                        {items.about}
+                                        {items.postId?.about}
                                         <span className="hashtag"> #Fitness #CodingLife #GymMotivation</span>
                                     </p>
-                                    {items.media &&
+                                    {items.postId?.media &&
                                         <div className="postMedia" style={{
                                             backgroundColor: '#f3f2ef',
                                             display: 'flex',
@@ -372,7 +404,7 @@ function Hero() {
                                             maxHeight: '560px',
                                             overflow: 'hidden'
                                         }}>
-                                            {items.media && items.media.includes('.mp4') ? (
+                                            {items.postIdmedia && items.media.includes('.mp4') ? (
                                                 <video
                                                     src={items.media}
                                                     controls
@@ -386,7 +418,7 @@ function Hero() {
                                                 />
                                             ) : (
                                                 <img
-                                                    src={items.media}
+                                                    src={items.postId.media}
                                                     style={{
                                                         width: '100%',
                                                         height: '560px',
@@ -400,10 +432,10 @@ function Hero() {
                                 </div>
 
                                 <div className="post-actions">
-                                    <button className="action-item" onClick={() => handleLike(items)}>
-                                        {items.likes.includes(token.id) ?
-                                            <span className="icon"> <span style={{ color: "red" }}>❤️</span> {items.likes.length} likes</span> :
-                                            <span className="icon"><span style={{ color: "white" }}>🤍</span> {items.likes.length} likes</span>
+                                    <button className="action-item" onClick={() => handleLike(items.postId)}>
+                                        {items.postId.likes.includes(token.id) ?
+                                            <span className="icon"> <span style={{ color: "red" }}>❤️</span> {items.postId.likes.length} likes</span> :
+                                            <span className="icon"><span style={{ color: "white" }}>🤍</span> {items.postId.likes.length} likes</span>
                                         }
                                     </button>
 
@@ -547,7 +579,7 @@ function Hero() {
                 </div>
             </div>
         </>
-    );
+    )
 }
 
 export default Hero;
