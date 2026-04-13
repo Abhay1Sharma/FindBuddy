@@ -126,12 +126,14 @@ app.get("/allFormData", async (req, res) => {
 
 app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
     try {
-        const profilePath = req.file ? req.files?.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+        const profilePath = req.file ? req.file?.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
 
         const {
             name, gender, age, fitnessLevel, goal, gymname,
             typeOfBuddy, city, state, country, shifts, userId
         } = req.body;
+
+        console.log(req.file);
 
         const newForm = await new Form({
             name, gender, age, fitnessLevel, goal,
@@ -139,9 +141,16 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
             userId, gymname,
             profilePicture: profilePath,
         }).save();
+
+        const defaultUserProfile = await new Profile({
+            userId: userId, introContent: 'Ready to find a partner and hit the gym', aboutContent:
+                `Hi, I'm a fitness enthusiast looking for a dedicated partner to stay consistent, share motivation, and crush our gym goals together.`,
+            profileImage: "https://img.freepik.com/premium-vector/vector-flat-illustration-grayscale-avatar-user-profile-person-icon-gender-neutral-silhouette-profile-picture-suitable-social-media-profiles-icons-screensavers-as-templatex9xa_719432-2210.jpg?semt=ais_hybrid&w=740&q=80",
+            backgroundImage: 'https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg',
+        }).save();
         console.log(newForm);
 
-        await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id });
+        await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id, profileId: defaultUserProfile._id });
         res.status(200).json({ message: "Data received successfully!" });
     } catch (error) {
         console.error(error);
@@ -342,14 +351,17 @@ app.post("/savePost", async (req, res) => {
         if (!user) return res.status(404).json({ message: "This Post User not Exists" });
         const post = await Post.findById({ _id: PostId });
         if (!post) return res.status(404).json({ message: "This Post not Exists" });
+
         const data = {
             userId: UserId,
             postId: PostId,
             postUserId: PostUserId,
             profileId: ProfileId,
         }
+
         const savePost = await new SavePost(data).save();
         console.log(savePost);
+        await Post.findByIdAndUpdate(PostId, { isPostSave: true });
         res.status(200).json({ message: "Post Saved", savePost });
     } catch (error) {
         console.log(error);
@@ -371,14 +383,31 @@ app.post("/allSavedPosts", async (req, res) => {
 
 app.post("/UnSavePost", async (req, res) => {
     try {
-        const { UserId, SavePostId } = req.body;
+        const { UserId, SavePostId, postId } = req.body;
         const UnSavePost = await SavePost.findByIdAndDelete(SavePostId);
         console.log(UnSavePost);
+        await Post.findByIdAndUpdate(postId, { isPostSave: false });
         res.status(200).json({ message: "Post Removed!!", UnSavePost });
     } catch (error) {
         res.status(404).json({ error: error.message });
     }
-})
+});
+
+app.post("/UnSavePostfromHome", async (req, res) => {
+    try {
+        console.log("Hello I am remove the post from save area from home", req.body);
+        const { UserId, postId } = req.body;
+        const savePost = await SavePost.find({ postId });
+        console.log(savePost[0]);
+        const id = savePost[0]._id;
+        const UnSavePost = await SavePost.findByIdAndDelete(id);
+        console.log(UnSavePost);
+        await Post.findByIdAndUpdate(postId, { isPostSave: false });
+        res.status(200).json({ message: "Post Removed!!", UnSavePost });
+    } catch (error) {
+        res.status(404).json({ error: error.message });
+    }
+});
 
 app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
     const {
@@ -421,15 +450,7 @@ const uploadFields = upload.fields([
     { name: 'backgroundImage', maxCount: 1 }
 ]);
 
-app.post("/updateIntro", function (req, res, next) {
-    uploadFields(req, res, function (err) {
-        if (err) {
-            console.error("Multer Error:", err);
-            return res.status(400).json({ error: err.message || "File upload error" });
-        }
-        next();
-    });
-}, async (req, res) => {
+app.post("/updateIntro", uploadFields, async (req, res) => {
     try {
         const { userId, intro, about } = req.body;
         console.log(req.body);

@@ -48,7 +48,7 @@ function Hero() {
 
             // 200 or 201 are standard success codes
             if (response.status === 200 || response.status === 201 || response.status === 202) {
-                toast.success("User Created! Please verify your email.");
+                toast.success("We send you mail on your given email for verification!!");
                 setCheckbtn(true); // Switch to 'Resend' button
             }
 

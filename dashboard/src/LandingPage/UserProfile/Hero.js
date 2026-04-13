@@ -77,6 +77,7 @@ function Hero() {
     const handleSumbit = async (e) => {
         try {
             e.preventDefault();
+            console.log("Click Sumbit....", Id);
 
             const data = {
                 userId: Id.id,
@@ -84,23 +85,12 @@ function Hero() {
                 intro: content.introContent,
             }
             console.log(data);
-
             if (profileImageFile) {
-                const data = {
-                    userId: Id.id,
-                    about: content.aboutContent,
-                    intro: content.introContent,
-                    profileImage: profileImageFile
-                }
+                data.profileImage = profileImageFile;
+                console.log(data);
             }
             if (backgroundImageFile) {
-                const data = {
-                    userId: Id.id,
-                    about: content.aboutContent,
-                    intro: content.introContent,
-                    profileImage: profileImageFile,
-                    backgroundImage: backgroundImageFile
-                }
+                data.backgroundImage = backgroundImageFile;
             }
 
             console.log(data);
@@ -201,7 +191,7 @@ function Hero() {
                                                             </div>
                                                             <div className="modal-body">
 
-                                                                <form onSubmit={handleSumbit}>
+                                                                <form onSubmit={(e) => { handleSumbit(e) }}>
 
                                                                     <div className="mb-3">
                                                                         <label htmlFor="formFile" className="form-label">Choose profile photo</label>
@@ -311,117 +301,116 @@ function Hero() {
                                 <h4 style={{ fontWeight: 700 }}>Activity</h4>
                                 <hr />
                                 <div className='activityContent text-muted'>
-                                    {
-                                        allPost.filter((items, idx) => idx === 0 || showAllPost).map((items, idx) => (
-                                            <div className="container mb-4" key={items._id} >
-                                                <div className="row">
-                                                    <div className="col-lg-12 post">
-                                                        <div className="linkedin-card mt-4" style={{ width: "80%" }}>
-                                                            <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId}`}>
-                                                                <div className="post-header" onClick={() => { goToProfile() }}>
-                                                                    {items.profileId &&
-                                                                        <img src={items.profileId.profileImage} alt="User Avatar" className="avatar" />
-                                                                    }
-                                                                    {items.profileId && <div className="user-information">
-                                                                        <h3 className="user-name">{items.userId && items.userId.username}</h3>
-                                                                        <p className="user-headline">{items.profileId.introContent}</p>
-                                                                        <p className="post-time">{items.createdAt ?
-                                                                            formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
-                                                                            : "Just now"} • <i className="fas fa-globe-americas"></i></p>
-                                                                    </div>}
-                                                                    <button className="options-btn">•••</button>
-                                                                </div>
-                                                            </Link>
-
-
-                                                            <div className="post-content">
-                                                                <p>
-                                                                    {items.about}
-                                                                    <span className="hashtag"> #Fitness #CodingLife #GymMotivation</span>
-                                                                </p>
-                                                                {items.media &&
-                                                                    <div className="postMedia" style={{
-                                                                        backgroundColor: '#f3f2ef',
-                                                                        display: 'flex',
-                                                                        justifyContent: 'center',
-                                                                        alignItems: 'center',
-                                                                        width: '100%',
-                                                                        maxHeight: '560px',
-                                                                        overflow: 'hidden'
-                                                                    }}>
-                                                                        {items.media && items.media.includes('.mp4') ? (
-                                                                            <video
-                                                                                src={items.media}
-                                                                                controls
-                                                                                style={{
-                                                                                    width: '100%',
-                                                                                    height: '560px',       // Fixed height to match container
-                                                                                    objectFit: 'contain',  // Shows full image with bars on sides if too skinny
-                                                                                    display: 'block',
-                                                                                    borderRadius: '8px'
-                                                                                }}
-                                                                            />
-                                                                        ) : (
-                                                                            <img
-                                                                                src={items.media}
-                                                                                style={{
-                                                                                    width: '100%',
-                                                                                    height: '560px',       // Fixed height to match container
-                                                                                    objectFit: 'contain',  // Shows full image with bars on sides if too skinny
-                                                                                    display: 'block'
-                                                                                }}
-                                                                            />
-                                                                        )}
-                                                                    </div>
+                                    {allPost.length !== 0 && allPost.filter((items, idx) => idx === 0 || showAllPost).map((items, idx) => (
+                                        <div className="container mb-4" key={items._id} >
+                                            <div className="row">
+                                                <div className="col-lg-12 post">
+                                                    <div className="linkedin-card mt-4" style={{ width: "80%" }}>
+                                                        <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId}`}>
+                                                            <div className="post-header" onClick={() => { goToProfile() }}>
+                                                                {items.profileId &&
+                                                                    <img src={items.profileId.profileImage} alt="User Avatar" className="avatar" />
                                                                 }
+                                                                {items.profileId && <div className="user-information">
+                                                                    <h3 className="user-name">{items.userId && items.userId.username}</h3>
+                                                                    <p className="user-headline">{items.profileId.introContent}</p>
+                                                                    <p className="post-time">{items.createdAt ?
+                                                                        formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
+                                                                        : "Just now"} • <i className="fas fa-globe-americas"></i></p>
+                                                                </div>}
+                                                                <button className="options-btn">•••</button>
                                                             </div>
+                                                        </Link>
 
-                                                            <div className="post-actions">
-                                                                <button className="action-item">
-                                                                    <span className="icon">👍</span> Like
-                                                                </button>
 
-                                                                {/* Pass the items._id to the toggle function */}
-                                                                <button className="action-item" onClick={() => toggleComments(items._id)}>
-                                                                    <span className="icon">💬</span> Comment
-                                                                </button>
-
-                                                                <button className="action-item">
-                                                                    <span className="icon">🔁</span> Repost
-                                                                </button>
-                                                                <button className="action-item">
-                                                                    <span className="icon">✈️</span> Send
-                                                                </button>
-                                                            </div>
-
-                                                            {/* Only show comments if this post's ID matches activePostId */}
-                                                            {activePostId === items._id && (
-                                                                <div className="comment-section p-3 border-top">
-                                                                    <div className="d-flex align-items-center mb-2">
-                                                                        <input
-                                                                            type="text"
-                                                                            className="form-control form-control-sm"
-                                                                            placeholder="Add a comment..."
+                                                        <div className="post-content">
+                                                            <p>
+                                                                {items.about}
+                                                                <span className="hashtag"> #Fitness #CodingLife #GymMotivation</span>
+                                                            </p>
+                                                            {items.media &&
+                                                                <div className="postMedia" style={{
+                                                                    backgroundColor: '#f3f2ef',
+                                                                    display: 'flex',
+                                                                    justifyContent: 'center',
+                                                                    alignItems: 'center',
+                                                                    width: '100%',
+                                                                    maxHeight: '560px',
+                                                                    overflow: 'hidden'
+                                                                }}>
+                                                                    {items.media && items.media.includes('.mp4') ? (
+                                                                        <video
+                                                                            src={items.media}
+                                                                            controls
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                height: '560px',       // Fixed height to match container
+                                                                                objectFit: 'contain',  // Shows full image with bars on sides if too skinny
+                                                                                display: 'block',
+                                                                                borderRadius: '8px'
+                                                                            }}
                                                                         />
-                                                                    </div>
-                                                                    <ul className="list-unstyled">
-                                                                        <li className="small mb-1"><strong>Jane Doe:</strong> Great workout! Keep it up.</li>
-                                                                    </ul>
-                                                                    <button
-                                                                        className="btn btn-link btn-sm p-0 text-decoration-none"
-                                                                        onClick={() => setActivePostId(null)}
-                                                                    >
-                                                                        Hide comments
-                                                                    </button>
+                                                                    ) : (
+                                                                        <img
+                                                                            src={items.media}
+                                                                            style={{
+                                                                                width: '100%',
+                                                                                height: '560px',       // Fixed height to match container
+                                                                                objectFit: 'contain',  // Shows full image with bars on sides if too skinny
+                                                                                display: 'block'
+                                                                            }}
+                                                                        />
+                                                                    )}
                                                                 </div>
-                                                            )}
+                                                            }
                                                         </div>
+
+                                                        <div className="post-actions">
+                                                            <button className="action-item">
+                                                                <span className="icon">👍</span> Like
+                                                            </button>
+
+                                                            {/* Pass the items._id to the toggle function */}
+                                                            <button className="action-item" onClick={() => toggleComments(items._id)}>
+                                                                <span className="icon">💬</span> Comment
+                                                            </button>
+
+                                                            <button className="action-item">
+                                                                <span className="icon">🔁</span> Repost
+                                                            </button>
+                                                            <button className="action-item">
+                                                                <span className="icon">✈️</span> Send
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Only show comments if this post's ID matches activePostId */}
+                                                        {activePostId === items._id && (
+                                                            <div className="comment-section p-3 border-top">
+                                                                <div className="d-flex align-items-center mb-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        className="form-control form-control-sm"
+                                                                        placeholder="Add a comment..."
+                                                                    />
+                                                                </div>
+                                                                <ul className="list-unstyled">
+                                                                    <li className="small mb-1"><strong>Jane Doe:</strong> Great workout! Keep it up.</li>
+                                                                </ul>
+                                                                <button
+                                                                    className="btn btn-link btn-sm p-0 text-decoration-none"
+                                                                    onClick={() => setActivePostId(null)}
+                                                                >
+                                                                    Hide comments
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))
+                                        </div>
+                                    ))
                                     }
-                                    {showAllPost ? <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows Less</button> : <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows All </button>}
+                                    {allPost.length === 0 ? "There are no public posts to display at the moment." : showAllPost ? <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows Less</button> : <button className="showAllPostBtn" onClick={() => setShowAllPost(!showAllPost)}>Shows All </button>}
                                 </div>
                             </div>
                         </div>

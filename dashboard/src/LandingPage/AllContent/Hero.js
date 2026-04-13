@@ -137,15 +137,22 @@ function Hero() {
 
     const savePost = async (items) => {
         try {
-            // console.log(items);
+            console.log(items);
             const postIds = {
                 UserId: token.id,
                 PostId: items._id,
                 PostUserId: items.userId._id,
                 ProfileId: items.profileId._id,
+                isPostSave: true,
             }
-            console.log(postIds);
             const sendPost = await axios.post("http://localhost:3001/savePost", postIds);
+            console.log(sendPost);
+            setAllPost(prevPost =>
+                prevPost.map(item =>
+                    item._id === items._id ? { ...item, isPostSave: true } : item
+                )
+            );
+
             console.log(sendPost);
         } catch (error) {
             console.log(error);
@@ -213,6 +220,27 @@ function Hero() {
         }
     };
 
+    const UnsavePost = async (items) => {
+        try {
+            console.log(items);
+            const postIds = {
+                UserId: token.id,
+                postId: items._id,
+            }
+
+            console.log(postIds);
+            const sendPost = await axios.post("http://localhost:3001/UnSavePostfromHome", postIds);
+            console.log(sendPost);
+            setAllPost(prevPost =>
+                prevPost.map(item =>
+                    item._id === items._id ? { ...item, isPostSave: false } : item
+                )
+            );
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const deletePost = async (items) => {
         try {
             console.log(items);
@@ -254,6 +282,29 @@ function Hero() {
         );
     }
 
+    if (allPost.length === 0) {
+        return (
+            <>
+                <div className="container NotFound" style={{ userSelect: "none" }}>
+
+                    <div className="row">
+
+                        <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
+                            <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" />
+                        </div>
+
+                        <div className="colo-lg-6" style={{ textAlign: "center" }}>
+                            <h2>No posts to show</h2>
+                            <p>Discover new connections to fill this space with industry news and updates</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </>
+        )
+    };
+
     return (
         <>
             {allPost.map((items) => (
@@ -264,7 +315,7 @@ function Hero() {
                                 <div className="post-header">
                                     <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId._id}`}>
                                         {items.profileId &&
-                                            <img src={items.profileId.profileImage} alt="User Avatar" className="avatar" />
+                                            <img src={items.profileId?.profileImage} alt="User Avatar" className="avatar" />
                                         }
                                         {items.profileId && <div className="user-information">
                                             <h3 className="user-name">{items.userId && items.userId.username}</h3>
@@ -275,28 +326,32 @@ function Hero() {
                                         </div>}
                                     </Link>
                                     <div className="dropdown-container">
-                                        {/* Unique checkbox for each post */}
                                         <input
                                             type="checkbox"
                                             id={`dropdown-${items._id}`}
                                             className="dropdown-toggle"
                                         />
 
-                                        {/* Label acts as the clickable button */}
                                         <label htmlFor={`dropdown-${items._id}`} className="options-btn">
                                             •••
                                         </label>
 
                                         {/* The menu list defined in your CSS */}
                                         <ul className="dropdown-menu-list">
-                                            <li onClick={() => { savePost(items) }}>
-                                                <i className="fas fa-bookmark"></i> Save Post
-                                            </li>
+                                            {
+                                                items.isPostSave ?
+                                                    <li onClick={() => { UnsavePost(items) }}>
+                                                        <i className="fas fa-bookmark"></i> Remove from saved
+                                                    </li>
+                                                    :
+                                                    <li onClick={() => { savePost(items) }}>
+                                                        <i className="fas fa-bookmark"></i> Save for later
+                                                    </li>
+                                            }
+
                                             <li onClick={() => { copyPostLink(items._id) }}>
                                                 <i className="fas fa-link"></i> Copy link
                                             </li>
-                                            {/* Check if the logged-in user owns the post to show Edit/Delete  */}
-                                            {/* Inside the dropdown-menu-list */}
                                             {items.userId._id === token.id && (
                                                 <>
                                                     <li onClick={() => editPost(items)} data-bs-toggle="modal" data-bs-target="#modalEditPost">

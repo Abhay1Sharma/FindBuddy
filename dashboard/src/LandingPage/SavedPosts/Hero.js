@@ -151,10 +151,11 @@ function Hero() {
 
     const UnsavePost = async (items) => {
         try {
-            // console.log(items);
+            console.log(items);
             const postIds = {
                 UserId: token.id,
                 SavePostId: items._id,
+                postId: items.postId._id,
             }
             console.log(postIds);
             const sendPost = await axios.post("http://localhost:3001/UnSavePost", postIds);
@@ -274,6 +275,8 @@ function Hero() {
 
                         <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
                             <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" />
+                            {/* <video autoPlay loop muted className="notFoundImage" src="https://cdnl.iconscout.com/lottie/premium/preview-watermark/404-animation-gif-download-5017532.mp4" /> */}
+                            {/* <video autoplay  className="notFoundImage" src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/404-animation-gif-download-5017532.mp4'} /> */}
                         </div>
 
                         <div className="colo-lg-6" style={{ textAlign: "center" }}>
@@ -433,9 +436,9 @@ function Hero() {
 
                                 <div className="post-actions">
                                     <button className="action-item" onClick={() => handleLike(items.postId)}>
-                                        {items.postId.likes.includes(token.id) ?
-                                            <span className="icon"> <span style={{ color: "red" }}>❤️</span> {items.postId.likes.length} likes</span> :
-                                            <span className="icon"><span style={{ color: "white" }}>🤍</span> {items.postId.likes.length} likes</span>
+                                        {items.postId.likes?.includes(token.id) ?
+                                            <span className="icon"> <span style={{ color: "red" }}>❤️</span> {items.postId.likes?.length} likes</span> :
+                                            <span className="icon"><span style={{ color: "white" }}>🤍</span> {items.postId.likes?.length} likes</span>
                                         }
                                     </button>
 

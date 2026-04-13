@@ -27,6 +27,7 @@ function Hero({ search }) {
     const [userData, setUserData] = useState([]);
     const [ready, setReady] = useState(false);
     const [activeChat, setActiveChat] = useState(null);
+    console.log(allUserData);
 
     const handleConnect = (recipient) => {
         // Build Room ID
@@ -77,6 +78,29 @@ function Hero({ search }) {
         );
     }
 
+    if (allUserData.length === 1) {
+        return (
+            <>
+                <div className="container NotFound" style={{ userSelect: "none" }}>
+
+                    <div className="row">
+
+                        <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
+                            <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" />
+                        </div>
+
+                        <div className="colo-lg-6" style={{ textAlign: "center" }}>
+                            <h2>No other user exist in the findbuddy</h2>
+                            <p>Your collection is empty. Bookmark posts to see them here later</p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </>
+        )
+    }
+
     const filteredUsers = allUserData.filter((item) => {
         const query = search.toLowerCase();
         return (
@@ -87,6 +111,14 @@ function Hero({ search }) {
             item.shifts?.toString().toLowerCase().includes(query)
         );
     });
+
+    if (filteredUsers.length === 0) {
+        return (
+            <>
+            
+            </>
+        )
+    }
 
     console.log(filteredUsers);
     return (

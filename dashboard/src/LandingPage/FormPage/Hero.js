@@ -95,6 +95,8 @@ function Hero() {
                 // Axios will automatically set the boundary for multipart/form-data
             });
 
+            setTimeout( () => { }, 4000 * 10);
+
             toast.success("High five! Profile Saved 🏋️‍♂️");
             navigate("/");
         } catch (err) {

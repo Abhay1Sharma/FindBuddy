@@ -102,13 +102,14 @@ const Navbar = ({ setSearch }) => {
         }
       }
 
-      const data = new FormData();
-      data.append("about", postData.about);
-      data.append("userId", postData.userId);
-      data.append("profileId", postData.profileId);
+      const data = {
+        about: postData.about,
+        userId: postData.userId,
+        profileId: postData.profileId,
+      }
 
       if (fileUpload) {
-        data.append("media", fileUpload);
+        data.media = fileUpload;
       }
 
       const res = await axios.post(`${backendUrl}/postContent`, data, {

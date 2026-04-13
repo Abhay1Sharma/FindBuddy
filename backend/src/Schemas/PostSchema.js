@@ -23,6 +23,11 @@ const PostSchema = mongoose.Schema(
             required: true
         },
 
+        isPostSave: {
+            type: Boolean,
+            default: false,
+        },
+
         likes: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "user"
