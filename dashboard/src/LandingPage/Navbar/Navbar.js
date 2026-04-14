@@ -4,9 +4,12 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import imageCompression from "browser-image-compression";
+import { io } from "socket.io-client"; // 1. Import Socket.io
 
 const frontendUrl = "http://localhost:3000";
 const backendUrl = "http://localhost:3001";
+
+const socket = io(backendUrl);
 
 const Navbar = ({ setSearch }) => {
   const [userData, setUserData] = useState([]);
@@ -17,7 +20,25 @@ const Navbar = ({ setSearch }) => {
   });
   const [file, setFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [notifications, setNotifications] = useState([]); // 3. State for notifications
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userData?._id) {
+      // Register user identity with the backend
+      socket.emit("register_user", userData._id);
+
+      // Listen for incoming notifications
+      socket.on("new_notification", (notif) => {
+        setNotifications((prev) => [notif, ...prev]);
+        toast.info(`🔔 New ${notif.type.toLowerCase()}: ${notif.content}`);
+      });
+    }
+
+    return () => {
+      socket.off("new_notification");
+    };
+  }, [userData]);
 
   // STEP 1: Catch and Save the Token
   useEffect(() => {
@@ -200,7 +221,14 @@ const Navbar = ({ setSearch }) => {
                     </li>
                     <li><a className="dropdown-item" href={`http://localhost:3002/userProfile/${userData._id}`}>My Profile</a></li>
                     <li><a className="dropdown-item" href='/savedPosts'>Saved Posts</a></li>
-                    <li><a className="dropdown-item" href="/settings">Any Notification</a></li>
+                    {/* 6. Rendering Notifications in the list */}
+                    {notifications.length === 0 ? (
+                      <li><span className="dropdown-item-text small text-muted">No new notifications</span></li>
+                    ) : (
+                      notifications.slice(0, 5).map((n, i) => (
+                        <li key={i}><span className="dropdown-item small border-bottom">{n.content}</span></li>
+                      ))
+                    )}
                     <li><hr className="dropdown-divider" /></li>
                     <button
                       className="dropdown-item text-danger"

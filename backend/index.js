@@ -12,6 +12,7 @@ import session from "express-session";
 import multer from 'multer';
 import bodyParser from "body-parser";
 import flash from "connect-flash";
+import { jwtDecode } from "jwt-decode";
 import LocalStrategy from "passport-local";
 
 // Import your models and routers
@@ -23,6 +24,8 @@ import { User } from "./src/models/UserSchema.js";
 import { Profile } from './src/models/ProfileModel.js';
 import { Comment } from './src/models/CommentModel.js';
 import { SavePost } from "./src/models/SavaPostModel.js";
+
+const userSocketMap = new Map(); // userId -> socketId
 
 const uploadDir = 'uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -103,6 +106,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
+        for (let [userId, socketId] of userSocketMap.entries()) {
+            if (socketId === socket.id) {
+                userSocketMap.delete(userId);
+                break;
+            }
+        }
         console.log("User disconnected");
     });
 });
@@ -267,21 +276,72 @@ app.post("/editComment", async (req, res) => {
 });
 
 // backend/routes/post.js (or wherever your /like route is)
+// app.post("/like", async (req, res) => {
+//     try {
+//         const { postId, userId } = req.body;
+//         const post = await Post.findById(postId);
+
+//         const isLike = post.likes.includes(userId);
+//         const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
+
+//         // CRITICAL FIX: Add .populate() here before sending back to frontend
+//         const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId').populate('profileId');
+//         console.log(updatedPost);
+
+//         return res.status(200).json({ updatedPost });
+//     } catch (error) {
+//         res.status(400).json({ error: error.message });
+//     }
+// });
+
 app.post("/like", async (req, res) => {
     try {
         const { postId, userId } = req.body;
+
+        socket.on("register_user", (userId) => {
+            userSocketMap.set(userId, socket.id);
+            console.log(`User ${userId} registered with socket ${socket.id}`);
+        });
+
         const post = await Post.findById(postId);
-
         const isLike = post.likes.includes(userId);
-        const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
 
-        // CRITICAL FIX: Add .populate() here before sending back to frontend
-        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId').populate('profileId');
-        console.log(updatedPost);
+        const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
+        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId');
+
+        // --- NOTIFICATION LOGIC ---
+        // If it's a new like and not liking own post
+        if (!isLike && updatedPost.userId._id.toString() !== userId) {
+            const newNotif = await new Notification({
+                recipient: updatedPost.userId._id,
+                sender: userId,
+                type: 'LIKE',
+                postReference: postId,
+                content: "liked your post"
+            }).save();
+
+            // Send real-time if recipient is online
+            const recipientSocketId = userSocketMap.get(updatedPost.userId._id.toString());
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("new_notification", newNotif);
+            }
+        }
+        // ---------------------------
 
         return res.status(200).json({ updatedPost });
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+});
+
+app.get("/notifications/:userId", async (req, res) => {
+    try {
+        const list = await Notification.find({ recipient: req.params.userId })
+            .populate('sender', 'name profilePicture') // Get sender details
+            .sort({ createdAt: -1 });
+        res.status(200).json(list);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

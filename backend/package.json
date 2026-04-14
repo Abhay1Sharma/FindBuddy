@@ -28,6 +28,7 @@
     "http-status": "^2.1.0",
     "image-to-base64": "^2.2.0",
     "jsonwebtoken": "^9.0.3",
+    "jwt-decode": "^4.0.0",
     "mongoose": "^9.1.4",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",

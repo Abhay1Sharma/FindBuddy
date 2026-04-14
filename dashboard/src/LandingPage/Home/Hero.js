@@ -115,7 +115,22 @@ function Hero({ search }) {
     if (filteredUsers.length === 0) {
         return (
             <>
-            
+                <div className="container NotFound" style={{ userSelect: "none" }}>
+
+                    <div className="row">
+
+                        <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
+                            <video autoPlay loop muted disablepictureinpicture="true" className="notFoundImage" src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/file-not-found-animation-gif-download-6342141.mp4'} />
+                        </div>
+
+                        <div className="colo-lg-6" style={{ textAlign: "center" }}>
+                            <h2>No results found</h2>
+                            <p>Please check the spelling or try searching for a different name or IDs</p>
+                        </div>
+
+                    </div>
+
+                </div>
             </>
         )
     }
@@ -124,7 +139,7 @@ function Hero({ search }) {
     return (
         <>
             {/* 2. User Card List */}
-            <div className="allCard mt-4">
+            <div className="allCard">
                 {filteredUsers.filter((items) => items._id !== userData.formId).map((items) => (
                     <div className="card m-4">
                         <div className="" key={items._id || items.id}>

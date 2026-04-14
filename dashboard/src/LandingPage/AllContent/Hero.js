@@ -7,8 +7,8 @@ import React, { useState, useEffect } from "react";
 import imageCompression from "browser-image-compression";
 
 function Hero() {
-    const [postId, setPostId] = useState();
     const [ready, setReady] = useState(false);
+    const [postId, setPostId] = useState();
     const [comment, setComment] = useState("");
     const token = jwtDecode(localStorage.token);
     const [postUser, setPostUser] = useState([]);

@@ -99,12 +99,14 @@ function Hero() {
                 toast.info("Can't post an empty comment");
                 return;
             }
+
             const data = {
                 "comment": comment,
                 "postId": postId._id,
                 "userId": commentUser._id,
                 "profileId": commentUser.profileId._id
             };
+
             const res = await axios.post("http://localhost:3001/comment", data);
             window.location.reload();
             setComment(null);
@@ -274,14 +276,14 @@ function Hero() {
                     <div className="row">
 
                         <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
-                            <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" />
+                            {/* <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" /> */}
                             {/* <video autoPlay loop muted className="notFoundImage" src="https://cdnl.iconscout.com/lottie/premium/preview-watermark/404-animation-gif-download-5017532.mp4" /> */}
-                            {/* <video autoplay  className="notFoundImage" src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/404-animation-gif-download-5017532.mp4'} /> */}
+                            <video autoPlay loop muted disablepictureinpicture="true" className="notFoundImage" src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/empty-animation-gif-download-8707259.mp4'} />
                         </div>
 
                         <div className="colo-lg-6" style={{ textAlign: "center" }}>
-                            <h2>Everything you save will appear right here</h2>
-                            <p>Your collection is empty. Bookmark posts to see them here later</p>
+                            <h2>Your collection is empty</h2>
+                            <p>Tap the bookmark icon on any post to save it for later</p>
                         </div>
 
                     </div>
