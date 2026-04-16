@@ -12,7 +12,6 @@ import session from "express-session";
 import multer from 'multer';
 import bodyParser from "body-parser";
 import flash from "connect-flash";
-import { jwtDecode } from "jwt-decode";
 import LocalStrategy from "passport-local";
 
 // Import your models and routers
@@ -21,6 +20,7 @@ import { storage } from './cloudinary.js';
 import { Form } from './src/models/FormModel.js';
 import { Post } from './src/models/PostModel.js';
 import { User } from "./src/models/UserSchema.js";
+import { Notification } from './src/models/NotificationModel.js';
 import { Profile } from './src/models/ProfileModel.js';
 import { Comment } from './src/models/CommentModel.js';
 import { SavePost } from "./src/models/SavaPostModel.js";
@@ -100,8 +100,12 @@ io.on("connection", (socket) => {
         console.log(`Socket ${socket.id} joined room: ${roomId}`);
     });
 
-    socket.on("send_message", (data) => {
-        // data should have: { roomId, text, senderId }
+    socket.on("register_user", (userId) => {
+        userSocketMap.set(userId, socket.id);
+        console.log(`User ${userId} registered with socket ${socket.id}`);
+    });
+
+    socket.on("send_message", (data) => { // data should have: { roomId, text, senderId }
         socket.to(data.roomId).emit("receive_message", data);
     });
 
@@ -248,11 +252,42 @@ app.post("/userPostComments", async (req, res) => {
 
 app.post("/comment", async (req, res) => {
     try {
-        // console.log(req.body);
         const { comment, postId, profileId, userId } = req.body;
         console.log(comment, postId, userId);
+        const post = await Post.findById({ _id: postId }).populate("userId");
+        if (!post) { return };
         const saveComment = await new Comment({ comment: comment, userId: userId, postId: postId, profileId: profileId }).save();
-        // console.log(saveComment);
+        console.log(saveComment);
+        console.log(post);
+
+        const postOwnerId = post.userId._id.toString();
+        const postOwnerName = post.userId.username;
+
+        let recipientSocketId = null;
+        if (postOwnerId !== userId) {
+            const newNotif = await new Notification({
+                recipient: postOwnerId,
+                sender: userId.toString(),
+                type: "COMMENT",
+                content: "comment on your post",
+
+            }).save();
+
+            console.log(newNotif);
+            recipientSocketId = userSocketMap.get(postOwnerId);
+
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("new_notification", {
+                    type: 'COMMENT',
+                    content: `${postOwnerName} commented on your post`,
+                    _id: newNotif._id
+                });
+            }
+        }
+        console.log("Who Commented : ", userId);
+        console.log("Whose post : ", post.userId._id);
+        console.log("Found Socket Id : ", recipientSocketId);
+        console.log("Sockets Ids Available : ", Array.from(userSocketMap.keys()));
         res.status(200).json({ message: "comment added", saveComment });
     } catch (error) {
         console.log(error);
@@ -297,48 +332,73 @@ app.post("/editComment", async (req, res) => {
 app.post("/like", async (req, res) => {
     try {
         const { postId, userId } = req.body;
-
-        socket.on("register_user", (userId) => {
-            userSocketMap.set(userId, socket.id);
-            console.log(`User ${userId} registered with socket ${socket.id}`);
-        });
-
         const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: "Post not found" });
         const isLike = post.likes.includes(userId);
-
         const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
-        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId');
 
-        // --- NOTIFICATION LOGIC ---
-        // If it's a new like and not liking own post
-        if (!isLike && updatedPost.userId._id.toString() !== userId) {
+        // 1. Update and populate the owner of the post
+        const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId profileId');
+
+        const postOwnerId = updatedPost.userId._id.toString();
+        const postOwnerName = updatedPost.userId.username;
+        let recipientSocketId = null; // Define it here so it's accessible for logging
+
+        // 2. Notification Logic]
+        if (!isLike && postOwnerId !== userId) {
+            // Save to DB
             const newNotif = await new Notification({
-                recipient: updatedPost.userId._id,
+                recipient: postOwnerId,
                 sender: userId,
                 type: 'LIKE',
                 postReference: postId,
                 content: "liked your post"
             }).save();
 
-            // Send real-time if recipient is online
-            const recipientSocketId = userSocketMap.get(updatedPost.userId._id.toString());
+            // Find socket using string ID
+            recipientSocketId = userSocketMap.get(postOwnerId);
+
             if (recipientSocketId) {
-                io.to(recipientSocketId).emit("new_notification", newNotif);
+                io.to(recipientSocketId).emit("new_notification", {
+                    type: 'LIKE',
+                    content: `${postOwnerName} liked your post`,
+                    _id: newNotif._id
+                });
             }
         }
-        // ---------------------------
+
+        // 3. Debug Logs (Now they will work)
+        console.log("--- Debug Like Route ---");
+        console.log("Recipient ID (Post Owner):", postOwnerId);
+        console.log("Person who Liked:", userId);
+        console.log("Available Sockets:", Array.from(userSocketMap.keys()));
+        console.log("Found Socket ID:", recipientSocketId || "None (User Offline)");
 
         return res.status(200).json({ updatedPost });
     } catch (error) {
+        console.error(error);
         res.status(400).json({ error: error.message });
     }
 });
 
 app.get("/notifications/:userId", async (req, res) => {
     try {
+        console.log(req.params);
         const list = await Notification.find({ recipient: req.params.userId })
-            .populate('sender', 'name profilePicture') // Get sender details
+            .populate([
+                {
+                    path: 'recipient',
+                    populate: { path: 'profileId' } // Deep populate the recipient's profile
+                },
+                {
+                    path: 'sender',
+                    populate: { path: 'profileId' } // Deep populate the recipient's profile
+                },
+                'postReference',
+            ]) // Get sender details
             .sort({ createdAt: -1 });
+
+        console.log(list);
         res.status(200).json(list);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -374,7 +434,8 @@ app.post("/followers", async (req, res) => {
     try {
         // console.log(req.body);
         const { profileId, userId } = req.body;
-        const profile = await Profile.findById({ _id: profileId });
+        const profile = await Profile.findById({ _id: profileId }).populate('userId');
+        const user = await User.findById({ _id: userId });
 
         if (!profile) {
             return res.status(404).json({ message: "Profile Not Found " });
@@ -384,6 +445,38 @@ app.post("/followers", async (req, res) => {
         const updateData = isUserFollow ? { $pull: { followers: userId } } : { $addToSet: { followers: userId } };
 
         const data = await Profile.findByIdAndUpdate(profileId, updateData, { new: true });
+
+        const sender = user._id.toString();
+        const receiver = profile.userId._id.toString();
+        let recipientSocketId = null;
+
+        if (!isUserFollow && sender !== receiver) {
+            const newNotif = await new Notification({
+                recipient: profile.userId._id.toString(),
+                sender: user._id.toString(),
+                recipientProfile: profile._id.toString(),
+                senderProfile: user.profileId._id.toString(),
+                type: 'FOLLOW',
+                content: "follow your profile"
+            }).save();
+
+            console.log(newNotif);
+
+            recipientSocketId = userSocketMap.get(profile.userId._id.toString());
+            console.log(recipientSocketId);
+
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("new_notification", {
+                    type: 'FOLLOW',
+                    content: `${user.username} follow your profile`,
+                    _id: newNotif._id
+                });
+            }
+        }
+        console.log("Reciever ", profile.userId._id.toString());
+        console.log("Sender ", user._id.toString());
+        console.log("Available Sockets:", Array.from(userSocketMap.keys()));
+
         // console.log(data);
         res.status(200).json({ message: isUserFollow ? "User Unfollow the User" : "User follow the user", data });
     } catch (error) {

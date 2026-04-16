@@ -12,7 +12,7 @@ const backendUrl = "http://localhost:3001";
 const socket = io(backendUrl);
 
 const Navbar = ({ setSearch }) => {
-  const [userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState(null);
   const [postData, setPostData] = useState({
     about: "",
     media: "",
@@ -20,25 +20,33 @@ const Navbar = ({ setSearch }) => {
   });
   const [file, setFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [notifications, setNotifications] = useState([]); // 3. State for notifications
+  // const [notifications, setNotifications] = useState([]); // 3. State for notifications
+  const [isNewNotification, setIsNewNotification] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (userData?._id) {
-      // Register user identity with the backend
+      // 1. Register
       socket.emit("register_user", userData._id);
-
-      // Listen for incoming notifications
-      socket.on("new_notification", (notif) => {
-        setNotifications((prev) => [notif, ...prev]);
-        toast.info(`🔔 New ${notif.type.toLowerCase()}: ${notif.content}`);
-      });
+      console.log("Sent register_user for:", userData._id);
     }
 
-    return () => {
-      socket.off("new_notification");
+    // 2. Define the listener function
+    const handleNewNotif = (notif) => {
+      console.log("!!! NOTIFICATION RECEIVED IN NAVBAR !!!", notif);
+      // setNotifications((prev) => [notif, ...prev]);
+      toast.info(`🔔 ${notif.content}`);
+      setIsNewNotification(true);
     };
-  }, [userData]);
+
+    // 3. Attach listener
+    socket.on("new_notification", handleNewNotif);
+
+    // 4. Cleanup
+    return () => {
+      socket.off("new_notification", handleNewNotif);
+    };
+  }, [userData?._id]); // Only reset if the user changes
 
   // STEP 1: Catch and Save the Token
   useEffect(() => {
@@ -222,13 +230,19 @@ const Navbar = ({ setSearch }) => {
                     <li><a className="dropdown-item" href={`http://localhost:3002/userProfile/${userData._id}`}>My Profile</a></li>
                     <li><a className="dropdown-item" href='/savedPosts'>Saved Posts</a></li>
                     {/* 6. Rendering Notifications in the list */}
-                    {notifications.length === 0 ? (
+
+                    {isNewNotification ?
+                      <li><Link to={`/notifications/${userData._id}`} style={{ textDecoration: "none" }}><span className="dropdown-item-text small" style={{ color: "red" }}> New Notification 🔔</span></Link></li> :
+                      <li><Link to={`/notifications/${userData._id}`} style={{ textDecoration: "none" }}><span className="dropdown-item-text small text-muted">No new notifications</span></Link></li>
+                    }
+
+                    {/* {notifications.length === 0 ? (
                       <li><span className="dropdown-item-text small text-muted">No new notifications</span></li>
                     ) : (
                       notifications.slice(0, 5).map((n, i) => (
                         <li key={i}><span className="dropdown-item small border-bottom">{n.content}</span></li>
                       ))
-                    )}
+                    )}; */}
                     <li><hr className="dropdown-divider" /></li>
                     <button
                       className="dropdown-item text-danger"

@@ -1195,3 +1195,165 @@ b {
 .post-header .dropdown-container {
   margin-left: auto;
 }
+
+/* Notifications css */
+
+:root {
+  --bg-hover: #f9fafb;
+  --border-color: #f3f4f6;
+  --text-main: #111827;
+  --text-sub: #6b7280;
+  --accent-blue: #2563eb;
+  --accent-red: #ef4444;
+}
+
+.notification-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Inter', -apple-system, sans-serif;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  max-width: 400px;
+}
+
+.notification-card:hover {
+  background-color: var(--bg-hover);
+}
+
+.avatar-container {
+  position: relative;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.icon-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #ffffff;
+}
+
+.icon-badge.like {
+  background-color: var(--accent-red);
+}
+
+.notif-content {
+  flex-grow: 1;
+}
+
+.notif-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.4;
+}
+
+.username {
+  font-weight: 600;
+}
+
+.notif-time {
+  display: block;
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+/* Unread Status Styling */
+.notification-card.unread .status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-blue);
+  border-radius: 50%;
+  margin-left: 10px;
+}
+
+/* Container for the avatar and the badge */
+.avatar-container {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  margin-right: 12px;
+}
+
+/* The badge base style */
+.icon-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  /* This creates the "cutout" effect against the card */
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Specific Colors based on Notification Type */
+.icon-badge.like {
+  background-color: #dcdada;
+  /* Vibrant Red */
+}
+
+.like {
+  color: red;
+}
+
+.icon-badge.comment {
+  background-color: #dcdada;
+  color: blue;
+  /* Message Blue */
+}
+
+.comment {
+  color: blue;
+}
+
+.follow {
+  color: greenyellow;
+}
+
+.icon-badge.follow {
+  background-color: #dcdada;
+  color: greenyellow;
+  /* Success Green */
+}
+
+.icon-badge.chat {
+  background-color: #dcdada;
+  color: purple;
+  /* Messenger Purple */
+}
+
+.chat {
+  color: purple;
+}
+
+/* Smooth scaling when hovering over the card */
+.notification-card:hover .icon-badge {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+}

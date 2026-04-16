@@ -15,6 +15,7 @@ import Chats from './LandingPage/Chats/Chats';
 import CreatePost from './LandingPage/CreatePost/CreatePost';
 import AllContent from './LandingPage/AllContent/AllContent';
 import SavedPosts from "./LandingPage/SavedPosts/SavedPosts"
+import Notification from "./LandingPage/Notifications/Notifications";
 
 const frontendUrl = "http://localhost:3000";
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -68,6 +69,7 @@ function App() {
             <Route path="/complete-profile" element={<FormData />} />
             <Route path="/update-profile" element={<UpdateForm />} />
             <Route path="/userProfile/:id" element={<UserProfile />} />
+            <Route path="/notifications/:userId" element={<Notification />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
