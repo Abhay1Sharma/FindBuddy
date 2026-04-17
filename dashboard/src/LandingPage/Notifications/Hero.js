@@ -41,8 +41,8 @@ function Hero() {
 
                         <div class="avatar-container">
                             <img src={items.sender.profileId.profileImage} alt="User Profile" class="avatar" />
-                            <div className={`icon-badge ${items.type.toLowerCase() || ""}`}>
-                                <svg width="10" height="10" viewBox="0 0 24 24">
+                            <div className={`icon-badge ${items.type.toLowerCase()}`}>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill='red'>
                                     <path d={ICON_PATHS[items.type]} />
                                 </svg>
                             </div>

@@ -1314,7 +1314,7 @@ b {
 
 /* Specific Colors based on Notification Type */
 .icon-badge.like {
-  background-color: #dcdada;
+  background-color: #ffffff;
   /* Vibrant Red */
 }
 
@@ -1323,7 +1323,7 @@ b {
 }
 
 .icon-badge.comment {
-  background-color: #dcdada;
+  background-color: #ffffff;
   color: blue;
   /* Message Blue */
 }
@@ -1337,13 +1337,13 @@ b {
 }
 
 .icon-badge.follow {
-  background-color: #dcdada;
+  background-color: #ffffff;
   color: greenyellow;
   /* Success Green */
 }
 
 .icon-badge.chat {
-  background-color: #dcdada;
+  background-color: #ffffff;
   color: purple;
   /* Messenger Purple */
 }

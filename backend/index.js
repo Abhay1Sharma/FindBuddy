@@ -430,6 +430,42 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
     }
 });
 
+app.post("/messageIds", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { senderId, ownerId } = req.body;
+        let recipientSocketId = null;
+
+        const owner = await User.findById({ _id: ownerId });
+        const sender = await User.findById({ _id: senderId });
+
+        if (senderId !== ownerId) {
+            // Save to DB
+            const newNotif = await new Notification({
+                recipient: senderId.toString(),
+                sender: ownerId.toString(),
+                type: 'CHAT',
+                content: "wants to talk you"
+            }).save();
+
+            console.log(newNotif);
+
+            // Find socket using string ID
+            recipientSocketId = userSocketMap.get(senderId.toString());
+
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("new_notification", {
+                    type: 'CHAT',
+                    content: `${owner.username} wants talk to you`,
+                    _id: newNotif._id
+                });
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+})
+
 app.post("/followers", async (req, res) => {
     try {
         // console.log(req.body);

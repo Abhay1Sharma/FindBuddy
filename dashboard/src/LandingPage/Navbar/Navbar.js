@@ -34,6 +34,11 @@ const Navbar = ({ setSearch }) => {
     // 2. Define the listener function
     const handleNewNotif = (notif) => {
       console.log("!!! NOTIFICATION RECEIVED IN NAVBAR !!!", notif);
+
+      const audio = new Audio("https://res.cloudinary.com/duogcdkyj/video/upload/v1776371696/universfield-new-notification-040-493469_di5zxj.mp3");
+      audio.volume = 0.7; // Keep it subtle (40% volume)
+      audio.play().catch(err => console.log("User interaction required for audio."));
+
       // setNotifications((prev) => [notif, ...prev]);
       toast.info(`🔔 ${notif.content}`);
       setIsNewNotification(true);
