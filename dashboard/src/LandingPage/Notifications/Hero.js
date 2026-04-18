@@ -7,7 +7,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 
 function Hero() {
-    const socket = io("http://localhost:3001");
+    const backendUrl = "https://findbuddy-back.onrender.com";
+    const socket = io(`${backendUrl}`);
 
     const [notifications, setNotifications] = useState([]);
     const userId = jwtDecode(localStorage.token).id;
@@ -23,7 +24,7 @@ function Hero() {
     useEffect(() => {
         const Notifications = async () => {
             try {
-                const notificationHistory = await axios.get(`http://localhost:3001/notifications/${userId}`);
+                const notificationHistory = await axios.get(`${backendUrl}/notifications/${userId}`);
                 console.log(notificationHistory);
                 setNotifications(notificationHistory.data);
             } catch (error) {

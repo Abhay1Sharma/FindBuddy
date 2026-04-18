@@ -6,8 +6,9 @@ import { jwtDecode } from "jwt-decode";
 import imageCompression from "browser-image-compression";
 import { io } from "socket.io-client"; // 1. Import Socket.io
 
-const frontendUrl = "http://localhost:3000";
-const backendUrl = "http://localhost:3001";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+const backendUrl = "https://findbuddy-back.onrender.com";
+const dashboardUrl = "https://findbuddy-dash.onrender.com";
 
 const socket = io(backendUrl);
 
@@ -232,7 +233,7 @@ const Navbar = ({ setSearch }) => {
                     <li>
                       <h6 className="dropdown-header">Signed in as {userData.email}</h6>
                     </li>
-                    <li><a className="dropdown-item" href={`http://localhost:3002/userProfile/${userData._id}`}>My Profile</a></li>
+                    <li><a className="dropdown-item" href={`${dashboardUrl}/userProfile/${userData._id}`}>My Profile</a></li>
                     <li><a className="dropdown-item" href='/savedPosts'>Saved Posts</a></li>
                     {/* 6. Rendering Notifications in the list */}
 

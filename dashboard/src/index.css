@@ -1104,7 +1104,8 @@ b {
 }
 
 .commentContent {
-  padding-left: 60px;
+  padding-left: 75px;
+  color: black;
 }
 
 .commentHeader {

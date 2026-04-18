@@ -17,9 +17,11 @@ function Hero() {
     const [activeChat, setActiveChat] = useState(null);
     console.log(recipientId);
 
+    const backendUrl = "https://findbuddy-back.onrender.com";
+
     const fetchUser = async () => {
         try {
-            const profile = await axios.post("http://localhost:3001/user", { id: recipientId });
+            const profile = await axios.post(`${backendUrl}/user`, { id: recipientId });
             console.log(profile);
             setUserData(profile.data);
         } catch (err) {

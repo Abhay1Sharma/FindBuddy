@@ -22,17 +22,20 @@ function Hero() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
 
+    const dashboardUrl = "https://findbuddy-dash.onrender.com";
+    const backendUrl = "https://findbuddy-back.onrender.com";
+
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
-        const postComments = await axios.post("http://localhost:3001/userPostComments", { postId: postId });
-        const response = await axios.post("http://localhost:3001/user", { id: token.id });
+        const postComments = await axios.post(`${backendUrl}/userPostComments`, { postId: postId });
+        const response = await axios.post(`${backendUrl}/user`, { id: token.id });
         setCommentUser(response.data)
         setAllComment(postComments.data.allComments);
     };
 
     const fetchAllPost = async () => {
         try {
-            const response = await axios.get("http://localhost:3001/allPost");
+            const response = await axios.get(`${backendUrl}/allPost`);
             const sortedArray = response.data.sort((a, b) => {
                 const dateA = a.createdAt ? new Date(a.createdAt) : 0;
                 const dateB = b.createdAt ? new Date(b.createdAt) : 0;
@@ -48,7 +51,7 @@ function Hero() {
 
     const handleLike = async (items) => {
         try {
-            const response = await axios.post("http://localhost:3001/like", {
+            const response = await axios.post(`${backendUrl}/like`, {
                 postId: items._id,
                 userId: token.id
             });
@@ -78,7 +81,7 @@ function Hero() {
                 "userId": commentUser._id,
                 "profileId": commentUser.profileId._id
             };
-            const res = await axios.post("http://localhost:3001/comment", data);
+            const res = await axios.post(`${backendUrl}/comment`, data);
             window.location.reload();
             setComment(null);
         } catch (error) {
@@ -105,7 +108,7 @@ function Hero() {
                 "editComment": comment,
                 "commentId": commentId._id,
             };
-            const res = await axios.post("http://localhost:3001/editComment", data);
+            const res = await axios.post(`${backendUrl}/editComment`, data);
             console.log("Server Response:", res.data);
             if (res.status === 200) {
                 setAllComment(prevComments =>
@@ -145,7 +148,7 @@ function Hero() {
                 ProfileId: items.profileId._id,
                 isPostSave: true,
             }
-            const sendPost = await axios.post("http://localhost:3001/savePost", postIds);
+            const sendPost = await axios.post(`${backendUrl}/savePost`, postIds);
             console.log(sendPost);
             setAllPost(prevPost =>
                 prevPost.map(item =>
@@ -204,7 +207,7 @@ function Hero() {
                 }
             }
 
-            const res = await axios.post("http://localhost:3001/editPost", formData, {
+            const res = await axios.post(`${backendUrl}/editPost`, formData, {
                 timeout: 60000,
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -229,7 +232,7 @@ function Hero() {
             }
 
             console.log(postIds);
-            const sendPost = await axios.post("http://localhost:3001/UnSavePostfromHome", postIds);
+            const sendPost = await axios.post(`${backendUrl}/UnSavePostfromHome`, postIds);
             console.log(sendPost);
             setAllPost(prevPost =>
                 prevPost.map(item =>
@@ -245,7 +248,7 @@ function Hero() {
         try {
             console.log(items);
             if (window.confirm("Are you want to delete this post...."));
-            const res = await axios.delete(`http://localhost:3001/deletePost/${items._id}`);
+            const res = await axios.delete(`${backendUrl}/deletePost/${items._id}`);
             console.log(res);
             toast.success("Post Deleted Successfully");
             setTimeout(() => { window.location.reload() }, 3000);
@@ -313,7 +316,7 @@ function Hero() {
                         <div className="col-lg-12 post">
                             <div className="linkedin-card mt-4">
                                 <div className="post-header">
-                                    <Link className="postHeader" to={`http://localhost:3002/userProfile/${items.userId._id}`}>
+                                    <Link className="postHeader" to={`${dashboardUrl}/userProfile/${items.userId._id}`}>
                                         {items.profileId &&
                                             <img src={items.profileId?.profileImage} alt="User Avatar" className="avatar" />
                                         }
@@ -494,7 +497,7 @@ function Hero() {
                                                 <li className="small mb-1 comment" key={items._id || key.id}>
                                                     <div className="commentBox">
                                                         <div className="commentHeader">
-                                                            <Link className="commentHeader" style={{ textDecoration: "none" }} to={`http://localhost:3002/userProfile/${items.userId._id}`}>
+                                                            <Link className="commentHeader" style={{ textDecoration: "none" }} to={`${dashboardUrl}/userProfile/${items.userId._id}`}>
                                                                 {items.profileId &&
                                                                     <img src={items.profileId.profileImage} alt="User Avatar" className="commentAvatar" />
                                                                 }
