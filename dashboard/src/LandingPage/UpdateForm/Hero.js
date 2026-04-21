@@ -3,14 +3,19 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
-const frontendUrl = "https://findbuddy-lsdc.onrender.com";
-const backendUrl = "https://findbuddy-back.onrender.com";
+const frontendUrl = "http://localhost:3000";
+const backendUrl = "http://localhost:3001";
 
 
 function Hero() {
+    const [selectedState, setSelectedState] = useState("");
+    const [cities, setCities] = useState([]);
     const navigate = useNavigate();
+    const [image, setImage] = useState([]);
+    const [file, setFile] = useState(null);
     const storedToken = localStorage.token;
     const decode = jwtDecode(storedToken);
+    const [formData, setformData] = useState();
 
     const locationData = {
         "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
@@ -49,9 +54,8 @@ function Hero() {
         "Puducherry": ["Puducherry", "Karaikal", "Mahe", "Yanam"]
     };
 
-    const [image, setImage] = useState([]);
-    const [formData, setformData] = useState();
     console.log("Your Form Data ", formData);
+    console.log("File : ", file);
 
     const fetchUser = async () => {
         try {
@@ -68,30 +72,44 @@ function Hero() {
 
     const handleChange = (e) => {
         if (e.target.name === "profilePicture") {
-            return setformData({ ...formData, "profilePicture": e.target.files[0] });
-        }
+            return setFile(e.target.files[0]);
+        };
         return setformData({ ...formData, [e.target.name]: e.target.value });
-    };
+    }
 
     const handleSumbit = async (e) => {
         e.preventDefault();
 
         try {
             // 1. You MUST create this instance
-            const data = new FormData();
+            const data = {
+                name: formData.name,
+                gender: formData.gender,
+                age: formData.age,
+                fitnessLevel: formData.fitnessLevel,
+                goal: formData.goal,
+                typeOfBuddy: formData.typeOfBuddy,
+                country: formData.country,
+                state: formData.state,
+                city: formData.city,
+                shifts: formData.shifts,
+                gymname: formData.gymname,
+                userId: formData.userId,
+                profilePicture: file,
+            }
 
-            Object.keys(formData).forEach((key) => {
-                data.append(key, formData[key]);
-                console.log(formData[key]);
-            });
+            console.log(data);
 
-            // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
+            // // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
             const res = await axios.post(`${backendUrl}/updateForm`, data, {
                 withCredentials: true,
+                headers: { 'Content-Type': 'multipart/form-data' }
                 // Axios will automatically set the boundary for multipart/form-data
             });
 
-            toast.success(res.data.message);
+            console.log(res);
+
+            toast.success("Workout Updated!!");
             navigate("/");
         } catch (err) {
             console.error(err);
@@ -99,11 +117,9 @@ function Hero() {
         }
     };
 
-    const [selectedState, setSelectedState] = useState("");
-    const [cities, setCities] = useState([]);
-
     const handleStateChange = (e) => {
         const state = e.target.value;
+        console.log(e.target);
         setSelectedState(state);
         setformData({ ...formData, [e.target.name]: e.target.value });
         setCities(locationData[state] || []); // Update city list based on state
@@ -111,7 +127,7 @@ function Hero() {
 
     return (
         <>
-            <div className="container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+            {formData && <div className="container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                 <div className="row">
                     {/* <div className="col-md-2"></div> */}
                     <div className="col-lg-12">
@@ -130,12 +146,12 @@ function Hero() {
                                 <div >
                                     <h6>Basic Information</h6>
                                     <label htmlFor="fullname" className="fullName">Full Name</label>
-                                    <input name="name" id="fullname" className="form-control" placeholder="Enter your name" onChange={handleChange} required />
+                                    <input name="name" id="fullname" className="form-control" placeholder="Enter your name" onChange={handleChange} value={formData.name} required />
 
                                     <div className="row g-3 mb-3">
                                         <div className="col-md-8">
                                             <label htmlFor="gender" type="number" className="form-label">Gender</label>
-                                            <select id="gender" className="form-control" defaultValue="" name="gender" onChange={handleChange} required>
+                                            <select id="gender" className="form-control" defaultValue="" name="gender" onChange={handleChange} value={formData.gender} required>
                                                 <option value="" disabled>Select Gender</option>
                                                 <option value="Male Buddy">Male</option>
                                                 <option value="Femal Buddy">Female</option>
@@ -146,7 +162,7 @@ function Hero() {
 
                                         <div className="col-md-4">
                                             <label htmlFor="age" className="form-label">Age</label>
-                                            <input type="number" className="form-control" placeholder="Above 16" name="age" min="16" max="50" onChange={handleChange} required />
+                                            <input type="number" className="form-control" placeholder="Above 16" name="age" min="16" max="50" onChange={handleChange} value={formData.age} required />
                                         </div>
                                     </div>
 
@@ -161,7 +177,7 @@ function Hero() {
 
                                     <div className="shifts mb-2">
                                         <label htmlFor="Shifts" className="form-label" name="shift">Select Shifts</label>
-                                        <select className="form-control" name="shifts" defaultValue="" onChange={handleChange} required>
+                                        <select className="form-control" name="shifts" defaultValue="" onChange={handleChange} value={formData.shift} required>
                                             <option value="" disabled>Choose the Preference</option>
                                             <option value="Morning (6:30 AM - 8:30 AM)">Morning (6:30 AM - 8:30 AM)</option>
                                             <option value="Afternoon (Often closed or Quiet Hours)">Afternoon (Often closed or Quiet Hours)</option>
@@ -171,7 +187,7 @@ function Hero() {
 
                                     <div className="fitnessLevel">
                                         <label htmlFor="Price" type="number" className="form-label" name="fitnessLevel">Fitness Level</label>
-                                        <select className="form-control" name="fitnessLevel" defaultValue="" onChange={handleChange} required>
+                                        <select className="form-control" name="fitnessLevel" defaultValue="" onChange={handleChange} value={formData.fitnessLevel} required>
                                             <option value="" disabled>Choose the Preference</option>
                                             <option value="Beginner (0-1 years exp)">Beginner (0-1 years exp)</option>
                                             <option value="Intermediate (1-3 years exp)">Intermediate (1-3 years exp)</option>
@@ -194,7 +210,7 @@ function Hero() {
                                             <h6 className="mb-3">Type of Buddy</h6>
                                             <div className="">
                                                 <label htmlFor="workout" className="form-label">Workout Split</label>
-                                                <select name="typeOfBuddy" id="workout" defaultValue="" className="form-control" onChange={handleChange} required>
+                                                <select name="typeOfBuddy" id="workout" defaultValue="" className="form-control" onChange={handleChange} value={formData.typeOfBuddy} required>
                                                     <option value="" disabled>No Preference</option>
                                                     <option value="Male">Male</option>
                                                     <option value="Female">Female</option>
@@ -211,7 +227,7 @@ function Hero() {
                                 <h6 className="mt-3">Location</h6>
                                 <div>
                                     <label htmlFor="country" className="form-label">Country</label>
-                                    <select className="form-control" defaultValue="" name="country" onChange={handleChange} required>
+                                    <select className="form-control" defaultValue="" name="country" onChange={handleChange} value={formData.country} required>
                                         <option value="" disabled >Select Country</option>
                                         <option value="India">India</option>
                                     </select>
@@ -220,7 +236,7 @@ function Hero() {
                             <div className="row mt-2">
                                 <div className="col-md-8">
                                     <label htmlFor="state" className="form-label">State</label>
-                                    <select className="form-control" defaultValue="" name="state" onChange={handleStateChange} required>
+                                    <select className="form-control" defaultValue="" name="state" onChange={handleStateChange} value={formData.state} required>m
                                         <option>Select State</option>
                                         {Object.keys(locationData).map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
@@ -228,7 +244,7 @@ function Hero() {
 
                                 <div className="col-md-4">
                                     <label htmlFor="city" className="form-label">City</label>
-                                    <select name="city" className="form-control" defaultValue="" onChange={handleChange} disabled={!cities.length} required>
+                                    <select name="city" className="form-control" defaultValue="" onChange={handleChange} disabled={!cities.length} value={formData.city} required>
                                         <option value="">Select City</option>
                                         {cities.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
@@ -240,7 +256,7 @@ function Hero() {
                     </div>
                     {/* <div className="col-lg-2"></div> */}
                 </div >
-            </div >
+            </div >}
         </>
     )
 }

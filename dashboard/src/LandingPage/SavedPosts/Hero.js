@@ -8,7 +8,7 @@ import imageCompression from "browser-image-compression";
 
 function Hero() {
 
-    const backendUrl = "https://findbuddy-back.onrender.com";
+    const backendUrl = "http://localhost:3001";
 
     const [postId, setPostId] = useState();
     const [ready, setReady] = useState(false);
@@ -237,7 +237,7 @@ function Hero() {
         try {
             console.log(items);
             if (window.confirm("Are you want to delete this post...."));
-            const res = await axios.delete(`${backendUrl}/deletePost/${items._id}`);
+            const res = await axios.delete(`${backendUrl}/deletePost/${items.postId._id}`);
             console.log(res);
             toast.success("Post Deleted Successfully");
             setTimeout(() => { window.location.reload() }, 3000);

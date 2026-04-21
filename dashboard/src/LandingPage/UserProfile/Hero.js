@@ -27,12 +27,14 @@ function Hero() {
     const [activePostId, setActivePostId] = useState(null);
     const [commentId, setCommentId] = useState();
     const [postAbout, setPostAbout] = useState(null);
+    const [allFollowers, setAllFollowers] = useState([]);
     const [file, setFile] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
+    const[loggedUser, setLoggedUser] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
 
-    const backendUrl = "https://findbuddy-back.onrender.com";
-    const dashboardUrl = "https://findbuddy-dash.onrender.com";
+    const backendUrl = "http://localhost:3001";
+    const dashboardUrl = "http://localhost:3002";
 
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
@@ -199,6 +201,8 @@ function Hero() {
 
             console.log(data);
 
+            toast.info("Wait for a minute..");
+
             const res = await axios.post(`${backendUrl}/updateIntro`, data, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
@@ -208,7 +212,7 @@ function Hero() {
             }
         } catch (error) {
             console.log("Error detail:", error);
-            // toast.error("Image not valid");
+            toast.error("Try again, Something went wrong");
         }
     }
 
@@ -262,9 +266,25 @@ function Hero() {
             });
     }
 
+    console.log(allFollowers);
+
+    const showFollowers = async (userProfileId) => {
+        try {
+            console.log(userProfileId);
+            const allFollowers = await axios.post("http://localhost:3001/allUserFollowers", { userProfileId });
+            console.log(allFollowers);
+            setAllFollowers(allFollowers.data.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const handleFollowers = async () => {
         try {
             // userId: token.id is the LOGGED-IN user
+            const loggedUser = await axios.post("http://localhost:3001/user", { id: token.id });
+            console.log(loggedUser);
+            setLoggedUser(loggedUser.data);
             const response = await axios.post(`${backendUrl}/followers`, {
                 profileId: userProfile._id,
                 userId: token.id
@@ -364,6 +384,8 @@ function Hero() {
             toast.error("Failed to update post");
         }
     };
+
+    console.log(loggedUser);
 
     const UnsavePost = async (items) => {
         try {
@@ -492,7 +514,7 @@ function Hero() {
                                                 </div>
                                             </div>
                                             <div className="profile-actions">
-                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(token.id) ? "Unfollow" : "Wants to Follow"} </button>}
+                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(loggedUser.profileId._id) ? "Unfollow" : "Wants to Follow"} </button>}
                                                 {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button onClick={() => { giveNotification(userInfo._id, tokenId) }} className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link>}
                                                 <div className="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
                                                     <div className="modal-dialog modal-dialog-centered">
@@ -535,7 +557,7 @@ function Hero() {
                                             </div>
                                         </div>
                                         <div className="stats-row">
-                                            <div className="stat-item"><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
+                                            <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop" style={{ cursor: "pointer" }} onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
                                             <div className="stat-item"><span className="stat-number">1,289</span> connections</div>
                                             <div className="stat-item"><span className="stat-number">12</span> recommendations</div>
                                         </div>
@@ -865,11 +887,56 @@ function Hero() {
                         </div>
                     </div>
                 </div>
+            </div >
+
+            {/* Followers Modal */}
+            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div className="followers-list-container" style={{ padding: '20px', maxWidth: '500px' }}>
+                                {allFollowers && allFollowers.length > 0 ? (
+                                    allFollowers.map((followerProfile) => (
+                                        <div className="follower-bar" key={followerProfile._id}>
+                                            {/* 1. User Photo */}
+                                            <img
+                                                className="bar-image"
+                                                src={followerProfile.profileImage}
+                                                alt="Profile"
+                                            />
+
+                                            <div className="bar-info">
+                                                {/* 2. Username (Extracted from nested userId) */}
+                                                <h3 className="bar-username">
+                                                    {followerProfile.userId?.username || "Gym Member"}
+                                                </h3>
+
+                                                {/* 3. Headline (introContent from Profile) */}
+                                                <p className="bar-headline">
+                                                    {followerProfile.introContent || "No bio available"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No followers yet. Time to hit the gym!</p>
+                                )}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </>
     );
 }
 
 export default Hero;
-
-

@@ -7,7 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 
 function Hero() {
-    const backendUrl = "https://findbuddy-back.onrender.com";
+    const backendUrl = "http://localhost:3001";
     const socket = io(`${backendUrl}`);
 
     const [notifications, setNotifications] = useState([]);

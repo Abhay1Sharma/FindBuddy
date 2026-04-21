@@ -9,6 +9,7 @@ import { jwtAuthMiddleware, generateToken } from "../jwt.js";
 const googleClient = new OAuth2Client(process.env.REACT_APP_CLIENTID);
 const resend = new Resend(process.env.REACT_APP_RESEND_API_KEY);
 const jwtsecret = process.env.REACT_APP_JWT_SECRET;
+const frontendUrl = "http://localhost:3000";
 
 const router = express.Router();
 
@@ -59,7 +60,7 @@ router.post("/signup", async (req, res) => {
             { expiresIn: '15m' }
         );
 
-        const verificationUrl = `https://findbuddy-lsdc.onrender.com/verify-email?token=${emailToken}`;
+        const verificationUrl = `${frontendUrl}/verify-email?token=${emailToken}`;
 
         // 3. Send the Email via Resend
         const emaildetails = await resend.emails.send({
@@ -138,7 +139,7 @@ router.post("/api/resend-verification", async (req, res) => {
 
     // Send email again (same as Step 3)
 
-    const verificationUrl = `https://findbuddy-lsdc.onrender.com/verify-email?token=${newToken}`;
+    const verificationUrl = `${frontendUrl}/verify-email?token=${newToken}`;
 
     await resend.emails.send({
         from: 'FindBuddy <onboarding@resend.dev>',
@@ -197,7 +198,7 @@ router.post('/api/forgot-password', async (req, res) => {
         }
 
         const token = jwt.sign({ id: user._id }, jwtsecret, { expiresIn: '7d' });
-        const resetUrl = `https://findbuddy-lsdc.onrender.com/reset-password?token=${token}`;
+        const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
         await resend.emails.send({
             from: 'FindBuddy <security@resend.dev>',

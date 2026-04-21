@@ -6,9 +6,9 @@ import { jwtDecode } from "jwt-decode";
 import imageCompression from "browser-image-compression";
 import { io } from "socket.io-client"; // 1. Import Socket.io
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com";
-const backendUrl = "https://findbuddy-back.onrender.com";
-const dashboardUrl = "https://findbuddy-dash.onrender.com";
+const frontendUrl = "http://localhost:3000";
+const backendUrl = "http://localhost:3001";
+const dashboardUrl = "http://localhost:3002";
 
 const socket = io(backendUrl);
 
@@ -41,7 +41,17 @@ const Navbar = ({ setSearch }) => {
       audio.play().catch(err => console.log("User interaction required for audio."));
 
       // setNotifications((prev) => [notif, ...prev]);
-      toast.info(`🔔 ${notif.content}`);
+      toast(`🔔 ${notif.content}`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+      // toast.info(`🔔 ${notif.content}`);
       setIsNewNotification(true);
     };
 
@@ -143,6 +153,8 @@ const Navbar = ({ setSearch }) => {
         profileId: postData.profileId,
       }
 
+      console.log(data);
+
       if (fileUpload) {
         data.media = fileUpload;
       }
@@ -151,6 +163,8 @@ const Navbar = ({ setSearch }) => {
         timeout: 60000, // Increased to 60s for video uploads
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
+      console.log(res);
 
 
       // Reset form

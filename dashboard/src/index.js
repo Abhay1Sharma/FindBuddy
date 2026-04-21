@@ -17,7 +17,7 @@ import AllContent from './LandingPage/AllContent/AllContent';
 import SavedPosts from "./LandingPage/SavedPosts/SavedPosts"
 import Notification from "./LandingPage/Notifications/Notifications";
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+const frontendUrl = "http://localhost:3000";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 function App() {

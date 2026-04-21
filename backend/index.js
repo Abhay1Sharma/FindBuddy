@@ -37,9 +37,9 @@ const PORT = 3001;
 const app = express();
 const httpServer = createServer(app); // Create the HTTP server
 
-const frontendUrl = "https://findbuddy-lsdc.onrender.com";
-const backendUrl = "https://findbuddy-back.onrender.com";
-const dashboardUrl = "https://findbuddy-dash.onrender.com";
+const frontendUrl = "http://localhost:3000";
+const backendUrl = "http://localhost:3001";
+const dashboardUrl = "http://localhost:3002";
 
 // 1. Initialize Socket.io[]
 const io = new Server(httpServer, {
@@ -139,6 +139,8 @@ app.get("/allFormData", async (req, res) => {
 
 app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
     try {
+        console.log(req.files);
+
         const profilePath = req.file ? req.file?.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
 
         const {
@@ -212,6 +214,7 @@ app.post("/editPost", upload.single("editMedia"), async (req, res) => {
 
 app.post("/user", async (req, res) => {
     try {
+        console.log(req.body);
         const Id = req.body.id;
         const logged = await User.findById(Id).populate('formId profileId');
         res.status(200).json(logged);
@@ -310,25 +313,6 @@ app.post("/editComment", async (req, res) => {
     }
 });
 
-// backend/routes/post.js (or wherever your /like route is)
-// app.post("/like", async (req, res) => {
-//     try {
-//         const { postId, userId } = req.body;
-//         const post = await Post.findById(postId);
-
-//         const isLike = post.likes.includes(userId);
-//         const update = isLike ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } };
-
-//         // CRITICAL FIX: Add .populate() here before sending back to frontend
-//         const updatedPost = await Post.findByIdAndUpdate(postId, update, { new: true }).populate('userId').populate('profileId');
-//         console.log(updatedPost);
-
-//         return res.status(200).json({ updatedPost });
-//     } catch (error) {
-//         res.status(400).json({ error: error.message });
-//     }
-// });
-
 app.post("/like", async (req, res) => {
     try {
         const { postId, userId } = req.body;
@@ -407,8 +391,8 @@ app.get("/notifications/:userId", async (req, res) => {
 
 app.post("/postContent", upload.single("media"), async (req, res) => {
     try {
-        // console.log("File received:", req.file);
-        // console.log("Body received:", req.body);
+        console.log("File received:", req.file);
+        console.log("Body received:", req.body);
 
         const data = {
             userId: req.body.userId,
@@ -477,8 +461,10 @@ app.post("/followers", async (req, res) => {
             return res.status(404).json({ message: "Profile Not Found " });
         }
 
-        const isUserFollow = profile.followers.includes(userId);
-        const updateData = isUserFollow ? { $pull: { followers: userId } } : { $addToSet: { followers: userId } };
+        const userProfileId = user.profileId._id;
+
+        const isUserFollow = profile.followers.includes(userProfileId);
+        const updateData = isUserFollow ? { $pull: { followers: userProfileId } } : { $addToSet: { followers: userProfileId } };
 
         const data = await Profile.findByIdAndUpdate(profileId, updateData, { new: true });
 
@@ -518,6 +504,45 @@ app.post("/followers", async (req, res) => {
     } catch (error) {
         // console.log(error);
         res.status(400).json({ error: error.message });
+    }
+});
+
+app.post("/allUserFollowers", async (req, res) => {
+    try {
+        const { userProfileId } = req.body;
+
+        if (!userProfileId) {
+            return res.status(400).json({ error: "userProfileId is required" });
+        }
+
+        // const userFollowers = await Profile.findById(userProfileId).populate([
+        //     {
+        //         ref: "followers",
+        //         path: { userId: "user" }
+        //     },
+        // ], 'followers');
+
+        const userFollowers = await Profile.findById(userProfileId).populate({
+            path: 'followers',
+            populate: {
+                path: 'userId',
+                select: 'username email'
+            }
+        });
+
+        if (!userFollowers) {
+            return res.status(404).json({ error: "Profile not found" });
+        }
+
+        res.status(200).json({
+            message: "Followers retrieved successfully",
+            count: userFollowers.followers.length,
+            data: userFollowers.followers
+        });
+
+    } catch (error) {
+        console.error("Follower Fetch Error:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
@@ -572,6 +597,7 @@ app.post("/allSavedPosts", async (req, res) => {
 
 app.post("/UnSavePost", async (req, res) => {
     try {
+        console.log(req.body);
         const { UserId, SavePostId, postId } = req.body;
         const UnSavePost = await SavePost.findByIdAndDelete(SavePostId);
         console.log(UnSavePost);
@@ -599,29 +625,29 @@ app.post("/UnSavePostfromHome", async (req, res) => {
 });
 
 app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
-    const {
-        name, gender, age, fitnessLevel, goal,
-        typeOfBuddy, city, state, country, shifts, userId
-    } = req.body;
 
-    const photoBase64 = req.file ? "data:image/webp;base64," + req.file.buffer.toString("base64") : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+    try {
 
-    const user = await User.findById({ _id: userId });
-    const _id = user.formId;
-    const form = await Form.findByIdAndUpdate(_id, {
-        name, gender, age, fitnessLevel, goal,
-        typeOfBuddy, city, state, country, shifts, userId,
-        profilePicture: photoBase64
+        console.log("Request body : ", req.body);
+        console.log("Request files :", req.files);
 
-    });
+        const { userId } = req.body;
 
-    const formUpdate = await Form.findByIdAndUpdate({})
-    const newForm = await new Form({
-        name, gender, age, fitnessLevel, goal,
-        typeOfBuddy, city, state, country, shifts,
-        userId,
-        profilePicture: photoBase64,
-    }).save();
+        const profilePictureUrl = req.file ? req.file.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
+        const data = req.body;
+        data.profilePicture = profilePictureUrl;
+
+        console.log(data);
+
+        const user = await User.findById({ _id: userId });
+        const _id = user.formId;
+        const form = await Form.findByIdAndUpdate(_id, data);
+        console.log(form);
+        res.status(200).json({ message: "Routine Updated Successfully!!!" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error });
+    }
 });
 
 app.delete("/deletePost/:id", async (req, res) => {

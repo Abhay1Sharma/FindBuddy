@@ -29,6 +29,11 @@ const ProfileSchema = mongoose.Schema(
 
         followers: [{
             type: mongoose.Schema.Types.ObjectId,
+            ref: "profile",
+        }],
+
+        following : [{
+            type: mongoose.Schema.Types.ObjectId,
             ref: "user",
         }]
 

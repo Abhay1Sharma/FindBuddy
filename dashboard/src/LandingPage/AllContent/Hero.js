@@ -22,8 +22,8 @@ function Hero() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
 
-    const dashboardUrl = "https://findbuddy-dash.onrender.com";
-    const backendUrl = "https://findbuddy-back.onrender.com";
+    const dashboardUrl = "http://localhost:3002";
+    const backendUrl = "http://localhost:3001";
 
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
@@ -311,10 +311,10 @@ function Hero() {
     return (
         <>
             {allPost.map((items) => (
-                <div className="container mt-4 mb-4" key={items._id} >
-                    <div className="row">
+                <div className="container" key={items._id} >
+                    <div className="row mt-4">
                         <div className="col-lg-12 post">
-                            <div className="linkedin-card mt-4">
+                            <div className="linkedin-card">
                                 <div className="post-header">
                                     <Link className="postHeader" to={`${dashboardUrl}/userProfile/${items.userId._id}`}>
                                         {items.profileId &&
@@ -534,6 +534,7 @@ function Hero() {
                             </div>
                         </div>
                     </div>
+                    <div className="mb-4"></div>
                 </div >
             ))}
             {/* EDIT POST MODAL - OUTSIDE THE MAP */}
