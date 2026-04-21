@@ -514,7 +514,7 @@ function Hero() {
                                                 </div>
                                             </div>
                                             <div className="profile-actions">
-                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(loggedUser.profileId._id) ? "Unfollow" : "Wants to Follow"} </button>}
+                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(loggedUser?.profileId._id) ? "Unfollow" : "Wants to Follow"} </button>}
                                                 {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button onClick={() => { giveNotification(userInfo._id, tokenId) }} className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link>}
                                                 <div className="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
                                                     <div className="modal-dialog modal-dialog-centered">
