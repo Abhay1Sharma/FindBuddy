@@ -60,11 +60,11 @@ function App() {
         <Navbar setSearch={setSearch} />
         <div className="content">
           <Routes>
-            <Route path="/" element={<Home search={search} />} />
+            <Route path="/" element={<AllContent />} />
             <Route path="/userChats/:id" element={<Chats />} />
             <Route path="/createPost" element={<CreatePost />} />
             <Route path="/savedPosts" element={<SavedPosts />} />
-            <Route path="/allContent" element={<AllContent />} />
+            <Route path="/allContent" element={<Home search={search} />} />
             <Route path="/logout-sync" element={<LogoutSync />} />
             <Route path="/complete-profile" element={<FormData />} />
             <Route path="/update-profile" element={<UpdateForm />} />

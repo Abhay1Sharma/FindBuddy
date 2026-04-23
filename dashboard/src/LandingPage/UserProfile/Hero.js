@@ -28,9 +28,10 @@ function Hero() {
     const [commentId, setCommentId] = useState();
     const [postAbout, setPostAbout] = useState(null);
     const [allFollowers, setAllFollowers] = useState([]);
+    const [allFollowings, setAllFollowings] = useState([]);
     const [file, setFile] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
-    const[loggedUser, setLoggedUser] = useState(null);
+    const [loggedUser, setLoggedUser] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
 
     const backendUrl = "http://localhost:3001";
@@ -131,7 +132,8 @@ function Hero() {
             try {
                 const user = await axios.post(`${backendUrl}/user`, { id: Id.id });
                 const posts = await axios.post(`${backendUrl}/userPosts`, { id: Id.id });
-                console.log(posts);
+                const loggedUser = await axios.post("http://localhost:3001/user", { id: token.id });
+                setLoggedUser(loggedUser.data);
                 setAllPost(posts.data.userposts);
                 setUserInfo(user.data);
                 setFormData(user.data.formId);
@@ -279,12 +281,20 @@ function Hero() {
         }
     }
 
+    const showFollowings = async (userProfileId) => {
+        try {
+            console.log(userProfileId);
+            const allFollowers = await axios.post("http://localhost:3001/allUserFollowings", { userProfileId });
+            console.log(allFollowers);
+            setAllFollowings(allFollowers.data.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const handleFollowers = async () => {
         try {
             // userId: token.id is the LOGGED-IN user
-            const loggedUser = await axios.post("http://localhost:3001/user", { id: token.id });
-            console.log(loggedUser);
-            setLoggedUser(loggedUser.data);
             const response = await axios.post(`${backendUrl}/followers`, {
                 profileId: userProfile._id,
                 userId: token.id
@@ -557,9 +567,9 @@ function Hero() {
                                             </div>
                                         </div>
                                         <div className="stats-row">
-                                            <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop" style={{ cursor: "pointer" }} onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
-                                            <div className="stat-item"><span className="stat-number">1,289</span> connections</div>
-                                            <div className="stat-item"><span className="stat-number">12</span> recommendations</div>
+                                            <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
+                                            <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdropFollowings" onClick={() => showFollowings(userProfile._id)}><span className="stat-number">{userProfile?.following.length}</span> followings </div>
+                                            {/* <div className="stat-item"><span className="stat-number">12</span> recommendations</div> */}
                                         </div>
                                     </div>
                                 </div>
@@ -893,10 +903,10 @@ function Hero() {
             <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                        <div class="modal-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h5 class="modal-title" id="staticBackdropLabel">Showing Followers</h5>
                             <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
+                                <span aria-hidden="true">X</span>
                             </button>
                         </div>
                         <div class="modal-body">
@@ -904,7 +914,6 @@ function Hero() {
                                 {allFollowers && allFollowers.length > 0 ? (
                                     allFollowers.map((followerProfile) => (
                                         <div className="follower-bar" key={followerProfile._id}>
-                                            {/* 1. User Photo */}
                                             <img
                                                 className="bar-image"
                                                 src={followerProfile.profileImage}
@@ -912,12 +921,10 @@ function Hero() {
                                             />
 
                                             <div className="bar-info">
-                                                {/* 2. Username (Extracted from nested userId) */}
                                                 <h3 className="bar-username">
                                                     {followerProfile.userId?.username || "Gym Member"}
                                                 </h3>
 
-                                                {/* 3. Headline (introContent from Profile) */}
                                                 <p className="bar-headline">
                                                     {followerProfile.introContent || "No bio available"}
                                                 </p>
@@ -926,6 +933,51 @@ function Hero() {
                                     ))
                                 ) : (
                                     <p>No followers yet. Time to hit the gym!</p>
+                                )}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Followingss Modals */}
+
+            <div class="modal fade" id="staticBackdropFollowings" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h5 class="modal-title" id="staticBackdropLabelFollowings">Showing Followers</h5>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">X</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div className="followers-list-container" style={{ padding: '20px', maxWidth: '500px' }}>
+                                {allFollowings && allFollowings.length > 0 ? (
+                                    allFollowings.map((followerProfile) => (
+                                        <div className="follower-bar" key={followerProfile._id}>
+                                            <img
+                                                className="bar-image"
+                                                src={followerProfile.profileImage}
+                                                alt="Profile"
+                                            />
+
+                                            <div className="bar-info">
+                                                <h3 className="bar-username">
+                                                    {followerProfile.userId?.username || "Gym Member"}
+                                                </h3>
+
+                                                <p className="bar-headline">
+                                                    {followerProfile.introContent || "No bio available"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No followings yet. Time to hit the gym!</p>
                                 )}
                             </div>
                         </div>

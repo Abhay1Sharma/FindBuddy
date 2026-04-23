@@ -26,7 +26,7 @@ const jwtAuthMiddleware = (req, res, next) => {
 const generateToken = (userData) => {
     // Use the same ENV variable here!
     // '8h' = 8 hours. '1d' = 1 day. Use strings for clarity.
-    return jwt.sign(userData, process.env.REACT_APP_JWT_SECRET, { expiresIn: '8h' });
+    return jwt.sign(userData, process.env.REACT_APP_JWT_SECRET, { expiresIn: '7d' });
 }
 
 export { jwtAuthMiddleware, generateToken };

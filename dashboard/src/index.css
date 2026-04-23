@@ -152,6 +152,13 @@ body,
   color: #777;
 }
 
+.navbar-logo-input {
+  width: 45rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -213,13 +220,39 @@ i {
   }
 }
 
-.searchbar {
-  width: 20%;
-}
-
 @media only screen and (max-width: 800px) {
   .searchbar {
     width: 50%;
+  }
+
+  .navbar-logo-input {
+    width: 18.5rem;
+  }
+}
+
+@media only screen and (min-width: 800px) {
+  .searchbar {
+    width: 50%;
+  }
+}
+
+@media only screen and (max-width: 1170px) {
+  .searchbar {
+    width: 50%;
+  }
+
+  .navbar-logo-input {
+    width: 25rem;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .searchbar {
+    width: 50%;
+  }
+
+  .navbar-logo-input {
+    width: 80%;
   }
 }
 
@@ -394,8 +427,11 @@ i {
 
 /* Not Found Page */
 .notFoundImage {
+  object-fit: cover;
   width: 100vh !important;
-  padding: 0 8rem;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
 }
 
 .card {
@@ -422,6 +458,13 @@ i {
   width: 5rem;
   border-radius: 50%;
   border: 3px solid #FF3D00;
+}
+
+.form-content {
+  margin: 1rem;
+  padding: 2rem;
+  border-radius: 22px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
 }
 
 .profile {
@@ -519,6 +562,16 @@ i {
   background-color: #FF3D00 !important;
   border-top-right-radius: 0px !important;
   border-bottom-right-radius: 0px !important;
+}
+
+.mg {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 10px;
+  border-radius: 12px;
+  /* background-color: rgb(255, 61, 0); */
+  /* color: white; */
 }
 
 .right {
@@ -834,6 +887,13 @@ i {
   }
 }
 
+@media only screen and (max-width: 10240px) {
+  .notFoundImage {
+    width: 60vh !important;
+  }
+}
+
+
 .profile-actions-btn {
   background-color: #FF3D00;
   height: 2.5rem;
@@ -1116,6 +1176,8 @@ b {
   display: flex;
   padding: 5px 16px;
   position: relative;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
 .comment {
@@ -1221,8 +1283,11 @@ b {
   font-family: 'Inter', -apple-system, sans-serif;
   transition: background-color 0.2s ease;
   cursor: pointer;
+  margin: 1rem;
   position: relative;
   max-width: 400px;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+  border-radius: 11px;
 }
 
 .notification-card:hover {
@@ -1412,4 +1477,47 @@ b {
   text-overflow: ellipsis;
   /* Cuts off long text with ... */
   max-width: 250px;
+}
+
+.ping-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  position: relative;
+}
+
+.ping-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #ccff00;
+  /* Your Neon Lime Accent */
+  border-radius: 50%;
+  box-shadow: 0 0 15px #ccff00;
+}
+
+.ping-ring {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #ccff00;
+  border-radius: 50%;
+  animation: ripple 3s infinite ease-out;
+  opacity: 0;
+}
+
+.delay {
+  animation-delay: 1.5s;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(8);
+    opacity: 0;
+  }
 }

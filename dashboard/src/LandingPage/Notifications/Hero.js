@@ -34,6 +34,46 @@ function Hero() {
         Notifications()
     }, []);
 
+    if (notifications.length === 0) {
+        return (
+            <>
+                <div className="container empty-state-wrapper" style={{ userSelect: "none", padding: "4rem 0" }}>
+                    <div className="row justify-content-center">
+
+                        {/* Video Container */}
+                        <div className="col-12 d-flex justify-content-center mb-4">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "65vh",
+                                    mixBlendMode: "multiply",
+                                    filter: "grayscale(20%)"
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/notifications-animation-gif-download-9166489.mp4'}
+                            />
+                        </div>
+
+                        {/* Text Content */}
+                        <div className="col-lg-6 text-center">
+                            <h2 style={{ fontWeight: "600", letterSpacing: "-0.02em", color: "#111" }}>
+                                Nothing to see here... yet.
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "1.1rem" }}>
+                                Stay in the loop! New connections, mentions, and updates will show up here as they happen
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </>
+        )
+    }
+
     return (
         <>
             {notifications.map((items) => (

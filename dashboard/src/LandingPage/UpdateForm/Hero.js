@@ -16,6 +16,8 @@ function Hero() {
     const storedToken = localStorage.token;
     const decode = jwtDecode(storedToken);
     const [formData, setformData] = useState();
+    const [ready, setReady] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const locationData = {
         "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
@@ -63,8 +65,11 @@ function Hero() {
             const Id = response.data.formId;
             const getForm = await axios.post(`${backendUrl}/getUserForm`, { Id });
             setformData(getForm.data.data);
+            setReady(true);
         } catch (error) {
             console.log(error);
+        } finally {
+            setReady(true);
         }
     }
 
@@ -99,6 +104,7 @@ function Hero() {
             }
 
             console.log(data);
+            setLoading(true);
 
             // // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
             const res = await axios.post(`${backendUrl}/updateForm`, data, {
@@ -107,6 +113,7 @@ function Hero() {
                 // Axios will automatically set the boundary for multipart/form-data
             });
 
+            setLoading(false);
             console.log(res);
 
             toast.success("Workout Updated!!");
@@ -114,6 +121,8 @@ function Hero() {
         } catch (err) {
             console.error(err);
             toast.error("Upload failed.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -125,12 +134,24 @@ function Hero() {
         setCities(locationData[state] || []); // Update city list based on state
     };
 
+    if (!ready) {
+        return (
+            <>
+                <div className='root'>
+                    <div className="loaderContent">
+                        <div className="loader"></div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             {formData && <div className="container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                 <div className="row">
                     {/* <div className="col-md-2"></div> */}
-                    <div className="col-lg-12">
+                    <div className="col-lg-12 form-content">
                         <form onSubmit={handleSumbit} >
 
                             <div className="mt-4">
@@ -251,7 +272,8 @@ function Hero() {
                                 </div>
                             </div>
 
-                            <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Find your Buddy</button>
+                            {loading ? <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(227, 122, 90)" }}>Wait a minute...</button> :
+                                <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Update Your Routine</button>}
                         </form>
                     </div>
                     {/* <div className="col-lg-2"></div> */}

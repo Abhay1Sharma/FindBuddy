@@ -168,6 +168,16 @@ function Hero() {
         setPostAbout(items.about);
     };
 
+    const deleteComment = async (id) => {
+        try {
+            const deletedComment = await axios.post("http://localhost:3001/deletePostComment", { id: id });
+            console.log(deletedComment);
+            setAllComment(deletedComment.data.allComment);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const handleUpdatePost = async (e) => {
         e.preventDefault();
 
@@ -244,6 +254,14 @@ function Hero() {
         }
     }
 
+    const repostContent = async (post) => {
+        try {
+            console.log(post);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const deletePost = async (items) => {
         try {
             console.log(items);
@@ -288,7 +306,7 @@ function Hero() {
     if (allPost.length === 0) {
         return (
             <>
-                <div className="container NotFound" style={{ userSelect: "none" }}>
+                {/* <div className="container NotFound" style={{ userSelect: "none" }}>
 
                     <div className="row">
 
@@ -303,6 +321,40 @@ function Hero() {
 
                     </div>
 
+                </div> */}
+
+                <div className="container empty-state-wrapper" style={{ userSelect: "none", padding: "4rem 0" }}>
+                    <div className="row justify-content-center">
+
+                        {/* Video Container */}
+                        <div className="col-12 d-flex justify-content-center mb-4">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "65vh",
+                                    mixBlendMode: "multiply", // Blends video background if it's white
+                                    filter: "grayscale(20%)"   // Gives it a slightly more professional tone
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/empty-cart-animation-gif-download-8514509.mp4'}
+                            />
+                        </div>
+
+                        {/* Text Content */}
+                        <div className="col-lg-6 text-center">
+                            <h2 style={{ fontWeight: "600", letterSpacing: "-0.02em", color: "#111" }}>
+                                No posts to show
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "1.1rem" }}>
+                                Discover new connections to fill this space with industry news and updates
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
             </>
         )
@@ -470,7 +522,7 @@ function Hero() {
                                         <span className="icon">💬</span> Comment
                                     </button>
 
-                                    <button className="action-item">
+                                    <button className="action-item" onClick={() => { repostContent(items) }}>
                                         <span className="icon">🔁</span> Repost
                                     </button>
                                     <button className="action-item">
@@ -497,21 +549,35 @@ function Hero() {
                                                 <li className="small mb-1 comment" key={items._id || key.id}>
                                                     <div className="commentBox">
                                                         <div className="commentHeader">
-                                                            <Link className="commentHeader" style={{ textDecoration: "none" }} to={`${dashboardUrl}/userProfile/${items.userId._id}`}>
-                                                                {items.profileId &&
-                                                                    <img src={items.profileId.profileImage} alt="User Avatar" className="commentAvatar" />
-                                                                }
-                                                                {items.profileId && <div className="commentuserInfo">
-                                                                    <h3 className="commentUserName" style={{ fontWeight: '700', fontSize: "14px" }}>{items.userId && items.userId.username}</h3>
-                                                                    <h6 className="text-muted" style={{ fontSize: '11px', marginLeft: "10px", marginBottom: "0px" }}>{items.profileId.introContent}</h6>
-                                                                    <span className="text-muted" style={{ marginLeft: "11px", fontSize: '11px' }}>{items.createdAt ?
-                                                                        formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
-                                                                        : "Just now"}  {items.edit && "• Edited"}</span>
-                                                                </div>}
-                                                            </Link>
-                                                            <button type="button" className="options-btn" data-bs-toggle="modal" data-bs-target="#editComment" style={{ fontSize: "14px" }} onClick={() => { setCommentId(items); setComment(items.comment) }} >
-                                                                Edit
-                                                            </button>
+                                                            <div className="userInfo">
+                                                                <Link className="commentHeader" style={{ textDecoration: "none" }} to={`${dashboardUrl}/userProfile/${items.userId._id}`}>
+                                                                    {items.profileId &&
+                                                                        <img src={items.profileId.profileImage} alt="User Avatar" className="commentAvatar" />
+                                                                    }
+                                                                    {items.profileId && <div className="commentuserInfo">
+                                                                        <h3 className="commentUserName" style={{ fontWeight: '700', fontSize: "14px" }}>{items.userId && items.userId.username}</h3>
+                                                                        <h6 className="text-muted" style={{ fontSize: '11px', marginLeft: "10px", marginBottom: "0px" }}>{items.profileId.introContent}</h6>
+                                                                        <span className="text-muted" style={{ marginLeft: "11px", fontSize: '11px' }}>{items.createdAt ?
+                                                                            formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
+                                                                            : "Just now"}  {items.edit && "• Edited"}</span>
+                                                                    </div>}
+                                                                </Link>
+                                                            </div>
+
+                                                            <div className="EditDelete-btn">
+                                                                <div className="edit">
+                                                                    <button type="button" className="options-btn" data-bs-toggle="modal" data-bs-target="#editComment" style={{ fontSize: "14px" }} onClick={() => { setCommentId(items); setComment(items.comment) }} >
+                                                                        Edit
+                                                                    </button>
+                                                                </div>
+                                                                <br />
+                                                                <div className="delete">
+                                                                    <button type="button" className="options-btn" style={{ fontSize: "14px", color: '#d72929' }} onClick={() => { deleteComment(items._id) }}>
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
                                                         </div>
 
                                                         <div className="commentContent">

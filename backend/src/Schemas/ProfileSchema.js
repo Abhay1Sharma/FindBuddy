@@ -34,7 +34,7 @@ const ProfileSchema = mongoose.Schema(
 
         following : [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: "user",
+            ref: "profile",
         }]
 
     }, { timestamps: true }

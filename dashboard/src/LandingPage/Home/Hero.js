@@ -28,11 +28,13 @@ function Hero({ search }) {
     const [ready, setReady] = useState(false);
     const [activeChat, setActiveChat] = useState(null);
     console.log(allUserData);
+    const token = jwtDecode(localStorage.token);
+    const userid = token.id;
 
     const handleConnect = (recipient) => {
-        // Build Room ID
         const myId = userData.formId;
         const recipientId = recipient._id;
+        // Build Room ID
         const roomId = [myId, recipientId].sort().join("_");
 
         // Join Socket Room
@@ -45,6 +47,20 @@ function Hero({ search }) {
             recipientId: recipientId
         });
     };
+
+    const giveNotification = async (userId, ownerid) => {
+        try {
+            console.log(userId, ownerid);
+            const data = {
+                senderId: userId,
+                ownerId: ownerid,
+            }
+            const sendIds = await axios.post(`${backendUrl}/messageIds`, data);
+            console.log(sendIds)
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     const fetchUser = async () => {
         const token = localStorage.token;
@@ -81,7 +97,7 @@ function Hero({ search }) {
     if (allUserData.length === 1) {
         return (
             <>
-                <div className="container NotFound" style={{ userSelect: "none" }}>
+                {/* <div className="container NotFound" style={{ userSelect: "none" }}>
 
                     <div className="row">
 
@@ -96,10 +112,46 @@ function Hero({ search }) {
 
                     </div>
 
+                </div> */}
+
+                <div className="container empty-state-wrapper" style={{ userSelect: "none", padding: "4rem 0" }}>
+                    <div className="row justify-content-center">
+
+                        {/* Video Container */}
+                        <div className="col-12 d-flex justify-content-center mb-4">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "65vh",
+                                    mixBlendMode: "multiply", // Blends video background if it's white
+                                    filter: "grayscale(20%)"   // Gives it a slightly more professional tone
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/man-fishing-on-camping-animation-gif-download-7358590.mp4'}
+                            />
+                        </div>
+
+                        {/* Text Content */}
+                        <div className="col-lg-6 text-center">
+                            <h2 style={{ fontWeight: "600", letterSpacing: "-0.02em", color: "#111" }}>
+                                You’re the first one here-welcome to the inner circle
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "1.1rem" }}>
+                                Start the movement by creating your profile and inviting your inner circle to join the journey
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
             </>
         )
     }
+
+    console.log(allUserData);
 
     const filteredUsers = allUserData.filter((item) => {
         const query = search.toLowerCase();
@@ -108,7 +160,8 @@ function Hero({ search }) {
             item.state?.toString().toLowerCase().includes(query) ||
             item.gymname?.toString().toLowerCase().includes(query) ||
             item.goal?.toString().toLowerCase().includes(query) ||
-            item.shifts?.toString().toLowerCase().includes(query)
+            item.shifts?.toString().toLowerCase().includes(query) ||
+            item.userId?.username?.toString().toLowerCase().includes(query)
         );
     });
 
@@ -176,7 +229,7 @@ function Hero({ search }) {
 
                             <div className="button" >
                                 <Link className="connectNow-button left" to={`/userProfile/${items.userId}`}> VIEW PROFILE </Link>
-                                <Link className="connectNow-button right" to={`/userChats/${items.userId}`}> MESSAGE </Link>
+                                <Link className="connectNow-button right" to={`/userChats/${items.userId}`} onClick={() => { giveNotification(items.userId, userid) }}> MESSAGE </Link>
                             </div>
                         </div>
                     </div>

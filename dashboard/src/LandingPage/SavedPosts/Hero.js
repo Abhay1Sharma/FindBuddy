@@ -275,23 +275,38 @@ function Hero() {
     if (allPost.length === 0) {
         return (
             <>
-                <div className="container NotFound" style={{ userSelect: "none" }}>
+                <div className="container empty-state-wrapper" style={{ userSelect: "none", padding: "4rem 0" }}>
+                    <div className="row justify-content-center">
 
-                    <div className="row">
-
-                        <div className="col-lg-12 col-md-12" style={{ display: "flex", justifyContent: "center" }}>
-                            {/* <img className="notFoundImage" src="https://img.freepik.com/premium-vector/empty-cart-illustration-perfect-user-interface-uiux-projects_854078-2080.jpg?w=1480" alt="EmptyCart" /> */}
-                            {/* <video autoPlay loop muted className="notFoundImage" src="https://cdnl.iconscout.com/lottie/premium/preview-watermark/404-animation-gif-download-5017532.mp4" /> */}
-                            <video autoPlay loop muted disablepictureinpicture="true" className="notFoundImage" src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/empty-animation-gif-download-8707259.mp4'} />
+                        {/* Video Container */}
+                        <div className="col-12 d-flex justify-content-center mb-4">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "65vh",
+                                    mixBlendMode: "multiply", // Blends video background if it's white
+                                    filter: "grayscale(20%)"   // Gives it a slightly more professional tone
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/man-completely-buys-all-products-of-wishlist-animation-gif-download-10456083.mp4'}
+                            />
                         </div>
 
-                        <div className="colo-lg-6" style={{ textAlign: "center" }}>
-                            <h2>Your collection is empty</h2>
-                            <p>Tap the bookmark icon on any post to save it for later</p>
+                        {/* Text Content */}
+                        <div className="col-lg-6 text-center">
+                            <h2 style={{ fontWeight: "600", letterSpacing: "-0.02em", color: "#111" }}>
+                                Your collection is empty
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "1.1rem" }}>
+                                Tap the bookmark icon on any post to save it for later
+                            </p>
                         </div>
 
                     </div>
-
                 </div>
             </>
         )

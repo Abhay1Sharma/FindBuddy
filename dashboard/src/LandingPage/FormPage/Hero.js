@@ -10,6 +10,7 @@ function Hero() {
     const navigate = useNavigate();
     const storedToken = localStorage.token;
     const decode = jwtDecode(storedToken);
+    const [loading, setLoading] = useState(false);
 
     const locationData = {
         "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
@@ -90,18 +91,19 @@ function Hero() {
             });
 
             // 3. Send 'data' (the FormData), NOT 'formData' (your state object)
+            setLoading(true);
             const res = await axios.post(`${backendUrl}/formdata`, data, {
                 withCredentials: true,
                 // Axios will automatically set the boundary for multipart/form-data
             });
-
-            setTimeout( () => { }, 4000 * 10);
-
             toast.success("High five! Profile Saved 🏋️‍♂️");
             navigate("/");
+            window.location.reload();
         } catch (err) {
             console.error(err);
             toast.error("Upload failed.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -120,15 +122,15 @@ function Hero() {
             <div className="container" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                 <div className="row">
                     {/* <div className="col-md-2"></div> */}
-                    <div className="col-lg-12">
+                    <div className="col-lg-12 form-content">
                         <form onSubmit={handleSumbit} >
 
-                            <div className="mt-4">
+                            <div className="form-header">
                                 <div className="basic-info">
                                     <h3>FindBuddy</h3>
                                 </div>
                                 <div className="basic-info mb-4">
-                                    <span>Fill in your routine to find your perfect gym partner.</span>
+                                    <span>Fill your routine to find your perfect gym partner.</span>
                                 </div>
                             </div>
 
@@ -244,7 +246,11 @@ function Hero() {
                                 </div>
                             </div>
 
-                            <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Find your Buddy</button>
+                            {loading ?
+                                <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(213, 149, 130)" }}>Wait....</button>
+                                :
+                                <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Find your Buddy</button>
+                            }
                         </form>
                     </div>
                 </div >

@@ -105,8 +105,24 @@ io.on("connection", (socket) => {
         console.log(`User ${userId} registered with socket ${socket.id}`);
     });
 
-    socket.on("send_message", (data) => { // data should have: { roomId, text, senderId }
-        socket.to(data.roomId).emit("receive_message", data);
+
+    // socket.on("send_message", (data) => { // data should have: { roomId, text, senderId }
+    //     socket.to(data.roomId).emit("receive_message", data);
+    // });
+
+    socket.on("send_message", async (data) => {
+        // data: { roomId, senderId, text, messageType, sharedPostId }
+        try {
+            // 1. Logic to save message to DB could go here
+            // const savedMsg = await Message.create({...}); 
+
+            // 2. Emit to the room
+            socket.to(data.roomId).emit("receive_message", data);
+
+            console.log(`Message sent in room ${data.roomId} by ${data.senderId}`);
+        } catch (err) {
+            console.error("Socket error:", err);
+        }
     });
 
     socket.on("disconnect", () => {
@@ -116,24 +132,34 @@ io.on("connection", (socket) => {
                 break;
             }
         }
+        if (socket.userId) {
+            userSocketMap.delete(socket.userId);
+        }
         console.log("User disconnected");
     });
 });
 
-// 7. API Endpoints (Keeping your existing logic)
-// Change storage to disk
-// const diskStorage = multer.diskStorage({
-//     destination: (req, file, cb) => cb(null, 'uploads/'),
-//     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-// });
 const upload = multer({ storage: storage });
 
 app.get("/allFormData", async (req, res) => {
     try {
-        const allUser = await Form.find({});
+        const allUser = await Form.find({}).populate('userId');
         res.status(200).json(allUser);
     } catch (error) {
         res.status(500).json({ message: "Error fetching data" });
+    }
+});
+
+app.post("/deletePostComment", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { id } = req.body;
+        const deleteComment = await Comment.findByIdAndDelete(id);
+        const allComment = await Comment.find({}).populate('userId profileId');
+        res.status(200).json({ message: "Comment Deleted Successfully !!!", allComment });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ error: error });
     }
 });
 
@@ -224,10 +250,9 @@ app.post("/user", async (req, res) => {
 });
 
 app.post("/profile", async (req, res) => {
-    const { Id } = req.body;
     try {
+        const { Id } = req.body;
         const profile = await Profile.findOne(Id);
-        // console.log(profile);
         res.status(200).json(profile);
     } catch (err) {
         console.log(err);
@@ -358,12 +383,19 @@ app.post("/like", async (req, res) => {
         console.log("Available Sockets:", Array.from(userSocketMap.keys()));
         console.log("Found Socket ID:", recipientSocketId || "None (User Offline)");
 
-        return res.status(200).json({ updatedPost });
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: error.message });
     }
 });
+
+app.post("/repost", async (req, res) => {
+    try {
+        console.log(req.body);
+    } catch (error) {
+        console.log(error);
+    }
+})
 
 app.get("/notifications/:userId", async (req, res) => {
     try {
@@ -404,7 +436,7 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
             data.media = req.file ? req.file.path : null;
         }
 
-        // console.log(data);
+        console.log(data);
 
         const savePost = await new Post(data).save();
         res.status(200).json({ message: "Post Created", savePost });
@@ -413,6 +445,40 @@ app.post("/postContent", upload.single("media"), async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// app.post("/postContent", upload.single("media"), async (req, res) => {
+//     try {
+//         // 1. Check if a file was actually uploaded
+//         if (!req.file) {
+//             return res.status(400).json({ error: "No media file provided" });
+//         }
+
+//         const data = {
+//             userId: req.body.userId,
+//             profileId: req.body.profileId,
+//             about: req.body.about?.trim(),
+//             // req.file.path contains the Cloudinary URL
+//             media: req.file.path
+//         };
+
+//         // 2. Log for debugging
+//         console.log("Saving post with media:", data.media);
+
+//         const savePost = await new Post(data).save();
+
+//         res.status(200).json({
+//             message: "Post Created Successfully! ✅",
+//             savePost
+//         });
+
+//     } catch (error) {
+//         // If Cloudinary rejects the video (e.g., too large), it hits this block
+//         console.error("Upload Error:", error);
+//         res.status(500).json({
+//             error: "Upload failed. Ensure the video is under 100MB and a valid format."
+//         });
+//     }
+// }); 
 
 app.post("/messageIds", async (req, res) => {
     try {
@@ -450,6 +516,16 @@ app.post("/messageIds", async (req, res) => {
     }
 })
 
+app.post("/chat/upload", upload.single("chatMedia"), (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "No file" });
+        // Returns the Cloudinary URL from req.file.path
+        res.status(200).json({ url: req.file.path });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.post("/followers", async (req, res) => {
     try {
         // console.log(req.body);
@@ -468,6 +544,10 @@ app.post("/followers", async (req, res) => {
 
         const data = await Profile.findByIdAndUpdate(profileId, updateData, { new: true });
 
+        const updateFollowingData = isUserFollow ? { $pull: { following: profileId } } : { $addToSet: { following: profileId } };
+        const updateUser = await Profile.findByIdAndUpdate(userProfileId, updateFollowingData);
+        console.log(data);
+        console.log(updateUser);
         const sender = user._id.toString();
         const receiver = profile.userId._id.toString();
         let recipientSocketId = null;
@@ -510,17 +590,7 @@ app.post("/followers", async (req, res) => {
 app.post("/allUserFollowers", async (req, res) => {
     try {
         const { userProfileId } = req.body;
-
-        if (!userProfileId) {
-            return res.status(400).json({ error: "userProfileId is required" });
-        }
-
-        // const userFollowers = await Profile.findById(userProfileId).populate([
-        //     {
-        //         ref: "followers",
-        //         path: { userId: "user" }
-        //     },
-        // ], 'followers');
+        if (!userProfileId) return res.status(400).json({ error: "userProfileId is required" });
 
         const userFollowers = await Profile.findById(userProfileId).populate({
             path: 'followers',
@@ -538,6 +608,38 @@ app.post("/allUserFollowers", async (req, res) => {
             message: "Followers retrieved successfully",
             count: userFollowers.followers.length,
             data: userFollowers.followers
+        });
+
+    } catch (error) {
+        console.error("Follower Fetch Error:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+app.post("/allUserFollowings", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { userProfileId } = req.body;
+        if (!userProfileId) return res.status(400).json({ error: "userProfileId is required" });
+
+        const userFollowings = await Profile.findById(userProfileId).populate({
+            path: 'following',
+            populate: {
+                path: 'userId',
+                // select: 'username email'
+            }
+        });
+
+        console.log(userFollowings);
+
+        if (!userFollowings) {
+            return res.status(404).json({ error: "Profile not found" });
+        }
+
+        res.status(200).json({
+            message: "Followings retrieved successfully",
+            count: userFollowings.following.length,
+            data: userFollowings.following
         });
 
     } catch (error) {
@@ -670,10 +772,8 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
         const { userId, intro, about } = req.body;
         console.log(req.body);
 
-        // 1. Initialize update object
         const updateData = {};
 
-        // 2. Handle Text Fields
         if (intro && intro !== 'undefined') updateData.introContent = intro;
         if (about && about !== 'undefined') updateData.aboutContent = about;
 

@@ -31,7 +31,17 @@ const PostSchema = mongoose.Schema(
         likes: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "user"
-        }]
+        }],
+
+        from: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user"
+        },
+
+        isRepost: {
+            type: Boolean,
+            dafault: false
+        }
 
     }, { timestamps: true }
 );

@@ -323,10 +323,13 @@ router.post("/api/google-login", async (req, res) => {
         // we check by email. Google users might not have a password.
         let user = await User.findOne({ email: email });
 
+        console.log(payload);
+
         if (!user) {
             // Create user if they don't exist
             user = new User({
-                username: email.split('@')[0] + "_" + Math.floor(Math.random() * 1000),
+                // username: email.split('@')[0] + "_" + Math.floor(Math.random() * 1000),
+                username: name,
                 email: email,
                 isVerified: true, // Google emails are pre-verified
                 googleId: googleId,

@@ -6,8 +6,8 @@ import { jwtDecode } from "jwt-decode";
 import imageCompression from "browser-image-compression";
 import { io } from "socket.io-client"; // 1. Import Socket.io
 
-const frontendUrl = "http://localhost:3000";
-const backendUrl = "http://localhost:3001";
+const frontendUrl =  "http://localhost:3000";
+const backendUrl =   "http://localhost:3001";
 const dashboardUrl = "http://localhost:3002";
 
 const socket = io(backendUrl);
@@ -23,6 +23,7 @@ const Navbar = ({ setSearch }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   // const [notifications, setNotifications] = useState([]); // 3. State for notifications
   const [isNewNotification, setIsNewNotification] = useState(false);
+  const [isFormFilled, setIsFormFilled] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,6 +65,8 @@ const Navbar = ({ setSearch }) => {
     };
   }, [userData?._id]); // Only reset if the user changes
 
+  console.log(userData);
+
   // STEP 1: Catch and Save the Token
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -85,6 +88,8 @@ const Navbar = ({ setSearch }) => {
     }
   }, []); // Empty array means this runs ONCE when the page loads
 
+  console.log(isFormFilled);
+
   const fetchUser = async (tokenToUse) => {
     // Use the token passed in, or grab from storage
     const token = tokenToUse || localStorage.getItem('token');
@@ -99,6 +104,7 @@ const Navbar = ({ setSearch }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUserData(res.data);
+      setIsFormFilled(res.data.hasCompleteProfile);
       postData.userId = res.data._id;
       // setPostData({ ...postData, ["userId"]: res.data._id });
       setPostData({ ...postData, ["profileId"]: res.data.profileId });
@@ -160,12 +166,11 @@ const Navbar = ({ setSearch }) => {
       }
 
       const res = await axios.post(`${backendUrl}/postContent`, data, {
-        timeout: 60000, // Increased to 60s for video uploads
+        timeout: 6000, // Increased to 60s for video uploads
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       console.log(res);
-
 
       // Reset form
       setFile(null);
@@ -177,8 +182,21 @@ const Navbar = ({ setSearch }) => {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.status === 400 ? "Empty post not allowed" : "Post Not Created");
+      navigate("/complete-profile");
     }
   };
+
+  const giveWarning = async (e) => {
+    try {
+      console.log(e);
+      if (e.type === 'click' && isFormFilled === false) {
+        window.alert("Hold On! 🏋️‍♂️ It looks like you're trying to jump ahead, but your Gym Routine is still empty. To give you the best experience and unlock the full potential of our features, please take a moment to fill out your routine first.It only takes a minute, and it ensures everything else on the site works perfectly for your goals!");
+        // setTimeout(() => { navigate("/complete-profile") }, 3000);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -198,23 +216,33 @@ const Navbar = ({ setSearch }) => {
     <>
       < nav className="navbar navbar-expand-lg sticky-top border-bottom" style={{ backgroundColor: "white", height: "4rem", border: "none", boxShadow: "none" }}>
         <div className="container-fluid" >
-          <Link className="navbar-brand" to={"/form"} style={{ width: "30%", }}><i className="fa-solid fa-dumbbell" style={{ color: "red", height: "2rem", width: "2rem" }}> < span style={{ color: "#848080ff" }}>Find</span><span style={{ color: "#FF3D00" }}>Buddy</span></i> </Link>
-          <input placeholder='Enter your Interset' className="searchbar" onChange={(e) => setSearch(e.target.value)} />
+          <div className="navbar-logo-input">
+            <Link className="navbar-brand" to={"http://localhost:3000"}><i className="fa-solid fa-dumbbell" style={{ color: "red", height: "2rem", width: "2rem" }}> < span style={{ color: "#848080ff" }}>Find</span><span style={{ color: "#FF3D00" }}>Buddy</span></i> </Link>
+            <input placeholder='Enter your Interset' className="searchbar" onChange={(e) => setSearch(e.target.value)} />
+          </div>
           <button className="navbar-toggler" type="button" style={{ border: "none", color: "white" }} data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span style={{ border: "none", color: "white" }} className="navbar-toggler-icon"></span>
           </button>
           <div style={{ backgroundColor: 'white', border: "none" }} className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav mb-2 mb-lg-0" style={{ margin: "0 auto", backgroundColor: "white" }}>
-              <li className="nav-item">
-                <Link className="nav-link active m-1.5" aria-current="page" to={"/allContent"}>Home</Link >
+              <li className="nav-item" onClick={(e) => { giveWarning(e) }}>
+                <Link className="nav-link active m-1.5" aria-current="page" to={isFormFilled && "/"}>Home</Link >
               </li>
 
-              <li className="nav-item">
-                <Link className="nav-link active m-1.5" to={"/update-profile"}>Update Your Routine</Link >
+              <li className="nav-item" onClick={(e) => { giveWarning(e) }}>
+                <Link className="nav-link active m-1.5" aria-current="page" to={isFormFilled && "/allContent"}>All Users</Link >
               </li>
 
-              <li className="nav-item" >
-                <Link type="button" className='nav-link active m-1.5' data-bs-toggle="modal" data-bs-target="#exampleModalCenter"> Create a Post </Link>
+              <li className="nav-item" onClick={(e) => { giveWarning(e) }}>
+                <Link className="nav-link active m-1.5" to={isFormFilled && "/update-profile"}>Update Your Routine</Link >
+              </li>
+
+              <li className="nav-item" onClick={(e) => { giveWarning(e) }}>
+                {
+                  isFormFilled ? <Link type="button" className='nav-link active m-1.5' data-bs-toggle="modal" data-bs-target="#exampleModalCenter"> Create a Post </Link>
+                    :
+                  <Link type="button" className='nav-link active m-1.5'> Create a Post </Link>
+                }
               </li>
 
               {userData && (
@@ -293,7 +321,7 @@ const Navbar = ({ setSearch }) => {
                 <label htmlFor="about" className="about">About Content</label>
                 <textarea name="about" id="about" className="form-control mt-2" placeholder="Write about yourself..." onChange={handleChange} />
 
-                <div className="media-uploader mt-4">
+                <div className="media-uploader mt-3 mb-2">
                   <label htmlFor="media-input" className="custom-button">
                     <input type="file" id="media-input" accept="image/*,video/*" name="media" hidden onChange={handleChange} />
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
