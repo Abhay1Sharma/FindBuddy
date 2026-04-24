@@ -421,64 +421,64 @@ app.get("/notifications/:userId", async (req, res) => {
     }
 });
 
-app.post("/postContent", upload.single("media"), async (req, res) => {
-    try {
-        console.log("File received:", req.file);
-        console.log("Body received:", req.body);
-
-        const data = {
-            userId: req.body.userId,
-            profileId: req.body.profileId,
-            about: req.body.about?.trim()
-        };
-
-        if (req.file) {
-            data.media = req.file ? req.file.path : null;
-        }
-
-        console.log(data);
-
-        const savePost = await new Post(data).save();
-        res.status(200).json({ message: "Post Created", savePost });
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // app.post("/postContent", upload.single("media"), async (req, res) => {
 //     try {
-//         // 1. Check if a file was actually uploaded
-//         if (!req.file) {
-//             return res.status(400).json({ error: "No media file provided" });
-//         }
+//         console.log("File received:", req.file);
+//         console.log("Body received:", req.body);
 
 //         const data = {
 //             userId: req.body.userId,
 //             profileId: req.body.profileId,
-//             about: req.body.about?.trim(),
-//             // req.file.path contains the Cloudinary URL
-//             media: req.file.path
+//             about: req.body.about?.trim()
 //         };
 
-//         // 2. Log for debugging
-//         console.log("Saving post with media:", data.media);
+//         if (req.file) {
+//             data.media = req.file ? req.file.path : null;
+//         }
+
+//         console.log(data);
 
 //         const savePost = await new Post(data).save();
-
-//         res.status(200).json({
-//             message: "Post Created Successfully! ✅",
-//             savePost
-//         });
-
+//         res.status(200).json({ message: "Post Created", savePost });
 //     } catch (error) {
-//         // If Cloudinary rejects the video (e.g., too large), it hits this block
-//         console.error("Upload Error:", error);
-//         res.status(500).json({
-//             error: "Upload failed. Ensure the video is under 100MB and a valid format."
-//         });
+//         console.error("Error:", error);
+//         res.status(500).json({ error: error.message });
 //     }
-// }); 
+// });
+
+app.post("/postContent", upload.single("media"), async (req, res) => {
+    try {
+        // 1. Check if a file was actually uploaded
+        if (!req.file) {
+            return res.status(400).json({ error: "No media file provided" });
+        }
+
+        const data = {
+            userId: req.body.userId,
+            profileId: req.body.profileId,
+            about: req.body.about?.trim(),
+            // req.file.path contains the Cloudinary URL
+            media: req.file.path
+        };
+
+        // 2. Log for debugging
+        console.log("Saving post with media:", data.media);
+
+        const savePost = await new Post(data).save();
+
+        res.status(200).json({
+            message: "Post Created Successfully! ✅",
+            savePost
+        });
+
+    } catch (error) {
+        // If Cloudinary rejects the video (e.g., too large), it hits this block
+        console.error("Upload Error:", error);
+        res.status(500).json({
+            error: "Upload failed. Ensure the video is under 100MB and a valid format."
+        });
+    }
+});
 
 app.post("/messageIds", async (req, res) => {
     try {

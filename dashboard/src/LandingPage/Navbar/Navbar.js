@@ -6,8 +6,8 @@ import { jwtDecode } from "jwt-decode";
 import imageCompression from "browser-image-compression";
 import { io } from "socket.io-client"; // 1. Import Socket.io
 
-const frontendUrl =  "http://localhost:3000";
-const backendUrl =   "http://localhost:3001";
+const frontendUrl = "http://localhost:3000";
+const backendUrl = "http://localhost:3001";
 const dashboardUrl = "http://localhost:3002";
 
 const socket = io(backendUrl);
@@ -153,21 +153,24 @@ const Navbar = ({ setSearch }) => {
         }
       }
 
-      const data = {
-        about: postData.about,
-        userId: postData.userId,
-        profileId: postData.profileId,
-      }
+      const formData = new FormData();
 
-      console.log(data);
+      formData.append("about", postData.about);
+      formData.append("userId", postData.userId);
+      formData.append("profileId", postData.profileId);
 
       if (fileUpload) {
-        data.media = fileUpload;
+        formData.append("media", fileUpload); // ✅ IMPORTANT
       }
 
-      const res = await axios.post(`${backendUrl}/postContent`, data, {
-        timeout: 6000, // Increased to 60s for video uploads
-        headers: { 'Content-Type': 'multipart/form-data' }
+      console.log(formData);
+      toast.info("Ruko post create ho raha hai...");
+
+      const res = await axios.post(`${backendUrl}/postContent`, formData, {
+        timeout: 60000, // 60s (your comment said 60 but you used 6000)
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
       });
 
       console.log(res);
@@ -182,7 +185,6 @@ const Navbar = ({ setSearch }) => {
     } catch (error) {
       console.error(error);
       toast.error(error.response?.status === 400 ? "Empty post not allowed" : "Post Not Created");
-      navigate("/complete-profile");
     }
   };
 
@@ -241,7 +243,7 @@ const Navbar = ({ setSearch }) => {
                 {
                   isFormFilled ? <Link type="button" className='nav-link active m-1.5' data-bs-toggle="modal" data-bs-target="#exampleModalCenter"> Create a Post </Link>
                     :
-                  <Link type="button" className='nav-link active m-1.5'> Create a Post </Link>
+                    <Link type="button" className='nav-link active m-1.5'> Create a Post </Link>
                 }
               </li>
 
@@ -343,7 +345,7 @@ const Navbar = ({ setSearch }) => {
 
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="sumbit" className="btn btn-primary">Save changes</button>
+                  <button type="submit" className="btn btn-primary">Save changes</button>
                 </div>
 
               </form>
