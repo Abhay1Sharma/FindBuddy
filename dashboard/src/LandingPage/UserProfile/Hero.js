@@ -913,23 +913,25 @@ function Hero() {
                             <div className="followers-list-container" style={{ padding: '20px', maxWidth: '500px' }}>
                                 {allFollowers && allFollowers.length > 0 ? (
                                     allFollowers.map((followerProfile) => (
-                                        <div className="follower-bar" key={followerProfile._id}>
-                                            <img
-                                                className="bar-image"
-                                                src={followerProfile.profileImage}
-                                                alt="Profile"
-                                            />
+                                        <Link to={`/userProfile/${followerProfile.userId.profileId}`}>
+                                            <div className="follower-bar" key={followerProfile._id}>
+                                                <img
+                                                    className="bar-image"
+                                                    src={followerProfile.profileImage}
+                                                    alt="Profile"
+                                                />
 
-                                            <div className="bar-info">
-                                                <h3 className="bar-username">
-                                                    {followerProfile.userId?.username || "Gym Member"}
-                                                </h3>
+                                                <div className="bar-info">
+                                                    <h3 className="bar-username">
+                                                        {followerProfile.userId?.username || "Gym Member"}
+                                                    </h3>
 
-                                                <p className="bar-headline">
-                                                    {followerProfile.introContent || "No bio available"}
-                                                </p>
+                                                    <p className="bar-headline">
+                                                        {followerProfile.introContent || "No bio available"}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))
                                 ) : (
                                     <p>No followers yet. Time to hit the gym!</p>
@@ -943,7 +945,7 @@ function Hero() {
                 </div>
             </div>
 
-            {/* Followingss Modals */}
+            {/* Followings Modals */}
 
             <div class="modal fade" id="staticBackdropFollowings" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
                 <div class="modal-dialog">

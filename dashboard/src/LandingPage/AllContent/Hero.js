@@ -68,6 +68,27 @@ function Hero() {
         }
     }
 
+    // const handleComment = async (e) => {
+    //     e.preventDefault();
+    //     try {
+    //         if (comment.trim() === '') {
+    //             toast.info("Can't post an empty comment");
+    //             return;
+    //         }
+    //         const data = {
+    //             "comment": comment,
+    //             "postId": postId._id,
+    //             "userId": commentUser._id,
+    //             "profileId": commentUser.profileId._id
+    //         };
+    //         const res = await axios.post(`${backendUrl}/comment`, data);
+    //         setAllComment(res.data.allPostComment);
+    //         setComment("");
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
+
     const handleComment = async (e) => {
         e.preventDefault();
         try {
@@ -75,17 +96,29 @@ function Hero() {
                 toast.info("Can't post an empty comment");
                 return;
             }
+
             const data = {
                 "comment": comment,
                 "postId": postId._id,
                 "userId": commentUser._id,
                 "profileId": commentUser.profileId._id
             };
+
             const res = await axios.post(`${backendUrl}/comment`, data);
-            window.location.reload();
-            setComment(null);
+
+            if (res.status === 200) {
+                // 1. Update the list of comments dynamically
+                // Assuming res.data.allPostComment is the array of comments for this post
+                setAllComment(res.data.allPostComment);
+
+                // 2. Clear the input field so the user can type a new comment
+                setComment('');
+
+                toast.success("Comment posted!");
+            }
         } catch (error) {
             console.log(error);
+            toast.error("Failed to post comment");
         }
     }
 
@@ -377,7 +410,7 @@ function Hero() {
                                             <p className="user-headline">{items.profileId.introContent}</p>
                                             <p className="post-time">{items.createdAt ?
                                                 formatDistanceToNow(new Date(items.createdAt), { addSuffix: true }).replace('about ', '')
-                                                : "Just now"} • <i className="fas fa-globe-americas"></i></p>
+                                                : "Just now"} • <i className="fas fa-globe-americas"></i> {items?.isEdited && "Edited"}</p>
                                         </div>}
                                     </Link>
                                     <div className="dropdown-container">
@@ -539,6 +572,7 @@ function Hero() {
                                                     type="text"
                                                     className="form-control form-control-sm comment"
                                                     placeholder="Add a comment..."
+                                                    value={comment}
                                                     name="comment" onChange={handleChange} required
                                                 />
                                                 <button onClick={() => postsId(items)} className="commentBtn" type="sumbit"> Add </button>
@@ -661,11 +695,11 @@ function Hero() {
                         </div>
                         <form onSubmit={(e) => { editComments(e) }}>
                             <div className="modal-body ">
-                                <textarea type="text" className="form-control form-control-sm comment" name="comment" onChange={handleChange} value={`${comment}`} />
+                                <textarea type="text" className="form-control form-control-sm comment" name="comment" value={comment} onChange={handleChange} value={`${comment}`} />
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
-                                <button type="sumbit" className="btn btn-primary"> Edit </button>
+                                <button type="sumbit" className="btn btn-primary" data-bs-dismiss="modal"> Edit </button>
                             </div>
                         </form>
                     </div>

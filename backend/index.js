@@ -81,9 +81,9 @@ const sessionOptions = {
 };
 
 cloudinary.config({
-  cloud_name: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.REACT_APP_CLOUDINARY_API_KEY,
-  api_secret: process.env.REACT_APP_CLOUDINARY_API_SECRET,
+    cloud_name: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.REACT_APP_CLOUDINARY_API_KEY,
+    api_secret: process.env.REACT_APP_CLOUDINARY_API_SECRET,
 });
 
 
@@ -234,7 +234,7 @@ app.post("/editPost", upload.single("editMedia"), async (req, res) => {
         const { postId, postAbout } = req.body;
         const post = await Post.findById({ _id: postId });
         if (!post) return res.status(400).json({ message: "Post not exist!!! " });
-        const data = { about: postAbout };
+        const data = { about: postAbout, isEdited: true };
         if (req.file) {
             data.media = req.file.path;
         }
@@ -294,8 +294,10 @@ app.post("/comment", async (req, res) => {
         const post = await Post.findById({ _id: postId }).populate("userId");
         if (!post) { return };
         const saveComment = await new Comment({ comment: comment, userId: userId, postId: postId, profileId: profileId }).save();
-        console.log(saveComment);
-        console.log(post);
+        const allPostComment = await Comment.find({ postId }).populate("userId profileId").sort({ createdAt: -1 });
+        console.log(allPostComment);
+        // console.log(saveComment);
+        // console.log(post);
 
         const postOwnerId = post.userId._id.toString();
         const postOwnerName = post.userId.username;
@@ -325,7 +327,7 @@ app.post("/comment", async (req, res) => {
         console.log("Whose post : ", post.userId._id);
         console.log("Found Socket Id : ", recipientSocketId);
         console.log("Sockets Ids Available : ", Array.from(userSocketMap.keys()));
-        res.status(200).json({ message: "comment added", saveComment });
+        res.status(200).json({ message: "comment added", allPostComment });
     } catch (error) {
         console.log(error);
         res.status(400).json({ error: error })
@@ -392,6 +394,7 @@ app.post("/like", async (req, res) => {
         console.log("Available Sockets:", Array.from(userSocketMap.keys()));
         console.log("Found Socket ID:", recipientSocketId || "None (User Offline)");
 
+        res.status(200).json({ message: isLike ? "User liked your post" : "User unlike your post", updatedPost });
     } catch (error) {
         console.error(error);
         res.status(400).json({ error: error.message });
@@ -490,45 +493,45 @@ app.get("/notifications/:userId", async (req, res) => {
 // });
 
 app.post("/postContent", async (req, res) => {
-  try {
-    const { userId, profileId, about, media } = req.body;
+    try {
+        const { userId, profileId, about, media } = req.body;
 
-    if (!media && !about) {
-      return res.status(400).json({ error: "Empty post not allowed" });
+        if (!media && !about) {
+            return res.status(400).json({ error: "Empty post not allowed" });
+        }
+
+        const savePost = await new Post({
+            userId,
+            profileId,
+            about: about?.trim(),
+            media
+        }).save();
+
+        res.status(200).json({
+            message: "Post Created Successfully ✅",
+            savePost
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
     }
-
-    const savePost = await new Post({
-      userId,
-      profileId,
-      about: about?.trim(),
-      media
-    }).save();
-
-    res.status(200).json({
-      message: "Post Created Successfully ✅",
-      savePost
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
 });
 
 app.get("/cloudinary-signature", (req, res) => {
-  const timestamp = Math.round(new Date().getTime() / 1000);
+    const timestamp = Math.round(new Date().getTime() / 1000);
 
-  const signature = cloudinary.utils.api_sign_request(
-    { timestamp },
-    process.env.REACT_APP_CLOUDINARY_API_SECRET
-  );
+    const signature = cloudinary.utils.api_sign_request(
+        { timestamp },
+        process.env.REACT_APP_CLOUDINARY_API_SECRET
+    );
 
-  res.json({
-    timestamp,
-    signature,
-    cloudName: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
-    apiKey: process.env.REACT_APP_CLOUDINARY_API_KEY
-  });
+    res.json({
+        timestamp,
+        signature,
+        cloudName: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.REACT_APP_CLOUDINARY_API_KEY
+    });
 });
 
 app.post("/messageIds", async (req, res) => {
@@ -647,7 +650,6 @@ app.post("/allUserFollowers", async (req, res) => {
             path: 'followers',
             populate: {
                 path: 'userId',
-                select: 'username email'
             }
         });
 

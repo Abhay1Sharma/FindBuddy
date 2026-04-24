@@ -41,6 +41,11 @@ const PostSchema = mongoose.Schema(
         isRepost: {
             type: Boolean,
             dafault: false
+        },
+
+        isEdited: {
+            type: Boolean,
+            default: false,
         }
 
     }, { timestamps: true }

@@ -454,6 +454,7 @@ const socket = io(backendUrl, { autoConnect: false });
 
 const Navbar = ({ setSearch }) => {
   const [userData, setUserData] = useState(null);
+  const [isPostUploaded, setIsPostUploaded] = useState(false);
   const [postData, setPostData] = useState({
     about: "",
     media: "",
@@ -583,6 +584,7 @@ const Navbar = ({ setSearch }) => {
       setSelectedFile(null);
       setPostData(prev => ({ ...prev, about: "" }));
       toast.success("Post Created 🚀");
+      setTimeout(() => { window.location.reload() }, 3000);
     } catch (err) {
       toast.error("Upload failed");
     }
@@ -712,7 +714,7 @@ const Navbar = ({ setSearch }) => {
 
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="submit" className="btn btn-primary" data-bs-dismiss={!selectedFile && !postData.about ? "" : "modal"}>Post</button>
+                  <button type="submit" className="btn btn-primary">Post</button>
                 </div>
               </form>
               {uploadProgress > 0 && (

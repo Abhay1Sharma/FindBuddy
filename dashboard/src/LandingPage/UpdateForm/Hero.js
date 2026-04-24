@@ -257,7 +257,7 @@ function Hero() {
                             <div className="row mt-2">
                                 <div className="col-md-8">
                                     <label htmlFor="state" className="form-label">State</label>
-                                    <select className="form-control" defaultValue="" name="state" onChange={handleStateChange} value={formData.state} required>m
+                                    <select className="form-control" defaultValue="" name="state" onChange={handleStateChange} required>
                                         <option>Select State</option>
                                         {Object.keys(locationData).map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
@@ -265,7 +265,7 @@ function Hero() {
 
                                 <div className="col-md-4">
                                     <label htmlFor="city" className="form-label">City</label>
-                                    <select name="city" className="form-control" defaultValue="" onChange={handleChange} disabled={!cities.length} value={formData.city} required>
+                                    <select name="city" className="form-control" defaultValue="" onChange={handleChange} disabled={!cities.length} required>
                                         <option value="">Select City</option>
                                         {cities.map(c => <option key={c} value={c}>{c}</option>)}
                                     </select>
