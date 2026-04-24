@@ -22,6 +22,7 @@ import { Post } from './src/models/PostModel.js';
 import { User } from "./src/models/UserSchema.js";
 import { Notification } from './src/models/NotificationModel.js';
 import { Profile } from './src/models/ProfileModel.js';
+import { v2 as cloudinary } from "cloudinary";
 import { Comment } from './src/models/CommentModel.js';
 import { SavePost } from "./src/models/SavaPostModel.js";
 
@@ -78,6 +79,14 @@ const sessionOptions = {
         httpOnly: true
     },
 };
+
+cloudinary.config({
+  cloud_name: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.REACT_APP_CLOUDINARY_API_KEY,
+  api_secret: process.env.REACT_APP_CLOUDINARY_API_SECRET,
+});
+
+
 app.use(session(sessionOptions));
 app.use('/uploads', express.static('uploads'));
 
@@ -446,38 +455,80 @@ app.get("/notifications/:userId", async (req, res) => {
 //     }
 // });
 
-app.post("/postContent", upload.single("media"), async (req, res) => {
-    try {
-        // 1. Check if a file was actually uploaded
-        if (!req.file) {
-            return res.status(400).json({ error: "No media file provided" });
-        }
+// app.post("/postContent", upload.single("media"), async (req, res) => {
+//     try {
+//         // 1. Check if a file was actually uploaded
+//         if (!req.file) {
+//             return res.status(400).json({ error: "No media file provided" });
+//         }
 
-        const data = {
-            userId: req.body.userId,
-            profileId: req.body.profileId,
-            about: req.body.about?.trim(),
-            // req.file.path contains the Cloudinary URL
-            media: req.file.path
-        };
+//         const data = {
+//             userId: req.body.userId,
+//             profileId: req.body.profileId,
+//             about: req.body.about?.trim(),
+//             // req.file.path contains the Cloudinary URL
+//             media: req.file.path
+//         };
 
-        // 2. Log for debugging
-        console.log("Saving post with media:", data.media);
+//         // 2. Log for debugging
+//         console.log("Saving post with media:", data.media);
 
-        const savePost = await new Post(data).save();
+//         const savePost = await new Post(data).save();
 
-        res.status(200).json({
-            message: "Post Created Successfully! ✅",
-            savePost
-        });
+//         res.status(200).json({
+//             message: "Post Created Successfully! ✅",
+//             savePost
+//         });
 
-    } catch (error) {
-        // If Cloudinary rejects the video (e.g., too large), it hits this block
-        console.error("Upload Error:", error);
-        res.status(500).json({
-            error: "Upload failed. Ensure the video is under 100MB and a valid format."
-        });
+//     } catch (error) {
+//         // If Cloudinary rejects the video (e.g., too large), it hits this block
+//         console.error("Upload Error:", error);
+//         res.status(500).json({
+//             error: "Upload failed. Ensure the video is under 100MB and a valid format."
+//         });
+//     }
+// });
+
+app.post("/postContent", async (req, res) => {
+  try {
+    const { userId, profileId, about, media } = req.body;
+
+    if (!media && !about) {
+      return res.status(400).json({ error: "Empty post not allowed" });
     }
+
+    const savePost = await new Post({
+      userId,
+      profileId,
+      about: about?.trim(),
+      media
+    }).save();
+
+    res.status(200).json({
+      message: "Post Created Successfully ✅",
+      savePost
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/cloudinary-signature", (req, res) => {
+  const timestamp = Math.round(new Date().getTime() / 1000);
+
+  const signature = cloudinary.utils.api_sign_request(
+    { timestamp },
+    process.env.REACT_APP_CLOUDINARY_API_SECRET
+  );
+
+  res.json({
+    timestamp,
+    signature,
+    cloudName: process.env.REACT_APP_CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.REACT_APP_CLOUDINARY_API_KEY
+  });
 });
 
 app.post("/messageIds", async (req, res) => {
