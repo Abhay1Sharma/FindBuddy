@@ -1029,20 +1029,40 @@ function Hero() {
 
     const savePost = async (items) => {
         try {
+            const resolvedItem = resolveItem(items);
+            const postToSave = resolvedItem.post; // This gets the original post
+
             console.log(items);
             const postIds = {
                 UserId: token.id,
                 PostId: items._id,
-                PostUserId: items.userId._id,
-                ProfileId: items.profileId._id,
+                PostUserId: items.userId?._id || items.userId,
+                ProfileId: items.profileId?._id || items.profileId,
                 isPostSave: true,
             }
             const sendPost = await axios.post(`${backendUrl}/savePost`, postIds);
             console.log(sendPost);
+
             setAllPost(prevPost =>
-                prevPost.map(item =>
-                    item._id === items._id ? { ...item, isPostSave: true } : item
-                )
+                prevPost.map(item => {
+                    // Check if this is a repost
+                    if (item.isRepost || item.postId) {
+                        // If it's a repost, check if its original post matches the saved post
+                        const originalPostId = item.postId?._id || item._id;
+                        if (originalPostId === postToSave._id) {
+                            return {
+                                ...item,
+                                postId: { ...item.postId, isPostSave: true }
+                            };
+                        }
+                        return item;
+                    }
+                    // If it's a regular post
+                    else if (item._id === postToSave._id) {
+                        return { ...item, isPostSave: true };
+                    }
+                    return item;
+                })
             );
 
             console.log(sendPost);
@@ -1124,6 +1144,10 @@ function Hero() {
 
     const UnsavePost = async (items) => {
         try {
+
+            const resolvedItem = resolveItem(items);
+            const postToUnsave = resolvedItem.post; // This gets the original post
+
             console.log(items);
             const postIds = {
                 UserId: token.id,
@@ -1133,11 +1157,29 @@ function Hero() {
             console.log(postIds);
             const sendPost = await axios.post(`${backendUrl}/UnSavePostfromHome`, postIds);
             console.log(sendPost);
+
             setAllPost(prevPost =>
-                prevPost.map(item =>
-                    item._id === items._id ? { ...item, isPostSave: false } : item
-                )
+                prevPost.map(item => {
+                    // Check if this is a repost
+                    if (item.isRepost || item.postId) {
+                        // If it's a repost, check if its original post matches the saved post
+                        const originalPostId = item.postId?._id || item._id;
+                        if (originalPostId === postToUnsave._id) {
+                            return {
+                                ...item,
+                                postId: { ...item.postId, isPostSave: false }
+                            };
+                        }
+                        return item;
+                    }
+                    // If it's a regular post
+                    else if (item._id === postToUnsave._id) {
+                        return { ...item, isPostSave: false };
+                    }
+                    return item;
+                })
             );
+
         } catch (error) {
             console.log(error);
         }
@@ -1325,7 +1367,7 @@ function Hero() {
                                                 </label>
                                                 <ul className="dropdown-menu-list">
                                                     {resolvedItem.post?.isPostSave ?
-                                                        <li onClick={() => { UnsavePost(resolvedItem.post ) }}>
+                                                        <li onClick={() => { UnsavePost(resolvedItem.post) }}>
                                                             <i className="fas fa-bookmark"></i> Remove from saved
                                                         </li>
                                                         :
