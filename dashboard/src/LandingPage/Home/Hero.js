@@ -114,6 +114,8 @@ function Hero({ search }) {
 
                 </div> */}
 
+
+
                 <div className="container empty-state-wrapper" style={{ userSelect: "none", padding: "4rem 0" }}>
                     <div className="row justify-content-center">
 
@@ -168,7 +170,7 @@ function Hero({ search }) {
     if (filteredUsers.length === 0) {
         return (
             <>
-                <div className="container NotFound" style={{ userSelect: "none" }}>
+                {/* <div className="container NotFound" style={{ userSelect: "none" }}>
 
                     <div className="row">
 
@@ -183,7 +185,42 @@ function Hero({ search }) {
 
                     </div>
 
+                </div> */}
+
+                <div className="container empty-state-wrapper" style={{ userSelect: "none", padding: "4rem 0" }}>
+                    <div className="row justify-content-center">
+
+                        {/* Video Container */}
+                        <div className="col-12 d-flex justify-content-center mb-4">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "65vh",
+                                    mixBlendMode: "multiply", // Blends video background if it's white
+                                    filter: "grayscale(20%)"   // Gives it a slightly more professional tone
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/file-not-found-animation-gif-download-6342141.mp4'}
+                            />
+                        </div>
+
+                        {/* Text Content */}
+                        <div className="col-lg-6 text-center">
+                            <h2 style={{ fontWeight: "600", letterSpacing: "-0.02em", color: "#111" }}>
+                                No results found
+                            </h2>
+                            <p style={{ color: "#666", fontSize: "1.1rem" }}>
+                                Please check the spelling or try searching for a different name or IDs
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
+
             </>
         )
     }

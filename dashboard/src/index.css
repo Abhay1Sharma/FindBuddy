@@ -1521,3 +1521,19 @@ b {
     opacity: 0;
   }
 }
+
+.repostavatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 20px;
+}
+
+.repostUsername {
+  font-size: 14px;
+}
+
+.repost-info {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}

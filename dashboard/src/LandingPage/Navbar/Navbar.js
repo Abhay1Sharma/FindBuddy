@@ -620,17 +620,17 @@ const Navbar = ({ setSearch }) => {
           </button>
 
           <div className="collapse navbar-collapse" id="navbarSupportedContent" style={{ backgroundColor: 'white' }}>
-            <ul className="navbar-nav mb-2 mb-lg-0" style={{ margin: "0 auto" }}>
-              <li className="nav-item">
+            <ul className="navbar-nav mb-2 mb-lg-0" style={{ margin: "0 auto", alignItems: "inherit" }}>
+              <li className="nav-item" style={{ marginRight: "2.5px" }} >
                 <Link className="nav-link active m-1.5" to="/" onClick={giveWarning}>Home</Link>
               </li>
-              <li className="nav-item">
+              <li className="nav-item" style={{ marginRight: "2.5px" }} >
                 <Link className="nav-link active m-1.5" to="/allContent" onClick={giveWarning}>All Users</Link>
               </li>
-              <li className="nav-item">
+              <li className="nav-item" style={{ marginRight: "2.5px" }} >
                 <Link className="nav-link active m-1.5" to="/update-profile" onClick={giveWarning}>Update Your Routine</Link>
               </li>
-              <li className="nav-item">
+              <li className="nav-item" style={{ marginRight: "7px" }} >
                 <Link
                   className='nav-link active m-1.5'
                   to="#"

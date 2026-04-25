@@ -353,7 +353,7 @@ function Hero() {
                                             <li onClick={() => { copyPostLink(items._id) }}>
                                                 <i className="fas fa-link"></i> Copy link
                                             </li>
-                                            {items.userId._id === token.id && (
+                                            {items.postId.userId === token.id && (
                                                 <>
                                                     <li onClick={() => editPost(items)} data-bs-toggle="modal" data-bs-target="#modalEditPost">
                                                         <i className="fas fa-edit"></i> Edit Post

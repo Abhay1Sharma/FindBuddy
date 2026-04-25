@@ -158,7 +158,7 @@ function Hero() {
     }, []);
 
     const tokenId = jwtDecode(localStorage.token).id;
-    const userId = userInfo.id;
+    const userId = userInfo.id || userInfo._id;
     console.log();
     console.log(showAllPost);
 

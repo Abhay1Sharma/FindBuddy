@@ -33,16 +33,6 @@ const PostSchema = mongoose.Schema(
             ref: "user"
         }],
 
-        from: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "user"
-        },
-
-        isRepost: {
-            type: Boolean,
-            dafault: false
-        },
-
         isEdited: {
             type: Boolean,
             default: false,

@@ -25,6 +25,7 @@ import { Profile } from './src/models/ProfileModel.js';
 import { v2 as cloudinary } from "cloudinary";
 import { Comment } from './src/models/CommentModel.js';
 import { SavePost } from "./src/models/SavaPostModel.js";
+import { Repost } from "./src/models/RepostModel.js"
 
 const userSocketMap = new Map(); // userId -> socketId
 
@@ -403,11 +404,34 @@ app.post("/like", async (req, res) => {
 
 app.post("/repost", async (req, res) => {
     try {
-        console.log(req.body);
+
+        const { profileId, userId, postId, repostuserId, repostUserProfileId } = req.body;
+        const repost = {
+            postOwnerId: userId,
+            postOwnerProfileId: profileId,
+            postId: postId,
+            repostFromUserId: repostuserId,
+            repostFromProfileId: repostUserProfileId,
+        }
+
+        const newRepost = await new Repost(repost).save();
+        console.log(newRepost);
+        res.status(200).json({ message: "You Repost a Post", newRepost} );
     } catch (error) {
         console.log(error);
     }
-})
+});
+
+app.get("/allRePost", async (req, res) => {
+    try {
+        const allRePost = await Repost.find({}).populate('postOwnerId postId postOwnerProfileId repostFromUserId repostFromProfileId');
+        console.log(allRePost);
+        res.status(200).json({ message: "All Repost fetched Successfully !!!", allRePost });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error });
+    }
+});
 
 app.get("/notifications/:userId", async (req, res) => {
     try {
