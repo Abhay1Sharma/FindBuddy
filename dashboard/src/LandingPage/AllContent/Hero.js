@@ -1368,11 +1368,11 @@ function Hero() {
                                                 <ul className="dropdown-menu-list">
                                                     {resolvedItem.post?.isPostSave ?
                                                         <li onClick={() => { UnsavePost(resolvedItem.post) }}>
-                                                            <i className="fas fa-bookmark"></i> Remove from saved
+                                                            <i class="fa-solid fa-bookmark"></i> Remove from save
                                                         </li>
                                                         :
                                                         <li onClick={() => { savePost(resolvedItem.post) }}>
-                                                            <i className="fas fa-bookmark"></i> Save for later
+                                                            <i class="fa-regular fa-bookmark"></i> Save for later
                                                         </li>
                                                     }
                                                     <li onClick={() => { copyPostLink(resolvedItem.post?._id || items._id) }}>

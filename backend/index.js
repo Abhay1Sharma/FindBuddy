@@ -232,16 +232,19 @@ app.get("/allPost", async (req, res) => {
 
 app.post("/editPost", upload.single("editMedia"), async (req, res) => {
     try {
+        console.log(req.body);
         const { postId, postAbout } = req.body;
+        console.log(postId);
         const post = await Post.findById({ _id: postId });
         if (!post) return res.status(400).json({ message: "Post not exist!!! " });
+        console.log("Post Exist.....", post);
         const data = { about: postAbout, isEdited: true };
         if (req.file) {
             data.media = req.file.path;
         }
         const updatedData = await Post.findByIdAndUpdate(postId, data);
         console.log(updatedData);
-        res.status(200).json({ message: "Post Updated Successfully " });
+        res.status(200).json({ message: "Post Updated Successfully ", updatedData });
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: error.message });

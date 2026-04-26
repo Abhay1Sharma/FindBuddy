@@ -142,7 +142,7 @@ function Hero() {
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-        console.log(files);
+        console.log(postAbout);
         if (name === "postAbout") {
             setPostAbout(value);
         } else if (name === "editMedia" && files[0]) {
@@ -175,8 +175,9 @@ function Hero() {
 
 
     const editPost = (items) => {
+        console.log(items);
+        setPostAbout(items.postId.about);
         setEditingPost(items);
-        setPostAbout(items.about);
     };
 
     const handleUpdatePost = async (e) => {
@@ -189,7 +190,7 @@ function Hero() {
         try {
             // Use FormData for file uploads
             let formData = {
-                postId: editingPost._id,
+                postId: editingPost.postId._id,
                 postAbout: postAbout
             }
 
@@ -211,22 +212,31 @@ function Hero() {
                         return toast.error("Video too large! Max 50MB.");
                     }
                 }
+
                 formData = {
-                    postId: editingPost._id,
+                    postId: editingPost.postId._id,
                     postAbout: postAbout,
                     editMedia: fileToUpload,
                 }
             }
+
+            console.log(formData);
 
             const res = await axios.post(`${backendUrl}/editPost`, formData, {
                 timeout: 60000,
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
+            console.log(res);
+            const updateData = res.data.updatedData;
+
+            const posts = editingPost.postId;
+
             toast.success("Post updated!");
             setFile(null);
             setSelectedFile(null);
             setEditingPost(null);
+            window.location.reload()
         } catch (error) {
             console.error("Update error:", error);
             toast.error("Failed to update post");
@@ -350,7 +360,7 @@ function Hero() {
                                             <li onClick={() => { UnsavePost(items) }}>
                                                 <i className="fas fa-bookmark"></i> {isRemove ? "Removed ✅" : "Unsave Post"}
                                             </li>
-                                            <li onClick={() => { copyPostLink(items._id) }}>
+                                            <li onClick={() => { copyPostLink(items?._id) }}>
                                                 <i className="fas fa-link"></i> Copy link
                                             </li>
                                             {items.postId.userId === token.id && (
@@ -403,7 +413,7 @@ function Hero() {
 
                                                     <div className="modal-footer">
                                                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                        <button type="sumbit" className="btn btn-primary">Save changes</button>
+                                                        <button type="sumbit" className="btn btn-primary" onClick={() => { }}>Save changes</button>
                                                     </div>
 
                                                 </form>
@@ -559,7 +569,7 @@ function Hero() {
                                         <input type="file" id="editMedia" accept="image/*,video/*" name="editMedia" hidden onChange={handleChange} />
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z"></path>
-                                        </svg>
+                                        </svg> Add Media
 
                                         {file && (
                                             selectedFile?.type.startsWith('video/') ? (

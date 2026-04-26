@@ -265,7 +265,7 @@ function Hero({ search }) {
                             </div>
 
                             <div className="button" >
-                                <Link className="connectNow-button left" to={`/userProfile/${items.userId}`}> VIEW PROFILE </Link>
+                                <Link className="connectNow-button left" to={`/userProfile/${items.userId._id}`}> VIEW PROFILE </Link>
                                 <Link className="connectNow-button right" to={`/userChats/${items.userId}`} onClick={() => { giveNotification(items.userId, userid) }}> MESSAGE </Link>
                             </div>
                         </div>

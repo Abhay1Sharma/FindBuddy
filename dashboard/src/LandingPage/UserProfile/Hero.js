@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import React, { useState, useEffect } from 'react';
+import { Button } from "@mui/material";
 
 function Hero() {
     const Id = useParams();
@@ -159,8 +160,8 @@ function Hero() {
 
     const tokenId = jwtDecode(localStorage.token).id;
     const userId = userInfo.id || userInfo._id;
-    console.log();
-    console.log(showAllPost);
+    console.log(userInfo);
+    console.log(loggedUser);
 
     const createTimeStamp = userProfile?.createdAt;
     const createDate = new Date(createTimeStamp);
@@ -569,7 +570,7 @@ function Hero() {
                                         <div className="stats-row">
                                             <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
                                             <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdropFollowings" onClick={() => showFollowings(userProfile._id)}><span className="stat-number">{userProfile?.following.length}</span> followings </div>
-                                            {/* <div className="stat-item"><span className="stat-number">12</span> recommendations</div> */}
+                                            {(userInfo.formId.city === loggedUser.formId.city && userInfo.formId.gymname.toLowerCase() === loggedUser.formId.gymname.toLowerCase() && userInfo._id !== loggedUser._id) && <button className="btn btn-success"> Connect with me </button>}
                                         </div>
                                     </div>
                                 </div>
