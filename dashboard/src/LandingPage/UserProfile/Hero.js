@@ -10,30 +10,31 @@ import { Button } from "@mui/material";
 
 function Hero() {
     const Id = useParams();
-    const [formData, setFormData] = useState({});
-    const [userInfo, setUserInfo] = useState({});
-    const [userProfile, setUserProfile] = useState({});
-    const [profileImageFile, setProfileImageFile] = useState(null);
-    const [backgroundImageFile, setBackgroundImageFile] = useState(null);
-    const [ready, setReady] = useState(false);
-    const [showAllPost, setShowAllPost] = useState(false);
-    const [singlePost, setSinglePost] = useState([]);
+    const [file, setFile] = useState(null);
     const [postId, setPostId] = useState();
+    const [ready, setReady] = useState(false);
     const [comment, setComment] = useState("");
     const token = jwtDecode(localStorage.token);
+    const [formData, setFormData] = useState({});
+    const [userInfo, setUserInfo] = useState({});
     const [postUser, setPostUser] = useState([]);
     const [allPost, setAllPost] = useState(null);
-    const [allComment, setAllComment] = useState();
-    const [commentUser, setCommentUser] = useState();
-    const [activePostId, setActivePostId] = useState(null);
     const [commentId, setCommentId] = useState();
+    const [allComment, setAllComment] = useState();
+    const [singlePost, setSinglePost] = useState([]);
     const [postAbout, setPostAbout] = useState(null);
-    const [allFollowers, setAllFollowers] = useState([]);
-    const [allFollowings, setAllFollowings] = useState([]);
-    const [file, setFile] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [commentUser, setCommentUser] = useState();
     const [loggedUser, setLoggedUser] = useState(null);
+    const [userProfile, setUserProfile] = useState({});
+    const [allFollowers, setAllFollowers] = useState([]);
     const [editingPost, setEditingPost] = useState(null);
+    const [showAllPost, setShowAllPost] = useState(false);
+    const [activePostId, setActivePostId] = useState(null);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [allFollowings, setAllFollowings] = useState([]);
+    const [checkConnection, setCheckConnection] = useState(null);
+    const [profileImageFile, setProfileImageFile] = useState(null);
+    const [backgroundImageFile, setBackgroundImageFile] = useState(null);
 
     const backendUrl = "http://localhost:3001";
     const dashboardUrl = "http://localhost:3002";
@@ -293,6 +294,8 @@ function Hero() {
         }
     }
 
+    console.log(checkConnection);
+
     const handleFollowers = async () => {
         try {
             // userId: token.id is the LOGGED-IN user
@@ -446,6 +449,15 @@ function Hero() {
             });
     };
 
+    const connectWithMe = async () => {
+        try {
+            // const connection = await axios.post("http://localhost:3001/makeConnection", { ownerId: userInfo._id, loggedUserId: loggedUser._id });
+            // console.log(connection);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
     // if(!showallPost){
     //     setAllPost(singlePost);
@@ -570,7 +582,7 @@ function Hero() {
                                         <div className="stats-row">
                                             <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
                                             <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdropFollowings" onClick={() => showFollowings(userProfile._id)}><span className="stat-number">{userProfile?.following.length}</span> followings </div>
-                                            {(userInfo.formId.city === loggedUser.formId.city && userInfo.formId.gymname.toLowerCase() === loggedUser.formId.gymname.toLowerCase() && userInfo._id !== loggedUser._id) && <button className="btn btn-success"> Connect with me </button>}
+                                            {(userInfo.formId.city === loggedUser.formId.city && userInfo.formId.gymname.toLowerCase() === loggedUser.formId.gymname.toLowerCase() && userInfo._id !== loggedUser._id) && <button className="btn btn-success" onClick={() => connectWithMe()}> Connect with me </button>}
                                         </div>
                                     </div>
                                 </div>

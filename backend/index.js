@@ -26,6 +26,8 @@ import { v2 as cloudinary } from "cloudinary";
 import { Comment } from './src/models/CommentModel.js';
 import { SavePost } from "./src/models/SavaPostModel.js";
 import { Repost } from "./src/models/RepostModel.js"
+import { Connection } from './src/models/ConnectionModel.js';
+import { populate } from 'dotenv';
 
 const userSocketMap = new Map(); // userId -> socketId
 
@@ -201,7 +203,8 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
         }).save();
         console.log(newForm);
 
-        await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id, profileId: defaultUserProfile._id });
+        const defaultConnection = await new Connection({ ownerId: userId }).save();
+        await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id, profileId: defaultUserProfile._id, connectionId: defaultConnection._id });
         res.status(200).json({ message: "Data received successfully!" });
     } catch (error) {
         console.error(error);
@@ -419,7 +422,7 @@ app.post("/repost", async (req, res) => {
 
         const newRepost = await new Repost(repost).save();
         console.log(newRepost);
-        res.status(200).json({ message: "You Repost a Post", newRepost} );
+        res.status(200).json({ message: "You Repost a Post", newRepost });
     } catch (error) {
         console.log(error);
     }
@@ -789,6 +792,94 @@ app.post("/UnSavePost", async (req, res) => {
         res.status(404).json({ error: error.message });
     }
 });
+
+app.post("/checkRequest", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { ownerId } = req.body;
+        const userConnection = await Connection.find({ ownerId });
+        console.log(userConnection);
+        res.status(200).json({ message: "User Connection!!!!", userConnection });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error });
+    }
+})
+
+app.post("/checkConnections", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { connectionId } = req.body;
+        const userConnection = await Connection.findById({ _id: connectionId }).populate(
+            {
+                path: 'requestFrom',
+                populate: {
+                    path: 'profileId',
+                    // select: 'username email'
+                }
+            }
+        );
+        console.log(userConnection);
+        res.status(200).json({ message: "User Connection!!!!", userConnection });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error });
+    }
+})
+
+
+app.post("/isAnyReq", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const connections = await Connection.find({ userId });
+        console.log(connections);
+        res.status(200).json({ message: "Your Connections ", connections });
+    } catch (error) {
+        console.log(error);
+        res.status(300).json({ error: error });
+    }
+})
+
+app.post("/makeConnection", async (req, res) => {
+    try {
+        const { ownerId, loggedUserId } = req.body;
+        const profileOwner = await User.findById({ _id: ownerId });
+        const loggedUser = await User.findById({ _id: loggedUserId });
+        if (profileOwner === null || loggedUser === null) return res.status(404).json({ message: "Sorry profiles not found" });
+        console.log(profileOwner.connectionId);
+        const userId = profileOwner.connectionId;
+
+        const makeConnections = await Connection.findById({ _id: userId });
+        if (makeConnections.isConnected) return res.status(208).json({ message: "Already has a connections" });
+
+        const isUserExist = makeConnections.requestFrom.includes(loggedUserId);
+        const updateUser = isUserExist ? { $pull: { requestFrom: loggedUserId } } : { $addToSet: { requestFrom: loggedUserId } };
+        console.log(updateUser);
+
+        const makeRequest = await Connection.findByIdAndUpdate(
+            userId,
+            {
+                ...updateUser,
+                isAnyRequest: true
+            },
+            { new: true }
+        );
+
+        console.log(makeRequest);
+        res.status(200).json({ message: "You made a connection", makeRequest });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error });
+    }
+})
+
+app.post("/acceptConnection", async (req, res) => {
+    try {
+        console.log(req.body);
+    } catch (error) {
+        console.log(error);
+    }
+})
 
 app.post("/UnSavePostfromHome", async (req, res) => {
     try {

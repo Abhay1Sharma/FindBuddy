@@ -10,7 +10,6 @@ const ConnectionSchema = new Schema(
         connectedFrom: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "user",
-            require: true,
         },
 
         connectedTo: {
@@ -23,10 +22,21 @@ const ConnectionSchema = new Schema(
             default: false,
         },
 
-        requestFrom: {
+        requestFrom: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user",
+        }],
+
+        // requestTo: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "user",
+        // },
+
+        ownerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "user",
         },
+
     }, { timestamps: true}
 )
 

@@ -35,7 +35,12 @@ const UserSchema = mongoose.Schema(
         profileId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "profile"
-        }
+        },
+
+        connectionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "connection",
+        },
 
     }, { timestamps: true }
 );

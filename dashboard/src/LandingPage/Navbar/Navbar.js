@@ -444,6 +444,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "react-toastify";
 import { Link, useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
+import { jwtDecode } from 'jwt-decode';
+import { connect } from 'mongoose';
 
 const frontendUrl = "http://localhost:3000";
 const backendUrl = "http://localhost:3001";
@@ -466,6 +468,8 @@ const Navbar = ({ setSearch }) => {
   const [isNewNotification, setIsNewNotification] = useState(false);
   const [isFormFilled, setIsFormFilled] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [checkConnection, setCheckConnection] = useState([]);
+  const [isRequest, setIsRequest] = useState([]);
   const navigate = useNavigate();
 
   // Optimized Fetch User function
@@ -478,8 +482,14 @@ const Navbar = ({ setSearch }) => {
       const res = await axios.get(`${backendUrl}/user/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      const decode = jwtDecode(token).id;
 
       setUserData(res.data);
+      console.log(userData);
+      const connection = await axios.post("http://localhost:3001/checkConnections", { connectionId: res.data.connectionId });
+      console.log(connection);
+      setCheckConnection(connection.data.userConnection);
+
       setIsFormFilled(res.data.hasCompleteProfile);
 
       // Update state correctly (avoiding direct mutation)
@@ -607,6 +617,14 @@ const Navbar = ({ setSearch }) => {
     setPostData(prev => ({ ...prev, [name]: value }));
   };
 
+  const connectUser = async () => {
+    try {
+      
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <>
       <nav className="navbar navbar-expand-lg sticky-top border-bottom" style={{ backgroundColor: "white", height: "4rem", border: "none", boxShadow: "none" }}>
@@ -728,6 +746,91 @@ const Navbar = ({ setSearch }) => {
           </div>
         </div>
       </div>
+
+      {checkConnection.isAnyRequest && (
+        <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
+            <div className="modal-content" style={{
+              borderRadius: "16px",
+              border: "none",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+            }}>
+
+              <div className="modal-body text-center p-4">
+                {/* Simple Centered Avatar */}
+                <img
+                  src={`${checkConnection.requestFrom[0].profileId.profileImage}`}
+                  alt="Avatar"
+                  style={{
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "50%",
+                    backgroundColor: "#f8f9fa",
+                    marginBottom: "16px"
+                  }}
+                />
+
+                {/* Username */}
+                <Link to={`/userprofile/${userData}`} style={{ textDecoration: "none" }} ><h5 style={{ fontWeight: "600", color: "#111", marginBottom: "4px" }}>
+                  {checkConnection.requestFrom[0].username}
+                </h5></Link>
+                {/* Unique Goal Statement */}
+                <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+                  <p style={{
+                    color: "#475569",
+                    fontSize: "0.95rem",
+                    lineHeight: "1.5",
+                    fontWeight: "500",
+                    margin: "0",
+                    fontStyle: "italic"
+                  }}>
+                    "Twin goals, one grind. <br /> Let’s do this journey together."
+                  </p>
+                </div>
+
+                {/* Action Buttons Integrated */}
+                <div className="d-flex" style={{ gap: "12px" }}>
+                  {/* Emerald Green Connect Button */}
+                  <button
+                    type="button"
+                    className="btn w-100"
+                    style={{
+                      borderRadius: "16px",
+                      padding: "14px",
+                      backgroundColor: "#10b981",
+                      color: "#ffffff",
+                      fontWeight: "700",
+                      fontSize: "0.9rem",
+                      border: "none",
+                      boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)"
+                    }} onClick={ () => connectUser() }
+                  >
+                    Connect
+                  </button>
+                  {/* Minimalist Red Cancel Button */}
+                  <button
+                    type="button"
+                    className="btn w-100"
+                    style={{
+                      borderRadius: "16px",
+                      padding: "14px",
+                      backgroundColor: "#fef2f2",
+                      color: "#ef4444",
+                      border: "1px solid #fee2e2",
+                      fontWeight: "700",
+                      fontSize: "0.9rem",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

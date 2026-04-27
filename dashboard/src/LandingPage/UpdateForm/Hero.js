@@ -118,6 +118,7 @@ function Hero() {
 
             toast.success("Workout Updated!!");
             navigate("/");
+            window.location.reload();
         } catch (err) {
             console.error(err);
             toast.error("Upload failed.");
