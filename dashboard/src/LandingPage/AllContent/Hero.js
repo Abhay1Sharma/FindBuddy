@@ -836,9 +836,11 @@ function Hero() {
         try {
             const response = await axios.get(`${backendUrl}/allPost`);
             const allReposts = await axios.get(`${backendUrl}/allRePost`);
+            const allConnectionPost = await axios.get(`${backendUrl}/allConnectionsPosts`);
+            console.log(allConnectionPost);
 
-            // Combine posts and reposts
-            const allposts = [...response.data, ...allReposts.data.allRePost];
+            // Combine posts and reposts and allConnectionsPosts
+            const allposts = [...response.data, ...allReposts.data.allRePost, ...allConnectionPost.data.allconnectionposts];
 
             // Sort by creation date
             const feed = allposts.sort(
@@ -942,41 +944,6 @@ function Hero() {
         }
     }
 
-    const resolveItem = (items) => {
-        // Check if this is a repost (has postId and isRepost flag)
-        if (items.isRepost || items.postId) {
-            const post = {
-                type: "repost",
-                createdAt: items.createdAt || items.postId?.createdAt,
-                post: items.postId || items, // The original post content
-                user: items.postOwnerId || items.userId,
-                profile: items.postOwnerProfileId || items.profileId,
-                repostUser: items.repostFromUserId || items.repostuserId,
-                repostProfile: items.repostFromProfileId || items.repostUserProfileId
-            }
-
-            console.log(post);
-
-            return {
-                type: "repost",
-                createdAt: items.createdAt || items.postId?.createdAt,
-                post: items.postId || items, // The original post content
-                user: items.postOwnerId || items.userId,
-                profile: items.postOwnerProfileId || items.profileId,
-                repostUser: items.repostFromUserId || items.repostuserId,
-                repostProfile: items.repostFromProfileId || items.repostUserProfileId
-            };
-        }
-
-        // Regular post
-        return {
-            type: "post",
-            createdAt: items.createdAt,
-            post: items,
-            user: items.userId,
-            profile: items.profileId
-        };
-    };
 
     const postsId = async (items) => {
         return setPostId(items);
@@ -1260,7 +1227,55 @@ function Hero() {
     //         profile: items.profileId
     //     };
     // };
+    // 
 
+    const resolveItem = (items) => {
+        // Check if this is a repost (has postId and isRepost flag)
+        if (items.isRepost || items.postId) {
+            const post = {
+                type: "repost",
+                createdAt: items.createdAt || items.postId?.createdAt,
+                post: items.postId || items, // The original post content
+                user: items.postOwnerId || items.userId,
+                profile: items.postOwnerProfileId || items.profileId,
+                repostUser: items.repostFromUserId || items.repostuserId,
+                repostProfile: items.repostFromProfileId || items.repostUserProfileId
+            }
+
+            console.log(post);
+
+            return {
+                type: "repost",
+                createdAt: items.createdAt || items.postId?.createdAt,
+                post: items.postId || items, // The original post content
+                user: items.postOwnerId || items.userId,
+                profile: items.postOwnerProfileId || items.profileId,
+                repostUser: items.repostFromUserId || items.repostuserId,
+                repostProfile: items.repostFromProfileId || items.repostUserProfileId
+            };
+
+        } else if (items.isConnectionPost) {
+
+            return {
+                type: "connectionpost",
+                createdAt: items.createdAt,
+                post: items,
+                user1: items.user1,
+                user2: items.user2,
+                profile1: items?.user1?.profileId,
+                profile2: items?.user2?.profileId,
+            }
+        }
+
+        // Regular post
+        return {
+            type: "post",
+            createdAt: items.createdAt,
+            post: items,
+            user: items.userId,
+            profile: items.profileId
+        };
+    };
 
     if (!ready) {
         return (
@@ -1282,8 +1297,8 @@ function Hero() {
                         <div className="col-12 d-flex justify-content-center mb-4">
                             <video
                                 autoPlay
-                                loop
                                 muted
+                                loop
                                 playsInline
                                 disablePictureInPicture
                                 className="empty-state-video"
@@ -1295,7 +1310,6 @@ function Hero() {
                                 src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/empty-cart-animation-gif-download-8514509.mp4'}
                             />
                         </div>
-
                         {/* Text Content */}
                         <div className="col-lg-6 text-center">
                             <h2 style={{ fontWeight: "600", letterSpacing: "-0.02em", color: "#111" }}>
@@ -1334,6 +1348,8 @@ function Hero() {
                                         </Link>
                                     )}
 
+
+
                                     <hr style={{ margin: "0px" }} />
                                     <div className="post-header">
                                         {/* Show repost info if it's a repost */}
@@ -1354,8 +1370,23 @@ function Hero() {
                                             </div>}
                                         </Link>
 
+                                        {resolvedItem.type === "connectionpost" && (
+                                            <div className="repost-info" style={{ padding: "0.7rem 1rem" }}>
+                                                <Link to={`/userProfile/${resolvedItem.user1?._id}`} style={{ textDecoration: "none", color: "black" }}>
+                                                    <img src={resolvedItem.profile1?.profileImage} alt="User Avatar" className="repostavatar" />
+                                                </Link>
+                                                &nbsp;
+                                                <Link to={`/userProfile/${resolvedItem.user2?._id}`} style={{ textDecoration: "none", color: "black" }}>
+                                                    <img src={resolvedItem.profile2?.profileImage} alt="User Avatar" className="repostavatar" />
+                                                </Link>
+                                                &nbsp;&nbsp;
+                                                <b className="repostUsername">{resolvedItem.repostUser?.username}</b>&nbsp;
+                                                <small className="text-muted" style={{ fontSize: "16px" }}> connected to each other </small>
+                                            </div>
+                                        )}
+
                                         {/* Dropdown menu - only show for current user's content */}
-                                        {(resolvedItem) && (
+                                        {(resolvedItem && resolvedItem.type !== 'connectionpost') && (
                                             <div className="dropdown-container">
                                                 <input
                                                     type="checkbox"
@@ -1437,26 +1468,27 @@ function Hero() {
                                     </div>
 
                                     {/* Post Actions */}
-                                    <div className="post-actions">
-                                        <button className="action-item" onClick={() => handleLike(resolvedItem.post)}>
-                                            {resolvedItem.post?.likes?.includes(token.id) ?
-                                                <span className="icon"> <span style={{ color: "red" }}>❤️</span> {resolvedItem.post?.likes?.length || 0} likes</span> :
-                                                <span className="icon"><span style={{ color: "white" }}>🤍</span> {resolvedItem.post?.likes?.length || 0} likes</span>
-                                            }
-                                        </button>
+                                    {resolvedItem.type !== 'connectionpost' &&
+                                        <div className="post-actions">
+                                            <button className="action-item" onClick={() => handleLike(resolvedItem.post)}>
+                                                {resolvedItem.post?.likes?.includes(token.id) ?
+                                                    <span className="icon"> <span style={{ color: "red" }}>❤️</span> {resolvedItem.post?.likes?.length || 0} likes</span> :
+                                                    <span className="icon"><span style={{ color: "white" }}>🤍</span> {resolvedItem.post?.likes?.length || 0} likes</span>
+                                                }
+                                            </button>
 
-                                        <button className="action-item" onClick={() => toggleComments(resolvedItem.post?._id)}>
-                                            <span className="icon">💬</span> Comment
-                                        </button>
+                                            <button className="action-item" onClick={() => toggleComments(resolvedItem.post?._id)}>
+                                                <span className="icon">💬</span> Comment
+                                            </button>
 
-                                        <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
-                                            <span className="icon">🔁</span> Repost
-                                        </button>
-                                        <button className="action-item">
-                                            <span className="icon">✈️</span> Send
-                                        </button>
-                                    </div>
-
+                                            <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
+                                                <span className="icon">🔁</span> Repost
+                                            </button>
+                                            <button className="action-item">
+                                                <span className="icon">✈️</span> Send
+                                            </button>
+                                        </div>
+                                    }
                                     {/* Comments Section */}
                                     {activePostId === resolvedItem.post?._id && (
                                         <div className="comment-section p-3 border-top">
@@ -1528,7 +1560,8 @@ function Hero() {
                             </div>
                         </div>
                         <div className="mb-4"></div>
-                    </div>
+                    </div >
+
                 );
             })}
 

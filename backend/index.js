@@ -3,7 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import fs from 'fs';
+import fs, { rmSync } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import mongoose from "mongoose";
@@ -28,6 +28,7 @@ import { SavePost } from "./src/models/SavaPostModel.js";
 import { Repost } from "./src/models/RepostModel.js"
 import { Connection } from './src/models/ConnectionModel.js';
 import { populate } from 'dotenv';
+import { ConnectionPost } from './src/models/ConnectionPostModel.js';
 
 const userSocketMap = new Map(); // userId -> socketId
 
@@ -701,7 +702,6 @@ app.post("/allUserFollowers", async (req, res) => {
 
 app.post("/allUserFollowings", async (req, res) => {
     try {
-        console.log(req.body);
         const { userProfileId } = req.body;
         if (!userProfileId) return res.status(400).json({ error: "userProfileId is required" });
 
@@ -712,8 +712,6 @@ app.post("/allUserFollowings", async (req, res) => {
                 // select: 'username email'
             }
         });
-
-        console.log(userFollowings);
 
         if (!userFollowings) {
             return res.status(404).json({ error: "Profile not found" });
@@ -732,13 +730,10 @@ app.post("/allUserFollowings", async (req, res) => {
 });
 
 app.post("/userPosts", async (req, res) => {
-    // console.log(req.body);
     try {
         const userposts = await Post.find({ userId: req.body.id }).populate('profileId userId');
-        // console.log(userposts);
         res.status(200).json({ userposts });
     } catch (error) {
-        console.log(error);
         res.status(404).json({ error: error.message });
     }
 })
@@ -759,11 +754,9 @@ app.post("/savePost", async (req, res) => {
         }
 
         const savePost = await new SavePost(data).save();
-        console.log(savePost);
         await Post.findByIdAndUpdate(PostId, { isPostSave: true });
         res.status(200).json({ message: "Post Saved", savePost });
     } catch (error) {
-        console.log(error);
         res.status(404).json({ error: error.message });
     }
 })
@@ -772,20 +765,16 @@ app.post("/allSavedPosts", async (req, res) => {
     try {
         const { user } = req.body;
         const allUserSavedPosts = await SavePost.find({ userId: user }).populate("userId profileId postId");
-        console.log(allUserSavedPosts);
         res.status(200).json({ message: "All User Save Posts ", allUserSavedPosts });
     } catch (error) {
-        console.log(error);
         res.status(404).json({ error: error });
     }
 });
 
 app.post("/UnSavePost", async (req, res) => {
     try {
-        console.log(req.body);
         const { UserId, SavePostId, postId } = req.body;
         const UnSavePost = await SavePost.findByIdAndDelete(SavePostId);
-        console.log(UnSavePost);
         await Post.findByIdAndUpdate(postId, { isPostSave: false });
         res.status(200).json({ message: "Post Removed!!", UnSavePost });
     } catch (error) {
@@ -795,34 +784,38 @@ app.post("/UnSavePost", async (req, res) => {
 
 app.post("/checkRequest", async (req, res) => {
     try {
-        console.log(req.body);
         const { ownerId } = req.body;
         const userConnection = await Connection.find({ ownerId });
-        console.log(userConnection);
         res.status(200).json({ message: "User Connection!!!!", userConnection });
     } catch (error) {
-        console.log(error);
+        res.status(400).json({ error: error });
+    }
+});
+
+app.post("/connectionsProfile", async (req, res) => {
+    try {
+        const { connectionId } = req.body;
+        const userConnection = await Connection.findById({ _id: connectionId }).populate('connectedTo');
+        res.status(200).json({ message: "User Connection!!!!", userConnection });
+    } catch (error) {
         res.status(400).json({ error: error });
     }
 })
 
+
 app.post("/checkConnections", async (req, res) => {
     try {
-        console.log(req.body);
         const { connectionId } = req.body;
         const userConnection = await Connection.findById({ _id: connectionId }).populate(
             {
                 path: 'requestFrom',
                 populate: {
                     path: 'profileId',
-                    // select: 'username email'
-                }
+                },
             }
         );
-        console.log(userConnection);
         res.status(200).json({ message: "User Connection!!!!", userConnection });
     } catch (error) {
-        console.log(error);
         res.status(400).json({ error: error });
     }
 })
@@ -832,10 +825,8 @@ app.post("/isAnyReq", async (req, res) => {
     try {
         const { userId } = req.body;
         const connections = await Connection.find({ userId });
-        console.log(connections);
         res.status(200).json({ message: "Your Connections ", connections });
     } catch (error) {
-        console.log(error);
         res.status(300).json({ error: error });
     }
 })
@@ -846,26 +837,22 @@ app.post("/makeConnection", async (req, res) => {
         const profileOwner = await User.findById({ _id: ownerId });
         const loggedUser = await User.findById({ _id: loggedUserId });
         if (profileOwner === null || loggedUser === null) return res.status(404).json({ message: "Sorry profiles not found" });
-        console.log(profileOwner.connectionId);
         const userId = profileOwner.connectionId;
 
         const makeConnections = await Connection.findById({ _id: userId });
         if (makeConnections.isConnected) return res.status(208).json({ message: "Already has a connections" });
 
         const isUserExist = makeConnections.requestFrom.includes(loggedUserId);
-        const updateUser = isUserExist ? { $pull: { requestFrom: loggedUserId } } : { $addToSet: { requestFrom: loggedUserId } };
-        console.log(updateUser);
+        const updateUser = isUserExist ? { $set: { isAnyRequest: false }, $pull: { requestFrom: loggedUserId } } : { $set: { isAnyRequest: true }, $addToSet: { requestFrom: loggedUserId } };
 
         const makeRequest = await Connection.findByIdAndUpdate(
             userId,
             {
                 ...updateUser,
-                isAnyRequest: true
             },
             { new: true }
         );
 
-        console.log(makeRequest);
         res.status(200).json({ message: "You made a connection", makeRequest });
     } catch (error) {
         console.log(error);
@@ -875,9 +862,93 @@ app.post("/makeConnection", async (req, res) => {
 
 app.post("/acceptConnection", async (req, res) => {
     try {
-        console.log(req.body);
+        const { userId, userConnectionId, loggedUserId, loggedUserConnectionId } = req.body;
+
+        const user = await User.findById({ _id: userId });
+        const loggedUser = await User.findById({ _id: loggedUserId });
+
+        if (!user || !loggedUser) {
+            return res.status(404).json({ message: " User Not Found " });
+        }
+
+        const userConnection = await Connection.findById({ _id: userConnectionId });
+        const loggedUserConnection = await Connection.findById({ _id: loggedUserConnectionId });
+
+        if (!userConnection || !loggedUserConnection) {
+            return res.status.json({ message: "Connection Status Not Found" });
+        }
+
+        const updatedUserConnection = await Connection.findByIdAndUpdate(loggedUserConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: user.profileId });
+        const updatedLoggedUserConnection = await Connection.findByIdAndUpdate(userConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: loggedUser.profileId });
+
+        const data = {
+            about: `⚡ Energy alert! ${user.username} and ${loggedUser.username} just became workout buddies, and this duo is about to set the gym on fire! 🔥 No more dragging through sets alone or finding excuses to skip — these two are locking in, leveling up, and pushing each other harder than ever before. Think stronger lifts, faster runs, bigger energy, and zero days off. This isn't just a buddy match; it's a full-on power move. Watch them crush goals, break limits, and bring the heat every single workout. Who else feels the hype? Drop a 💪 to cheer them on! 🚀`,
+            media: "https://cdnl.iconscout.com/lottie/premium/preview-watermark/celebration-ribbon-animation-gif-download-5829504.mp4",
+            user1: user._id,
+            user2: loggedUser._id,
+            isConnectionPost: true,
+        }
+
+        const successConnectionsPost = await new ConnectionPost(data).save();
+        res.status(200).json({ message: "Connection estabilshed successfully!" });
     } catch (error) {
         console.log(error);
+        res.status(404).json({ error: error });
+    }
+});
+
+app.post("/fetchUserConnections", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { connectionId } = req.body;
+        const fetchConnection = await Connection.find({ _id: connectionId });
+        res.status(200).json({ message: "User Connection fetched!!!", fetchConnection });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ error: error });
+    }
+})
+
+app.get("/allConnectionsPosts", async (req, res) => {
+    try {
+        const allconnectionposts = await ConnectionPost.find({}).populate(
+            [{
+                path: 'user1',
+                populate: {
+                    path: 'profileId'
+                }
+            },
+
+            {
+                path: 'user2',
+                populate: {
+                    path: 'profileId'
+                }
+            }]
+        );
+        res.status(200).json({ message: "All Connections Post", allconnectionposts });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ error: error });
+    }
+})
+
+app.post("/leaveConnection", async (req, res) => {
+    try {
+        const user1ConnectionId = req.body.userInfos.connectionId;
+        const user = await Connection.findById({ _id: user1ConnectionId }).populate({
+            path: 'connectedTo',
+            populate: {
+                path: 'userId',
+            }
+        });
+        const user2ConnectionId = user.connectedTo.userId.connectionId;
+        const deletedConnection1 = await Connection.findByIdAndUpdate(user1ConnectionId, { isConnected: false, connectedTo: null });
+        const deletedConnection2 = await Connection.findByIdAndUpdate(user2ConnectionId, { isConnected: false, connectedTo: null });
+        res.status(200).json({ message: "Connection deleted successfully !!!" });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error });
     }
 })
 

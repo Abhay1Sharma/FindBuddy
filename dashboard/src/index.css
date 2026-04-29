@@ -814,9 +814,11 @@ i {
 
 .stats-row {
   display: flex;
+  justify-content: flex-start;
+  align-items: center;
   gap: 32px;
   border-top: 1px solid #e6e9ec;
-  margin-top: 20px;
+  /* margin-top: 20px; */
   padding-top: 18px;
 }
 
@@ -1536,4 +1538,34 @@ b {
   display: flex;
   align-items: center;
   justify-content: start;
+}
+
+.connected-buddyname {
+  font-weight: 700;
+  font-size: medium;
+}
+
+.connection-profile {
+  padding-right: 11px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 25px;
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  /* opacity: 0.8; */
+  transition: all 0.3s ease;
+  margin-right: 4px;
+}
+
+.connection-leave-btn {
+  color: #ef4444;
+  font-weight: 600;
+  margin-right: 4px;
+  font-size: 0.9rem;
+  padding-right: 11px;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
 }

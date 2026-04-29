@@ -445,7 +445,6 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
 import { jwtDecode } from 'jwt-decode';
-import { connect } from 'mongoose';
 
 const frontendUrl = "http://localhost:3000";
 const backendUrl = "http://localhost:3001";
@@ -457,18 +456,15 @@ const socket = io(backendUrl, { autoConnect: false });
 const Navbar = ({ setSearch }) => {
   const [userData, setUserData] = useState(null);
   const [isPostUploaded, setIsPostUploaded] = useState(false);
-  const [postData, setPostData] = useState({
-    about: "",
-    media: "",
-    userId: "",
-    profileId: ""
-  });
+  const [postData, setPostData] = useState({ about: "", media: "", userId: "", profileId: "" });
   const [file, setFile] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isNewNotification, setIsNewNotification] = useState(false);
   const [isFormFilled, setIsFormFilled] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [checkConnection, setCheckConnection] = useState([]);
+  const [success, setSuccess] = useState(false);
+  const [wait, setWait] = useState(false);
   const [isRequest, setIsRequest] = useState([]);
   const navigate = useNavigate();
 
@@ -498,6 +494,8 @@ const Navbar = ({ setSearch }) => {
         userId: res.data._id,
         profileId: res.data.profileId
       }));
+
+
 
     } catch (err) {
       console.error("Fetch User Error:", err);
@@ -619,7 +617,25 @@ const Navbar = ({ setSearch }) => {
 
   const connectUser = async () => {
     try {
-      
+      setWait(true);
+      console.log("Connect User");
+      const data = {
+        loggedUserId: userData._id,
+        userId: checkConnection.requestFrom[0]._id,
+        loggedUserConnectionId: userData.connectionId,
+        userConnectionId: checkConnection.requestFrom[0].connectionId,
+      }
+
+      console.log(data);
+      const res = await axios.post("http://localhost:3001/acceptConnection", data);
+      setCheckConnection(prev => ({
+        ...prev,
+        isAnyRequest: false
+      }));
+
+      setTimeout(() => { setWait(false) }, 4000);
+      setSuccess(true)
+      setTimeout(() => { setSuccess(false); navigate("/"); }, 5000);
     } catch (error) {
       console.log(error);
     }
@@ -645,9 +661,6 @@ const Navbar = ({ setSearch }) => {
               <li className="nav-item" style={{ marginRight: "2.5px" }} >
                 <Link className="nav-link active m-1.5" to="/allContent" onClick={giveWarning}>All Users</Link>
               </li>
-              <li className="nav-item" style={{ marginRight: "2.5px" }} >
-                <Link className="nav-link active m-1.5" to="/update-profile" onClick={giveWarning}>Update Your Routine</Link>
-              </li>
               <li className="nav-item" style={{ marginRight: "7px" }} >
                 <Link
                   className='nav-link active m-1.5'
@@ -658,6 +671,9 @@ const Navbar = ({ setSearch }) => {
                 >
                   Create a Post
                 </Link>
+              </li>
+              <li className="nav-item" style={{ marginRight: "2.5px" }} >
+                <Link className="nav-link active m-1.5" to="/update-profile" onClick={giveWarning}>Update Your Routine</Link>
               </li>
 
               {userData && (
@@ -759,7 +775,7 @@ const Navbar = ({ setSearch }) => {
               <div className="modal-body text-center p-4">
                 {/* Simple Centered Avatar */}
                 <img
-                  src={`${checkConnection.requestFrom[0].profileId.profileImage}`}
+                  src={`${checkConnection.requestFrom[0]?.profileId?.profileImage}`}
                   alt="Avatar"
                   style={{
                     width: "80px",
@@ -771,8 +787,8 @@ const Navbar = ({ setSearch }) => {
                 />
 
                 {/* Username */}
-                <Link to={`/userprofile/${userData}`} style={{ textDecoration: "none" }} ><h5 style={{ fontWeight: "600", color: "#111", marginBottom: "4px" }}>
-                  {checkConnection.requestFrom[0].username}
+                <Link to={`/userprofile/${checkConnection?.requestFrom[0]?._id}`} style={{ textDecoration: "none" }} ><h5 style={{ fontWeight: "600", color: "#111", marginBottom: "4px" }}>
+                  {checkConnection?.requestFrom[0]?.username}
                 </h5></Link>
                 {/* Unique Goal Statement */}
                 <div style={{ marginTop: "20px", marginBottom: "30px" }}>
@@ -797,15 +813,15 @@ const Navbar = ({ setSearch }) => {
                     style={{
                       borderRadius: "16px",
                       padding: "14px",
-                      backgroundColor: "#10b981",
+                      backgroundColor: wait ? "#4e9b81" :"#10b981",
                       color: "#ffffff",
                       fontWeight: "700",
                       fontSize: "0.9rem",
                       border: "none",
-                      boxShadow: "0 10px 20px -5px rgba(16, 185, 129, 0.4)"
-                    }} onClick={ () => connectUser() }
+                      boxShadow: wait ? "0 10px 20px -5px rgba(72, 180, 144, 0.39)" : "0 10px 20px -5px rgba(16, 185, 129, 0.4)"
+                    }} onClick={() => connectUser()}
                   >
-                    Connect
+                    {wait ? "Please Wait" : "Connect"}
                   </button>
                   {/* Minimalist Red Cancel Button */}
                   <button
@@ -831,6 +847,90 @@ const Navbar = ({ setSearch }) => {
           </div>
         </div>
       )}
+
+      {wait && <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
+        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
+          <div className="modal-content" style={{
+            borderRadius: "16px",
+            border: "none",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+          }}>
+
+            <div className="modal-body text-center p-4">
+              {/* Simple Centered Avatar */}
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                disablePictureInPicture
+                className="empty-state-video"
+                style={{
+                  maxWidth: "25vh",
+                  mixBlendMode: "multiply", // Blends video background if it's white
+                  filter: "grayscale(20%)"   // Gives it a slightly more professional tone
+                }}
+                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/circle-loader-animation-gif-download-4603867.mp4'}
+              />
+              <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+                <h6><b>Syncing Your Goals...</b></h6><i class="fa-regular fa-handshake fa-bounce" style={{ color: "#10b981" }}></i>
+                <p style={{
+                  color: "#475569",
+                  fontSize: "0.95rem",
+                  lineHeight: "1.5",
+                  fontWeight: "500",
+                  margin: "0",
+                  fontStyle: "italic"
+                }}>
+                  "Sophisticated and clean. It sounds like a secure handshake is happening in the background.."
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>}
+
+      {success && <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
+        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
+          <div className="modal-content" style={{
+            borderRadius: "16px",
+            border: "none",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+          }}>
+
+            <div className="modal-body text-center p-4">
+              {/* Simple Centered Avatar */}
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                disablePictureInPicture
+                className="empty-state-video"
+                style={{
+                  maxWidth: "25vh",
+                  mixBlendMode: "multiply", // Blends video background if it's white
+                  filter: "grayscale(20%)"   // Gives it a slightly more professional tone
+                }}
+                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/success-animation-gif-download-7271807.mp4'}
+              />
+              <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+                <h6><b>Congratulations</b></h6><i class="fa-regular fa-handshake fa-bounce" style={{ color: "#10b981" }}></i>
+                <p style={{
+                  color: "#475569",
+                  fontSize: "0.95rem",
+                  lineHeight: "1.5",
+                  fontWeight: "500",
+                  margin: "0",
+                  fontStyle: "italic"
+                }}>
+                  "Shared vision. Accelerated progress. <br /> Your journey just gained a partner."
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>}
     </>
   );
 }

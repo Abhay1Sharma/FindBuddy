@@ -14,6 +14,7 @@ function Hero() {
     const [postId, setPostId] = useState();
     const [ready, setReady] = useState(false);
     const [comment, setComment] = useState("");
+    const [request, setRequest] = useState([]);
     const token = jwtDecode(localStorage.token);
     const [formData, setFormData] = useState({});
     const [userInfo, setUserInfo] = useState({});
@@ -32,6 +33,7 @@ function Hero() {
     const [activePostId, setActivePostId] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [allFollowings, setAllFollowings] = useState([]);
+    const [connectionProfile, setConnectionProfile] = useState([]);
     const [checkConnection, setCheckConnection] = useState(null);
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [backgroundImageFile, setBackgroundImageFile] = useState(null);
@@ -135,6 +137,11 @@ function Hero() {
                 const user = await axios.post(`${backendUrl}/user`, { id: Id.id });
                 const posts = await axios.post(`${backendUrl}/userPosts`, { id: Id.id });
                 const loggedUser = await axios.post("http://localhost:3001/user", { id: token.id });
+                const connection = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: user.data.connectionId });
+                const userConnection = await axios.post("http://localhost:3001/fetchUserConnections", { connectionId: loggedUser.data.connectionId });
+                console.log(userConnection);
+                setRequest(userConnection.data.fetchConnection);
+                setConnectionProfile(connection.data.userConnection);
                 setLoggedUser(loggedUser.data);
                 setAllPost(posts.data.userposts);
                 setUserInfo(user.data);
@@ -282,6 +289,8 @@ function Hero() {
             console.log(error);
         }
     }
+
+    console.log(connectionProfile);
 
     const showFollowings = async (userProfileId) => {
         try {
@@ -449,10 +458,44 @@ function Hero() {
             });
     };
 
+    // useEffect( () => {
+    //     const fetchConnection = async () => {
+    //         try {
+                
+    //             console.log(userInfo);
+    //             // setRequest(connection.data.userConnection)
+    //         } catch (error) {
+    //             console.log(error);
+    //         }
+    //     }
+
+    //     fetchConnection()
+    // }, []);
+
     const connectWithMe = async () => {
         try {
-            // const connection = await axios.post("http://localhost:3001/makeConnection", { ownerId: userInfo._id, loggedUserId: loggedUser._id });
-            // console.log(connection);
+            const connection = await axios.post("http://localhost:3001/makeConnection", { ownerId: userInfo._id, loggedUserId: loggedUser._id });
+            console.log(connection);
+            setRequest(connection.data.makeRequest);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const goToProfile = async () => {
+        try {
+            navigate(`/userProfile/${connectionProfile.connectedTo.userId}`);
+            window.location.reload();
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const leaveConnection = async () => {
+        try {
+            const connectionsIds = { userInfos: userInfo, loggedUsers: loggedUser };
+            const deleteConnection = await axios.post("http://localhost:3001/leaveConnection", connectionsIds);
+            console.log(deleteConnection);
         } catch (error) {
             console.log(error);
         }
@@ -580,9 +623,28 @@ function Hero() {
                                             </div>
                                         </div>
                                         <div className="stats-row">
-                                            <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
-                                            <div className="stat-item" data-bs-toggle="modal" data-bs-target="#staticBackdropFollowings" onClick={() => showFollowings(userProfile._id)}><span className="stat-number">{userProfile?.following.length}</span> followings </div>
-                                            {(userInfo.formId.city === loggedUser.formId.city && userInfo.formId.gymname.toLowerCase() === loggedUser.formId.gymname.toLowerCase() && userInfo._id !== loggedUser._id) && <button className="btn btn-success" onClick={() => connectWithMe()}> Connect with me </button>}
+                                            <div className="stat-item" data-bs-toggle="modal" style={{ width: "auto", height: "max-content" }} data-bs-target="#staticBackdrop" onClick={() => showFollowers(userProfile._id)}><span className="stat-number">{userProfile?.followers.length}</span> followers</div>
+                                            <div className="stat-item" data-bs-toggle="modal" style={{ width: "auto", height: "max-content" }} data-bs-target="#staticBackdropFollowings" onClick={() => showFollowings(userProfile._id)}><span className="stat-number">{userProfile?.following.length}</span> followings </div>
+
+                                            {connectionProfile.connectedTo && <div className="conection-box">
+                                                {loggedUser?.profileId._id === userInfo.profileId._id ?
+                                                    <button className="connection-leave-btn" data-bs-toggle="modal" data-bs-target="#leaveConnectionConfirmModal" >
+                                                        <img src={connectionProfile?.connectedTo?.profileImage} alt="Avatar" style={{ width: "51px", height: "51px", borderRadius: "50%", marginRight: "1rem" }} />
+                                                        Wants to leave
+                                                    </button> :
+                                                    <Link onClick={() => { goToProfile() }} style={{ cursor: "pointer" }} >
+                                                        <button className="connection-profile" >
+                                                            <img src={connectionProfile?.connectedTo?.profileImage} alt="Avatar" style={{ width: "51px", height: "51px", borderRadius: "50%", backgroundColor: "#f8f9fa", marginRight: "1rem" }} />
+                                                            Already have a Buddy
+                                                        </button>
+                                                    </Link>
+                                                }
+                                            </div>}
+
+
+                                            {request?.requestFrom?.some(req => req._id === loggedUser?.profileId?._id ) ? <button className="btn btn-success" style={{ width: "auto", height: "max-content" }} onClick={() => connectWithMe()}> Connect with me </button> : 
+                                            <button className="btn btn-success" style={{ width: "auto", height: "max-content" }} onClick={() => connectWithMe()}> Connect with me </button>
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -618,7 +680,7 @@ function Hero() {
                                                         <div className="post-header">
                                                             <Link className="postHeader" to={`${dashboardUrl}/userProfile/${items.userId._id}`}>
                                                                 {items.profileId &&
-                                                                    <img src={items.profileId?.profileImage} alt="User Avatar" className="avatar" />
+                                                                    <img src={items?.profileId?.profileImage} alt="User Avatar" className="avatar" />
                                                                 }
                                                                 {items.profileId && <div className="user-information">
                                                                     <h3 className="user-name">{items.userId && items.userId.username}</h3>
@@ -998,6 +1060,63 @@ function Hero() {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Confirm Modal */}
+            <div className="modal fade" id="leaveConnectionConfirmModal" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+                <div className="modal-dialog modal-dialog-centered" role="document">
+                    {/* Soft Red Background and Border */}
+                    <div className="modal-content" style={{ width: "50vh", backgroundColor: "#fff5f5", border: "1px solid #feb2b2", borderRadius: "12px" }}>
+
+                        <div className="modal-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "none", padding: "20px 20px 10px" }}>
+                            {/* Deep Red Title */}
+                            <h5 className="modal-title" id="exampleModalLongTitle" style={{ color: "#c53030", fontWeight: "bold" }}>
+                                Leave Connection?
+                            </h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" style={{ fontSize: "0.8rem" }}></button>
+                        </div>
+
+                        <div className="modal-body" style={{ textAlign: "center", paddingBottom: "0px" }}>
+                            <img
+                                src={`${connectionProfile?.connectedTo?.profileImage}`}
+                                alt="Avatar"
+                                style={{
+                                    width: "80px",
+                                    height: "80px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#f8f9fa",
+                                    marginBottom: "16px",
+                                    border: "3px solid #fc8181" // Red ring around profile
+                                }}
+                            />
+                            <p style={{ color: "#742a2a", fontSize: "0.95rem" }}>
+                                Are you sure you want to end this connection? This action is permanent.
+                            </p>
+                        </div>
+
+                        <div className="modal-footer" style={{ borderTop: "none", justifyContent: "center", padding: "20px" }}>
+                            {/* Cancel Button */}
+                            <button
+                                type="button"
+                                className="btn"
+                                data-bs-dismiss="modal"
+                                style={{ backgroundColor: "#edf2f7", color: "#4a5568", fontWeight: "600", marginRight: "10px" }}
+                            >
+                                Cancel
+                            </button>
+
+                            {/* Confirm Action Button */}
+                            <button
+                                type="button"
+                                className="btn confirmBtn"
+                                onClick={() => { leaveConnection() }}
+                                style={{ backgroundColor: "#e53e3e", color: "white", fontWeight: "600", padding: "8px 24px" }}
+                            >
+                                Yes, Leave
+                            </button>
                         </div>
                     </div>
                 </div>

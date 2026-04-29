@@ -14,7 +14,7 @@ const ConnectionSchema = new Schema(
 
         connectedTo: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "user",
+            ref: "profile",
         },
 
         isAnyRequest: {
