@@ -463,6 +463,7 @@ const Navbar = ({ setSearch }) => {
   const [isFormFilled, setIsFormFilled] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [checkConnection, setCheckConnection] = useState([]);
+  const [requestFromArr, setRequestFromArr] = useState([]);
   const [success, setSuccess] = useState(false);
   const [wait, setWait] = useState(false);
   const [isRequest, setIsRequest] = useState([]);
@@ -481,11 +482,13 @@ const Navbar = ({ setSearch }) => {
       const decode = jwtDecode(token).id;
 
       setUserData(res.data);
-      console.log(userData);
-      const connection = await axios.post("http://localhost:3001/checkConnections", { connectionId: res.data.connectionId });
-      console.log(connection);
-      setCheckConnection(connection.data.userConnection);
-
+      console.log(res.data);
+      if (res.data.connectionId) {
+        const connection = await axios.post("http://localhost:3001/checkConnections", { connectionId: res.data.connectionId });
+        console.log(connection);
+        setCheckConnection(connection.data.userConnection);
+        setRequestFromArr(connection.data.userConnection.requestFrom);
+      }
       setIsFormFilled(res.data.hasCompleteProfile);
 
       // Update state correctly (avoiding direct mutation)
@@ -495,14 +498,14 @@ const Navbar = ({ setSearch }) => {
         profileId: res.data.profileId
       }));
 
-
-
     } catch (err) {
       console.error("Fetch User Error:", err);
       localStorage.removeItem('token');
       window.location.href = `${frontendUrl}/login`;
     }
   }, []);
+
+  console.log(requestFromArr);
 
   // Handle Token from URL and Initialization
   useEffect(() => {
@@ -598,12 +601,12 @@ const Navbar = ({ setSearch }) => {
     }
   };
 
-  const giveWarning = (e) => {
-    if (!isFormFilled) {
-      e.preventDefault(); // Prevents <Link> navigation
-      toast.warn("Hold On! 🏋️‍♂️ Please complete your Gym Routine first to unlock all features.");
-    }
-  };
+  // const giveWarning = (e) => {
+  //   if (!isFormFilled) {
+  //     e.preventDefault(); // Prevents <Link> navigation
+  //     toast.warn("Hold On! 🏋️‍♂️ Please complete your Gym Routine first to unlock all features.");
+  //   }
+  // };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -641,6 +644,18 @@ const Navbar = ({ setSearch }) => {
     }
   }
 
+  const rejectRequest = async () => {
+    try {
+      console.log("Connection Rejected by users");
+      const connectionsIds = { connectionId: userData.connectionId };
+      const deleteConnection = await axios.post("http://localhost:3001/rejectRequest", connectionsIds);
+      console.log(deleteConnection);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
   return (
     <>
       <nav className="navbar navbar-expand-lg sticky-top border-bottom" style={{ backgroundColor: "white", height: "4rem", border: "none", boxShadow: "none" }}>
@@ -656,16 +671,15 @@ const Navbar = ({ setSearch }) => {
           <div className="collapse navbar-collapse" id="navbarSupportedContent" style={{ backgroundColor: 'white' }}>
             <ul className="navbar-nav mb-2 mb-lg-0" style={{ margin: "0 auto", alignItems: "inherit" }}>
               <li className="nav-item" style={{ marginRight: "2.5px" }} >
-                <Link className="nav-link active m-1.5" to="/" onClick={giveWarning}>Home</Link>
+                <Link className="nav-link active m-1.5" to="/" >Home</Link>
               </li>
               <li className="nav-item" style={{ marginRight: "2.5px" }} >
-                <Link className="nav-link active m-1.5" to="/allContent" onClick={giveWarning}>All Users</Link>
+                <Link className="nav-link active m-1.5" to="/allContent" >All Users</Link>
               </li>
               <li className="nav-item" style={{ marginRight: "7px" }} >
                 <Link
                   className='nav-link active m-1.5'
                   to="#"
-                  onClick={giveWarning}
                   data-bs-toggle={isFormFilled ? "modal" : ""}
                   data-bs-target={isFormFilled ? "#exampleModalCenter" : ""}
                 >
@@ -673,7 +687,7 @@ const Navbar = ({ setSearch }) => {
                 </Link>
               </li>
               <li className="nav-item" style={{ marginRight: "2.5px" }} >
-                <Link className="nav-link active m-1.5" to="/update-profile" onClick={giveWarning}>Update Your Routine</Link>
+                <Link className="nav-link active m-1.5" to="/update-profile" >Update Your Routine</Link>
               </li>
 
               {userData && (
@@ -763,7 +777,7 @@ const Navbar = ({ setSearch }) => {
         </div>
       </div>
 
-      {checkConnection.isAnyRequest && (
+      {/* {checkConnection.isAnyRequest && (
         <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
             <div className="modal-content" style={{
@@ -773,7 +787,6 @@ const Navbar = ({ setSearch }) => {
             }}>
 
               <div className="modal-body text-center p-4">
-                {/* Simple Centered Avatar */}
                 <img
                   src={`${checkConnection.requestFrom[0]?.profileId?.profileImage}`}
                   alt="Avatar"
@@ -786,11 +799,9 @@ const Navbar = ({ setSearch }) => {
                   }}
                 />
 
-                {/* Username */}
                 <Link to={`/userprofile/${checkConnection?.requestFrom[0]?._id}`} style={{ textDecoration: "none" }} ><h5 style={{ fontWeight: "600", color: "#111", marginBottom: "4px" }}>
                   {checkConnection?.requestFrom[0]?.username}
                 </h5></Link>
-                {/* Unique Goal Statement */}
                 <div style={{ marginTop: "20px", marginBottom: "30px" }}>
                   <p style={{
                     color: "#475569",
@@ -804,16 +815,14 @@ const Navbar = ({ setSearch }) => {
                   </p>
                 </div>
 
-                {/* Action Buttons Integrated */}
                 <div className="d-flex" style={{ gap: "12px" }}>
-                  {/* Emerald Green Connect Button */}
                   <button
                     type="button"
                     className="btn w-100"
                     style={{
                       borderRadius: "16px",
                       padding: "14px",
-                      backgroundColor: wait ? "#4e9b81" :"#10b981",
+                      backgroundColor: wait ? "#4e9b81" : "#10b981",
                       color: "#ffffff",
                       fontWeight: "700",
                       fontSize: "0.9rem",
@@ -823,7 +832,6 @@ const Navbar = ({ setSearch }) => {
                   >
                     {wait ? "Please Wait" : "Connect"}
                   </button>
-                  {/* Minimalist Red Cancel Button */}
                   <button
                     type="button"
                     className="btn w-100"
@@ -837,6 +845,7 @@ const Navbar = ({ setSearch }) => {
                       fontSize: "0.9rem",
                       transition: "all 0.2s"
                     }}
+                    onClick={() => { rejectRequest(); window.location.reload(); }}
                   >
                     Cancel
                   </button>
@@ -846,91 +855,7 @@ const Navbar = ({ setSearch }) => {
             </div>
           </div>
         </div>
-      )}
-
-      {wait && <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
-        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
-          <div className="modal-content" style={{
-            borderRadius: "16px",
-            border: "none",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
-          }}>
-
-            <div className="modal-body text-center p-4">
-              {/* Simple Centered Avatar */}
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                disablePictureInPicture
-                className="empty-state-video"
-                style={{
-                  maxWidth: "25vh",
-                  mixBlendMode: "multiply", // Blends video background if it's white
-                  filter: "grayscale(20%)"   // Gives it a slightly more professional tone
-                }}
-                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/circle-loader-animation-gif-download-4603867.mp4'}
-              />
-              <div style={{ marginTop: "20px", marginBottom: "30px" }}>
-                <h6><b>Syncing Your Goals...</b></h6><i class="fa-regular fa-handshake fa-bounce" style={{ color: "#10b981" }}></i>
-                <p style={{
-                  color: "#475569",
-                  fontSize: "0.95rem",
-                  lineHeight: "1.5",
-                  fontWeight: "500",
-                  margin: "0",
-                  fontStyle: "italic"
-                }}>
-                  "Sophisticated and clean. It sounds like a secure handshake is happening in the background.."
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>}
-
-      {success && <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
-        <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
-          <div className="modal-content" style={{
-            borderRadius: "16px",
-            border: "none",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
-          }}>
-
-            <div className="modal-body text-center p-4">
-              {/* Simple Centered Avatar */}
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                disablePictureInPicture
-                className="empty-state-video"
-                style={{
-                  maxWidth: "25vh",
-                  mixBlendMode: "multiply", // Blends video background if it's white
-                  filter: "grayscale(20%)"   // Gives it a slightly more professional tone
-                }}
-                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/success-animation-gif-download-7271807.mp4'}
-              />
-              <div style={{ marginTop: "20px", marginBottom: "30px" }}>
-                <h6><b>Congratulations</b></h6><i class="fa-regular fa-handshake fa-bounce" style={{ color: "#10b981" }}></i>
-                <p style={{
-                  color: "#475569",
-                  fontSize: "0.95rem",
-                  lineHeight: "1.5",
-                  fontWeight: "500",
-                  margin: "0",
-                  fontStyle: "italic"
-                }}>
-                  "Shared vision. Accelerated progress. <br /> Your journey just gained a partner."
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>}
+      )} */}
     </>
   );
 }

@@ -13,6 +13,7 @@ function Hero() {
     const [file, setFile] = useState(null);
     const [postId, setPostId] = useState();
     const [ready, setReady] = useState(false);
+    const [wait, setWait] = useState(false);
     const [comment, setComment] = useState("");
     const [request, setRequest] = useState([]);
     const token = jwtDecode(localStorage.token);
@@ -21,21 +22,24 @@ function Hero() {
     const [postUser, setPostUser] = useState([]);
     const [allPost, setAllPost] = useState(null);
     const [commentId, setCommentId] = useState();
+    const [success, setSuccess] = useState(false);
     const [allComment, setAllComment] = useState();
     const [singlePost, setSinglePost] = useState([]);
     const [postAbout, setPostAbout] = useState(null);
     const [commentUser, setCommentUser] = useState();
     const [loggedUser, setLoggedUser] = useState(null);
     const [userProfile, setUserProfile] = useState({});
+    const [checkRequest, setCheckRequest] = useState([]);
+    const [showWarning, setShowWarning] = useState(false);
     const [allFollowers, setAllFollowers] = useState([]);
     const [editingPost, setEditingPost] = useState(null);
     const [showAllPost, setShowAllPost] = useState(false);
     const [activePostId, setActivePostId] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [allFollowings, setAllFollowings] = useState([]);
-    const [connectionProfile, setConnectionProfile] = useState([]);
     const [checkConnection, setCheckConnection] = useState(null);
     const [profileImageFile, setProfileImageFile] = useState(null);
+    const [connectionProfile, setConnectionProfile] = useState([]);
     const [backgroundImageFile, setBackgroundImageFile] = useState(null);
 
     const backendUrl = "http://localhost:3001";
@@ -138,8 +142,10 @@ function Hero() {
                 const posts = await axios.post(`${backendUrl}/userPosts`, { id: Id.id });
                 const loggedUser = await axios.post("http://localhost:3001/user", { id: token.id });
                 const connection = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: user.data.connectionId });
+                const loggedConnection = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: loggedUser.data.connectionId });
                 const userConnection = await axios.post("http://localhost:3001/fetchUserConnections", { connectionId: loggedUser.data.connectionId });
                 console.log(userConnection);
+                setCheckRequest(loggedConnection.data.userConnection);
                 setRequest(userConnection.data.fetchConnection);
                 setConnectionProfile(connection.data.userConnection);
                 setLoggedUser(loggedUser.data);
@@ -461,7 +467,7 @@ function Hero() {
     // useEffect( () => {
     //     const fetchConnection = async () => {
     //         try {
-                
+
     //             console.log(userInfo);
     //             // setRequest(connection.data.userConnection)
     //         } catch (error) {
@@ -474,8 +480,10 @@ function Hero() {
 
     const connectWithMe = async () => {
         try {
+            const user = await axios.post(`${backendUrl}/user`, { id: Id.id });
             const connection = await axios.post("http://localhost:3001/makeConnection", { ownerId: userInfo._id, loggedUserId: loggedUser._id });
-            console.log(connection);
+            const connectionProfile = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: user.data.connectionId });
+            setConnectionProfile(connectionProfile.data.userConnection);
             setRequest(connection.data.makeRequest);
         } catch (error) {
             console.log(error);
@@ -496,10 +504,58 @@ function Hero() {
             const connectionsIds = { userInfos: userInfo, loggedUsers: loggedUser };
             const deleteConnection = await axios.post("http://localhost:3001/leaveConnection", connectionsIds);
             console.log(deleteConnection);
+            window.location.reload();
         } catch (error) {
             console.log(error);
         }
     }
+
+    const rejectRequest = async () => {
+        try {
+            console.log("Connection Rejected by users");
+            const connectionsIds = { loggedUsersConnectionId: loggedUser.connectionId };
+            const deleteConnection = await axios.post("http://localhost:3001/rejectRequest", connectionsIds);
+            console.log(deleteConnection);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const connectUser = async () => {
+        try {
+            setWait(true);
+            console.log("Connect User");
+            const data = {
+                userId: userInfo?._id,
+                loggedUserId: loggedUser?._id,
+                userConnectionId: userInfo?.connectionId,
+                loggedUserConnectionId: loggedUser?.connectionId,
+            }
+
+            console.log(data);
+            const res = await axios.post("http://localhost:3001/acceptConnection", data);
+            setCheckConnection(prev => ({
+                ...prev,
+                isAnyRequest: false
+            }));
+
+            setTimeout(() => { setWait(false) }, 4000);
+            setSuccess(true)
+            setTimeout(() => { setSuccess(false); navigate("/"); }, 5000);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const goToFollowersProfile = async (url) => {
+        try {
+            navigate(`/userProfile/${url}`);
+            window.location.reload();
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
 
 
     // if(!showallPost){
@@ -580,13 +636,13 @@ function Hero() {
                                                 </div>
                                             </div>
                                             <div className="profile-actions">
-                                                {userInfo._id !== tokenId && <button className="btn btn-primary" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "auto" }} aria-label="Open to Gym" onClick={handleFollowers}> <i className="fas fa-dumbbell"></i> {userProfile.followers.includes(loggedUser?.profileId._id) ? "Unfollow" : "Wants to Follow"} </button>}
-                                                {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button onClick={() => { giveNotification(userInfo._id, tokenId) }} className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" > <i className="fas fa-paper-plane"></i> Message </button> </Link>}
+                                                {userInfo._id !== tokenId && <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#06A", border: "none", width: "max-content" }} aria-label="Open to Gym" onClick={handleFollowers}> {userProfile.followers.includes(loggedUser?.profileId._id) ? "Unfollow" : "Follow"} </button>}
+                                                {userInfo._id !== tokenId && <Link to={`/userChats/${userInfo._id}`}> <button onClick={() => { giveNotification(userInfo._id, tokenId) }} className="btn" style={{ color: "#F3F4F6", backgroundColor: "#8B5CF6", border: "none" }} aria-label="Send Message" >Message </button> </Link>}
                                                 <div className="modal fade" id="exampleModalToggle" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
                                                     <div className="modal-dialog modal-dialog-centered">
                                                         <div className="modal-content">
                                                             <div className="modal-footer">
-                                                                <button className="btn btn-primary" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
+                                                                <button className="btn btn-primary" style={{ width: "max-content" }} data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -606,7 +662,7 @@ function Hero() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#F59E0B", border: "none" }} data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About Profile</button>
+                                                <button className="btn" style={{ color: "#F3F4F6", backgroundColor: "#F59E0B", border: "none" }} data-bs-target="#exampleModalToggle2" data-bs-toggle="modal">About</button>
                                             </div>
                                         </div>
                                         <div className="name-title">
@@ -629,21 +685,34 @@ function Hero() {
                                             {connectionProfile.connectedTo && <div className="conection-box">
                                                 {loggedUser?.profileId._id === userInfo.profileId._id ?
                                                     <button className="connection-leave-btn" data-bs-toggle="modal" data-bs-target="#leaveConnectionConfirmModal" >
-                                                        <img src={connectionProfile?.connectedTo?.profileImage} alt="Avatar" style={{ width: "51px", height: "51px", borderRadius: "50%", marginRight: "1rem" }} />
-                                                        Wants to leave
+                                                        <img src={connectionProfile?.connectedTo?.profileImage} alt="Avatar leaves" style={{ width: "51px", height: "51px", borderRadius: "50%", marginRight: "1rem" }} />
+                                                        {/* Wants to leave */}
                                                     </button> :
-                                                    <Link onClick={() => { goToProfile() }} style={{ cursor: "pointer" }} >
+                                                    <Link onClick={() => { goToProfile(); }} style={{ cursor: "pointer", textDecoration: "none" }} >
                                                         <button className="connection-profile" >
                                                             <img src={connectionProfile?.connectedTo?.profileImage} alt="Avatar" style={{ width: "51px", height: "51px", borderRadius: "50%", backgroundColor: "#f8f9fa", marginRight: "1rem" }} />
-                                                            Already have a Buddy
+                                                            {/* Already have a buddy */}
                                                         </button>
                                                     </Link>
                                                 }
                                             </div>}
 
+                                            {connectionProfile.isConnected === false && checkRequest?.requestFrom?.includes(userInfo?._id) &&
+                                                <button onClick={() => { connectUser() }} className="btn btn-info cancel-button" style={{ width: "auto", height: "max-content", backgroundColor: "#3ce070", color: "white" }} > Accept </button>
+                                            }
 
-                                            {request?.requestFrom?.some(req => req._id === loggedUser?.profileId?._id ) ? <button className="btn btn-success" style={{ width: "auto", height: "max-content" }} onClick={() => connectWithMe()}> Connect with me </button> : 
-                                            <button className="btn btn-success" style={{ width: "auto", height: "max-content" }} onClick={() => connectWithMe()}> Connect with me </button>
+                                            {checkRequest.isConnected === false && userInfo.formId.city === loggedUser.formId.city && userInfo.formId.gymname === loggedUser.formId.gymname && userInfo._id !== loggedUser._id && connectionProfile.isConnected === false && !checkRequest?.requestFrom?.includes(userInfo?._id) ? <div>
+                                                {connectionProfile?.requestFrom?.includes(loggedUser?._id) ?
+                                                    <button className="btn btn-info cancel-button" style={{ width: "auto", height: "max-content", backgroundColor: "#fa5151cd", color: "white" }} onClick={() => connectWithMe()}> Cancel request </button> :
+                                                    <button className="btn btn-success connect-button" style={{ width: "auto", height: "max-content", }} onClick={() => connectWithMe()}> Connect </button>
+                                                }
+                                            </div> :
+
+                                                <div>
+                                                    {connectionProfile.isConnected === false && checkRequest.isAnyRequest === false && userInfo._id !== loggedUser._id &&
+                                                        <button className="btn" style={{ width: "auto", height: "max-content", backgroundColor: "#eef452fe", color: "white" }} onClick={() => setShowWarning(!showWarning)}> Accompanied </button>
+                                                    }
+                                                </div>
                                             }
                                         </div>
                                     </div>
@@ -988,7 +1057,7 @@ function Hero() {
                             <div className="followers-list-container" style={{ padding: '20px', maxWidth: '500px' }}>
                                 {allFollowers && allFollowers.length > 0 ? (
                                     allFollowers.map((followerProfile) => (
-                                        <Link to={`/userProfile/${followerProfile.userId.profileId}`}>
+                                        <Link onClick={() => goToFollowersProfile(followerProfile.userId._id)} style={{ textDecoration: "none" }} >
                                             <div className="follower-bar" key={followerProfile._id}>
                                                 <img
                                                     className="bar-image"
@@ -1035,23 +1104,25 @@ function Hero() {
                             <div className="followers-list-container" style={{ padding: '20px', maxWidth: '500px' }}>
                                 {allFollowings && allFollowings.length > 0 ? (
                                     allFollowings.map((followerProfile) => (
-                                        <div className="follower-bar" key={followerProfile._id}>
-                                            <img
-                                                className="bar-image"
-                                                src={followerProfile.profileImage}
-                                                alt="Profile"
-                                            />
+                                        <Link onClick={() => goToFollowersProfile(followerProfile.userId._id)} style={{ textDecoration: "none" }}>
+                                            <div className="follower-bar" key={followerProfile._id}>
+                                                <img
+                                                    className="bar-image"
+                                                    src={followerProfile.profileImage}
+                                                    alt="Profile"
+                                                />
 
-                                            <div className="bar-info">
-                                                <h3 className="bar-username">
-                                                    {followerProfile.userId?.username || "Gym Member"}
-                                                </h3>
+                                                <div className="bar-info">
+                                                    <h3 className="bar-username">
+                                                        {followerProfile.userId?.username || "Gym Member"}
+                                                    </h3>
 
-                                                <p className="bar-headline">
-                                                    {followerProfile.introContent || "No bio available"}
-                                                </p>
+                                                    <p className="bar-headline">
+                                                        {followerProfile.introContent || "No bio available"}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))
                                 ) : (
                                     <p>No followings yet. Time to hit the gym!</p>
@@ -1103,6 +1174,7 @@ function Hero() {
                                 type="button"
                                 className="btn"
                                 data-bs-dismiss="modal"
+                                aria-label="Close"
                                 style={{ backgroundColor: "#edf2f7", color: "#4a5568", fontWeight: "600", marginRight: "10px" }}
                             >
                                 Cancel
@@ -1112,6 +1184,8 @@ function Hero() {
                             <button
                                 type="button"
                                 className="btn confirmBtn"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
                                 onClick={() => { leaveConnection() }}
                                 style={{ backgroundColor: "#e53e3e", color: "white", fontWeight: "600", padding: "8px 24px" }}
                             >
@@ -1121,6 +1195,103 @@ function Hero() {
                     </div>
                 </div>
             </div>
+
+            {wait && <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
+                <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
+                    <div className="modal-content" style={{
+                        borderRadius: "16px",
+                        border: "none",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+                    }}>
+
+                        <div className="modal-body text-center p-4">
+                            {/* Simple Centered Avatar */}
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "25vh",
+                                    mixBlendMode: "multiply",
+                                    filter: "grayscale(20%)"
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/circle-loader-animation-gif-download-4603867.mp4'}
+                            />
+                            <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+                                <h6><b>Syncing Your Goals...</b></h6><i class="fa-regular fa-handshake fa-bounce" style={{ color: "#10b981" }}></i>
+                                <p style={{
+                                    color: "#475569",
+                                    fontSize: "0.95rem",
+                                    lineHeight: "1.5",
+                                    fontWeight: "500",
+                                    margin: "0",
+                                    fontStyle: "italic"
+                                }}>
+                                    "Sophisticated and clean. It sounds like a secure handshake is happening in the background.."
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>}
+
+
+            {success && <div className="modal show" style={{ display: "block", background: "rgba(0, 0, 0, 0.4)" }} tabIndex="-1">
+                <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "340px" }}>
+                    <div className="modal-content" style={{
+                        borderRadius: "16px",
+                        border: "none",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
+                    }}>
+
+                        <div className="modal-body text-center p-4">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                disablePictureInPicture
+                                className="empty-state-video"
+                                style={{
+                                    maxWidth: "25vh",
+                                    mixBlendMode: "multiply",
+                                    filter: "grayscale(20%)"
+                                }}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/success-animation-gif-download-7271807.mp4'}
+                            />
+                            <div style={{ marginTop: "20px", marginBottom: "30px" }}>
+                                <h6><b>Congratulations</b></h6><i class="fa-regular fa-handshake fa-bounce" style={{ color: "#10b981" }}></i>
+                                <p style={{
+                                    color: "#475569",
+                                    fontSize: "0.95rem",
+                                    lineHeight: "1.5",
+                                    fontWeight: "500",
+                                    margin: "0",
+                                    fontStyle: "italic"
+                                }}>
+                                    "Shared vision. Accelerated progress. <br /> Your journey just gained a partner."
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>}
+
+            {showWarning && <div class="modal-backdrop">
+                <div class="warning-modal">
+                    <div class="warning-icon">⚠️</div>
+
+                    <div class="message-primary btn-warning">Caution: Your Gym-Buddy Already Exist!!!</div>
+                    <div class="message-secondary">If you want to connect first leave your current gym buddy</div>
+
+                    <div class="button-group mt-4">
+                        <button class="btn-cancel buttons" onClick={() => { setShowWarning(!showWarning) }} >Cancel</button>
+                    </div>
+                </div>
+            </div>}
         </>
     );
 }

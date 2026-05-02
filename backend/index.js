@@ -165,7 +165,6 @@ app.get("/allFormData", async (req, res) => {
 
 app.post("/deletePostComment", async (req, res) => {
     try {
-        console.log(req.body);
         const { id } = req.body;
         const deleteComment = await Comment.findByIdAndDelete(id);
         const allComment = await Comment.find({}).populate('userId profileId');
@@ -178,7 +177,6 @@ app.post("/deletePostComment", async (req, res) => {
 
 app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
     try {
-        console.log(req.files);
 
         const profilePath = req.file ? req.file?.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
 
@@ -187,7 +185,6 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
             typeOfBuddy, city, state, country, shifts, userId
         } = req.body;
 
-        console.log(req.file);
 
         const newForm = await new Form({
             name, gender, age, fitnessLevel, goal,
@@ -199,10 +196,9 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
         const defaultUserProfile = await new Profile({
             userId: userId, introContent: 'Ready to find a partner and hit the gym', aboutContent:
                 `Hi, I'm a fitness enthusiast looking for a dedicated partner to stay consistent, share motivation, and crush our gym goals together.`,
-            profileImage: "https://img.freepik.com/premium-vector/vector-flat-illustration-grayscale-avatar-user-profile-person-icon-gender-neutral-silhouette-profile-picture-suitable-social-media-profiles-icons-screensavers-as-templatex9xa_719432-2210.jpg?semt=ais_hybrid&w=740&q=80",
+            profileImage: profilePath,
             backgroundImage: 'https://www.shutterstock.com/image-vector/default-ui-image-placeholder-wireframes-600nw-1037719192.jpg',
         }).save();
-        console.log(newForm);
 
         const defaultConnection = await new Connection({ ownerId: userId }).save();
         await User.findByIdAndUpdate(userId, { hasCompleteProfile: true, formId: newForm._id, profileId: defaultUserProfile._id, connectionId: defaultConnection._id });
@@ -212,6 +208,18 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
         res.status(500).json({ message: "Server error during profile creation." });
     }
 });
+
+app.post("/removeRepostContent", async (req, res) => {
+    try {
+        const { repostId, postId } = req.body; 
+        console.log(req.body);
+        const findRepostContent = await Repost.findById({ _id: repostId });
+        const findPost = await Post.findById({ _id: postId });
+        console.log(findRepostContent);
+    } catch (error) {
+        console.log(error);
+    }
+})
 
 app.post("/loggedUser", async (req, res) => {
     const { decode } = req.body;
@@ -278,14 +286,12 @@ app.post("/profile", async (req, res) => {
 
 app.post("/getUserForm", async (req, res) => {
     const { Id } = req.body;
-    // console.log(req.body);
     const getForm = await Form.findById({ _id: Id });
     res.status(200).json({ data: getForm });
 });
 
 app.post("/userPostComments", async (req, res) => {
     try {
-        // console.log(req.body.postId);
         const { postId } = req.body;
         const allComments = await Comment.find({ postId: req.body.postId }).populate("userId postId profileId");
         res.status(200).json({ message: "All Comment Post", allComments });
@@ -298,14 +304,11 @@ app.post("/userPostComments", async (req, res) => {
 app.post("/comment", async (req, res) => {
     try {
         const { comment, postId, profileId, userId } = req.body;
-        console.log(comment, postId, userId);
         const post = await Post.findById({ _id: postId }).populate("userId");
         if (!post) { return };
         const saveComment = await new Comment({ comment: comment, userId: userId, postId: postId, profileId: profileId }).save();
         const allPostComment = await Comment.find({ postId }).populate("userId profileId").sort({ createdAt: -1 });
-        console.log(allPostComment);
-        // console.log(saveComment);
-        // console.log(post);
+        const user = await User.findById({ _id: userId });
 
         const postOwnerId = post.userId._id.toString();
         const postOwnerName = post.userId.username;
@@ -320,13 +323,12 @@ app.post("/comment", async (req, res) => {
 
             }).save();
 
-            console.log(newNotif);
             recipientSocketId = userSocketMap.get(postOwnerId);
 
             if (recipientSocketId) {
                 io.to(recipientSocketId).emit("new_notification", {
                     type: 'COMMENT',
-                    content: `${postOwnerName} commented on your post`,
+                    content: `${user.username} commented on your post`,
                     _id: newNotif._id
                 });
             }
@@ -350,7 +352,6 @@ app.post("/editComment", async (req, res) => {
             edit: true
         }
         const updatedComment = await Comment.findByIdAndUpdate(req.body.commentId, data);
-        console.log(updatedComment);
         res.status(200).json({ message: "Comment Updated!!!", updatedComment });
     } catch (error) {
         res.status(400).json({ error: error });
@@ -370,6 +371,8 @@ app.post("/like", async (req, res) => {
 
         const postOwnerId = updatedPost.userId._id.toString();
         const postOwnerName = updatedPost.userId.username;
+
+        const user = await User.findById({ _id: userId });
         let recipientSocketId = null; // Define it here so it's accessible for logging
 
         // 2. Notification Logic]
@@ -389,7 +392,7 @@ app.post("/like", async (req, res) => {
             if (recipientSocketId) {
                 io.to(recipientSocketId).emit("new_notification", {
                     type: 'LIKE',
-                    content: `${postOwnerName} liked your post`,
+                    content: `${user.username} liked your post`,
                     _id: newNotif._id
                 });
             }
@@ -421,9 +424,36 @@ app.post("/repost", async (req, res) => {
             repostFromProfileId: repostUserProfileId,
         }
 
-        const newRepost = await new Repost(repost).save();
-        console.log(newRepost);
-        res.status(200).json({ message: "You Repost a Post", newRepost });
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: "This Post does not exist" });
+
+        const isAlreadySaved = post.repost.includes(userId);
+        let message = "";
+        let updatedPost;
+        let newRepost;
+
+        if (isAlreadySaved) {
+            updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                { $pull: { repost: userId } },
+                { new: true }
+            );
+
+            await SavePost.findOneAndDelete({ userId: userId, postId: postId });
+
+            message = "Post Repost Successfully";
+        } else {
+            updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                { $addToSet: { repost: userId } },
+                { new: true }
+            );
+
+            newRepost = await new Repost(repost).save();
+            message = "Post Saved Successfully";
+        }
+
+        res.status(200).json({ message: message, newRepost });
     } catch (error) {
         console.log(error);
     }
@@ -432,7 +462,6 @@ app.post("/repost", async (req, res) => {
 app.get("/allRePost", async (req, res) => {
     try {
         const allRePost = await Repost.find({}).populate('postOwnerId postId postOwnerProfileId repostFromUserId repostFromProfileId');
-        console.log(allRePost);
         res.status(200).json({ message: "All Repost fetched Successfully !!!", allRePost });
     } catch (error) {
         console.log(error);
@@ -442,7 +471,6 @@ app.get("/allRePost", async (req, res) => {
 
 app.get("/notifications/:userId", async (req, res) => {
     try {
-        console.log(req.params);
         const list = await Notification.find({ recipient: req.params.userId })
             .populate([
                 {
@@ -457,7 +485,6 @@ app.get("/notifications/:userId", async (req, res) => {
             ]) // Get sender details
             .sort({ createdAt: -1 });
 
-        console.log(list);
         res.status(200).json(list);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -551,7 +578,6 @@ app.post("/postContent", async (req, res) => {
 
 app.get("/cloudinary-signature", (req, res) => {
     const timestamp = Math.round(new Date().getTime() / 1000);
-
     const signature = cloudinary.utils.api_sign_request(
         { timestamp },
         process.env.REACT_APP_CLOUDINARY_API_SECRET
@@ -567,7 +593,6 @@ app.get("/cloudinary-signature", (req, res) => {
 
 app.post("/messageIds", async (req, res) => {
     try {
-        console.log(req.body);
         const { senderId, ownerId } = req.body;
         let recipientSocketId = null;
 
@@ -582,8 +607,6 @@ app.post("/messageIds", async (req, res) => {
                 type: 'CHAT',
                 content: "wants to talk you"
             }).save();
-
-            console.log(newNotif);
 
             // Find socket using string ID
             recipientSocketId = userSocketMap.get(senderId.toString());
@@ -631,8 +654,6 @@ app.post("/followers", async (req, res) => {
 
         const updateFollowingData = isUserFollow ? { $pull: { following: profileId } } : { $addToSet: { following: profileId } };
         const updateUser = await Profile.findByIdAndUpdate(userProfileId, updateFollowingData);
-        console.log(data);
-        console.log(updateUser);
         const sender = user._id.toString();
         const receiver = profile.userId._id.toString();
         let recipientSocketId = null;
@@ -647,8 +668,6 @@ app.post("/followers", async (req, res) => {
                 content: "follow your profile"
             }).save();
 
-            console.log(newNotif);
-
             recipientSocketId = userSocketMap.get(profile.userId._id.toString());
             console.log(recipientSocketId);
 
@@ -660,11 +679,11 @@ app.post("/followers", async (req, res) => {
                 });
             }
         }
+
         console.log("Reciever ", profile.userId._id.toString());
         console.log("Sender ", user._id.toString());
         console.log("Available Sockets:", Array.from(userSocketMap.keys()));
 
-        // console.log(data);
         res.status(200).json({ message: isUserFollow ? "User Unfollow the User" : "User follow the user", data });
     } catch (error) {
         // console.log(error);
@@ -741,25 +760,47 @@ app.post("/userPosts", async (req, res) => {
 app.post("/savePost", async (req, res) => {
     try {
         const { UserId, PostId, PostUserId, ProfileId } = req.body;
-        const user = await User.findById({ _id: PostUserId });
-        if (!user) return res.status(404).json({ message: "This Post User not Exists" });
-        const post = await Post.findById({ _id: PostId });
-        if (!post) return res.status(404).json({ message: "This Post not Exists" });
 
-        const data = {
-            userId: UserId,
-            postId: PostId,
-            postUserId: PostUserId,
-            profileId: ProfileId,
+        const post = await Post.findById(PostId);
+        if (!post) return res.status(404).json({ message: "This Post does not exist" });
+
+        const isAlreadySaved = post.isPostSave.includes(UserId);
+        let message = "";
+        let updatedPost;
+
+        if (isAlreadySaved) {
+            updatedPost = await Post.findByIdAndUpdate(
+                PostId,
+                { $pull: { isPostSave: UserId } },
+                { new: true }
+            );
+
+            await SavePost.findOneAndDelete({ userId: UserId, postId: PostId });
+
+            message = "Post Unsaved Successfully";
+        } else {
+            updatedPost = await Post.findByIdAndUpdate(
+                PostId,
+                { $addToSet: { isPostSave: UserId } },
+                { new: true }
+            );
+
+            const newSave = new SavePost({
+                userId: UserId,
+                postId: PostId,
+                postUserId: PostUserId,
+                profileId: ProfileId,
+            });
+            await newSave.save();
+            message = "Post Saved Successfully";
         }
 
-        const savePost = await new SavePost(data).save();
-        await Post.findByIdAndUpdate(PostId, { isPostSave: true });
-        res.status(200).json({ message: "Post Saved", savePost });
+        res.status(200).json({ message, savePost: updatedPost });
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        console.error("Error in savePost:", error);
+        res.status(500).json({ error: error.message });
     }
-})
+});
 
 app.post("/allSavedPosts", async (req, res) => {
     try {
@@ -775,7 +816,7 @@ app.post("/UnSavePost", async (req, res) => {
     try {
         const { UserId, SavePostId, postId } = req.body;
         const UnSavePost = await SavePost.findByIdAndDelete(SavePostId);
-        await Post.findByIdAndUpdate(postId, { isPostSave: false });
+        await Post.findByIdAndUpdate(postId, { $pull: { isPostSave: UserId } });
         res.status(200).json({ message: "Post Removed!!", UnSavePost });
     } catch (error) {
         res.status(404).json({ error: error.message });
@@ -800,7 +841,7 @@ app.post("/connectionsProfile", async (req, res) => {
     } catch (error) {
         res.status(400).json({ error: error });
     }
-})
+});
 
 
 app.post("/checkConnections", async (req, res) => {
@@ -845,6 +886,32 @@ app.post("/makeConnection", async (req, res) => {
         const isUserExist = makeConnections.requestFrom.includes(loggedUserId);
         const updateUser = isUserExist ? { $set: { isAnyRequest: false }, $pull: { requestFrom: loggedUserId } } : { $set: { isAnyRequest: true }, $addToSet: { requestFrom: loggedUserId } };
 
+
+        let recipientSocketId = null;
+
+        if (!isUserExist) {
+            const newNotif = await new Notification({
+                recipient: profileOwner?._id.toString(),
+                sender: loggedUser?._id.toString(),
+                recipientProfile: profileOwner?.profileId.toString(),
+                senderProfile: loggedUser?.profileId.toString(),
+                type: 'CONNECT',
+                content: "wants to make you as gym buddy"
+            }).save();
+
+
+            recipientSocketId = userSocketMap.get(profileOwner?._id.toString());
+            console.log(recipientSocketId);
+
+            if (recipientSocketId) {
+                io.to(recipientSocketId).emit("new_notification", {
+                    type: 'CONNECT',
+                    content: `${loggedUser?.username} wants to make you as gym buddy`,
+                    _id: newNotif._id
+                });
+            }
+        }
+
         const makeRequest = await Connection.findByIdAndUpdate(
             userId,
             {
@@ -878,8 +945,31 @@ app.post("/acceptConnection", async (req, res) => {
             return res.status.json({ message: "Connection Status Not Found" });
         }
 
+        let recipientSocketId = null;
+
         const updatedUserConnection = await Connection.findByIdAndUpdate(loggedUserConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: user.profileId });
         const updatedLoggedUserConnection = await Connection.findByIdAndUpdate(userConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: loggedUser.profileId });
+
+        const newNotif = await new Notification({
+            recipient: user?._id.toString(),
+            sender: loggedUser?._id.toString(),
+            recipientProfile: user?.profileId.toString(),
+            senderProfile: loggedUser?.profileId.toString(),
+            type: 'CONNECT',
+            content: "accept to make you as gym buddy"
+        }).save();
+
+
+        recipientSocketId = userSocketMap.get(user?._id.toString());
+        console.log(recipientSocketId);
+
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit("new_notification", {
+                type: 'CONNECT',
+                content: `${loggedUser?.username} accept to make you as gym buddy`,
+                _id: newNotif._id,
+            });
+        }
 
         const data = {
             about: `⚡ Energy alert! ${user.username} and ${loggedUser.username} just became workout buddies, and this duo is about to set the gym on fire! 🔥 No more dragging through sets alone or finding excuses to skip — these two are locking in, leveling up, and pushing each other harder than ever before. Think stronger lifts, faster runs, bigger energy, and zero days off. This isn't just a buddy match; it's a full-on power move. Watch them crush goals, break limits, and bring the heat every single workout. Who else feels the hype? Drop a 💪 to cheer them on! 🚀`,
@@ -899,13 +989,22 @@ app.post("/acceptConnection", async (req, res) => {
 
 app.post("/fetchUserConnections", async (req, res) => {
     try {
-        console.log(req.body);
         const { connectionId } = req.body;
         const fetchConnection = await Connection.find({ _id: connectionId });
         res.status(200).json({ message: "User Connection fetched!!!", fetchConnection });
     } catch (error) {
         console.log(error);
         res.status(404).json({ error: error });
+    }
+})
+
+app.post("/rejectRequest", async (req, res) => {
+    try {
+        const { connectionId } = req.body;
+        const userConnectionStatus = await Connection.findById({ _id: connectionId });
+        const rejectRequest = await Connection.findByIdAndUpdate(connectionId, { isAnyRequest: false });
+    } catch (error) {
+        console.log(error);
     }
 })
 
@@ -954,13 +1053,9 @@ app.post("/leaveConnection", async (req, res) => {
 
 app.post("/UnSavePostfromHome", async (req, res) => {
     try {
-        console.log("Hello I am remove the post from save area from home", req.body);
         const { UserId, postId } = req.body;
         const savePost = await SavePost.find({ postId });
-        console.log(savePost[0]);
-        const id = savePost[0]._id;
         const UnSavePost = await SavePost.findByIdAndDelete(id);
-        console.log(UnSavePost);
         await Post.findByIdAndUpdate(postId, { isPostSave: false });
         res.status(200).json({ message: "Post Removed!!", UnSavePost });
     } catch (error) {
@@ -972,21 +1067,15 @@ app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
 
     try {
 
-        console.log("Request body : ", req.body);
-        console.log("Request files :", req.files);
-
         const { userId } = req.body;
 
         const profilePictureUrl = req.file ? req.file.path : "https://i.pinimg.com/736x/f7/82/c8/f782c8360e890a8d488eeda004b26bde.jpg";
         const data = req.body;
         data.profilePicture = profilePictureUrl;
 
-        console.log(data);
-
         const user = await User.findById({ _id: userId });
         const _id = user.formId;
         const form = await Form.findByIdAndUpdate(_id, data);
-        console.log(form);
         res.status(200).json({ message: "Routine Updated Successfully!!!" });
     } catch (error) {
         console.log(error);
@@ -996,8 +1085,8 @@ app.post("/updateForm", upload.single("profilePicture"), async (req, res) => {
 
 app.delete("/deletePost/:id", async (req, res) => {
     try {
+        const post = await Repost.deleteMany({ postId: req.params.id });
         const deletedPost = await Post.findByIdAndDelete(req.params.id);
-        console.log(deletedPost);
         res.status(200).json({ message: "Post Deleted ", deletedPost });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -1012,8 +1101,6 @@ const uploadFields = upload.fields([
 app.post("/updateIntro", uploadFields, async (req, res) => {
     try {
         const { userId, intro, about } = req.body;
-        console.log(req.body);
-
         const updateData = {};
 
         if (intro && intro !== 'undefined') updateData.introContent = intro;
@@ -1036,15 +1123,12 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
         }
 
         const profileId = user.profileId;
-        console.log(updateData);
 
         const updatedProfile = await Profile.findByIdAndUpdate(
             profileId,
             { $set: updateData },
             { new: true, runValidators: true }
         );
-
-        console.log(updatedProfile);
 
         res.status(200).json({
             message: "Profile updated successfully",

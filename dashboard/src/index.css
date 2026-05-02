@@ -829,7 +829,6 @@ i {
   color: #5e5e5e;
   border-radius: 5px;
   font-size: 0.85rem;
-  background-color: azure;
 }
 
 .stat-number {
@@ -1446,6 +1445,42 @@ b {
   background: #f8f9fa;
 }
 
+.modal-backdrop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.warning-modal {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 300px;
+}
+
+.warning-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.message-primary {
+  font-weight: 700;
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.message-secondary {
+  font-size: 14px;
+  color: #7f8c8d;
+  line-height: 1.4;
+}
+
 .bar-image {
   width: 50px;
   height: 50px;
@@ -1559,6 +1594,7 @@ b {
 }
 
 .connection-leave-btn {
+  width: max-content;
   color: #ef4444;
   font-weight: 600;
   margin-right: 4px;
@@ -1568,4 +1604,60 @@ b {
   transition: all 0.3s ease;
   background-color: #fef2f2;
   border: 1px solid #fee2e2;
+}
+
+.connection-profile::after {
+  content: "Buddy Already Exist!!!";
+}
+
+.connection-leave-btn::after {
+  content: "Wants to Leave";
+}
+
+@media only screen and (max-width: 550px) {
+  .connection-leave-btn::after {
+    content: "🗑";
+    font-weight: 700;
+    font-size: xx-large;
+    display: inline-block;
+  }
+
+  .leaves {
+    margin: 0px;
+  }
+}
+
+@media only screen and (max-width: 550px) {
+  .stats-row {
+    justify-content: space-around;
+  }
+}
+
+svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.buttons {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  border: none;
+}
+
+.btn-cancel {
+  background-color: #f0f0f0;
+  color: #555;
+}
+
+.btn-cancel:hover {
+  background-color: #e5e5e5;
 }

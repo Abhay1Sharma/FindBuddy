@@ -249,7 +249,7 @@ function Hero() {
                             {loading ?
                                 <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(213, 149, 130)" }}>Wait....</button>
                                 :
-                                <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Find your Buddy</button>
+                                <button className="form-control mt-4 mb-3" style={{ color: "white", fontWeight: "600", fontSize: "1.1rem", backgroundColor: "rgb(255, 61, 0)" }}>Create Your Profile</button>
                             }
                         </form>
                     </div>

@@ -788,8 +788,10 @@ function Hero() {
     const [allPost, setAllPost] = useState(null);
     const [allComment, setAllComment] = useState();
     const [commentUser, setCommentUser] = useState();
+    const [wait, setWait] = useState(false);
     const [activePostId, setActivePostId] = useState(null);
     const [commentId, setCommentId] = useState();
+    const [isPostSave, setIsPostSave] = useState(false);
     const [postAbout, setPostAbout] = useState(null);
     const [file, setFile] = useState(null);
     const [allRepost, setAllRepost] = useState(null);
@@ -807,42 +809,13 @@ function Hero() {
         setAllComment(postComments.data.allComments);
     };
 
-    // const fetchAllPost = async () => {
-    //     try {
-    //         const response = await axios.get(`${backendUrl}/allPost`);
-    //         const sortedArray = response.data.sort((a, b) => {
-    //             const dateA = a.createdAt ? new Date(a.createdAt) : 0;
-    //             const dateB = b.createdAt ? new Date(b.createdAt) : 0;
-    //             return dateB - dateA;
-    //         });
-
-    //         const allReposts = await axios.get(`${backendUrl}/allRePost`);
-
-    //         const allposts = [...response.data, ...allReposts.data.allRePost];
-    //         const feed = allposts.sort(
-    //             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    //         );
-    //         console.log(feed);
-
-    //         setAllPost(sortedArray);
-    //         // setAllRepost(allReposts.data.allRepost);
-    //         setReady(true);
-    //     } catch (error) {
-    //         console.error("Error fetching posts:", error);
-    //     }
-    // };
-
     const fetchAllPost = async () => {
         try {
             const response = await axios.get(`${backendUrl}/allPost`);
             const allReposts = await axios.get(`${backendUrl}/allRePost`);
             const allConnectionPost = await axios.get(`${backendUrl}/allConnectionsPosts`);
-            console.log(allConnectionPost);
-
-            // Combine posts and reposts and allConnectionsPosts
             const allposts = [...response.data, ...allReposts.data.allRePost, ...allConnectionPost.data.allconnectionposts];
 
-            // Sort by creation date
             const feed = allposts.sort(
                 (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
             );
@@ -857,9 +830,8 @@ function Hero() {
 
     const handleLike = async (items) => {
         try {
-            // Resolve the item to get the actual post content
             const resolvedItem = resolveItem(items);
-            const postToLike = resolvedItem.post; // This gets the original post
+            const postToLike = resolvedItem.post;
 
             const response = await axios.post(`${backendUrl}/like`, {
                 postId: postToLike._id,
@@ -869,11 +841,9 @@ function Hero() {
             if (response.status === 200) {
                 setAllPost(prevPosts =>
                     prevPosts.map(post => {
-                        // Check if this is the same post (for regular posts)
                         if (!post.isRepost && !post.postId && post._id === postToLike._id) {
                             return response.data.updatedPost;
                         }
-                        // Check if this is a repost containing the liked post
                         else if ((post.isRepost || post.postId) &&
                             (post.postId?._id === postToLike._id || post._id === postToLike._id)) {
                             return {
@@ -889,27 +859,6 @@ function Hero() {
             console.log("Like error:", error);
         }
     }
-
-    // const handleComment = async (e) => {
-    //     e.preventDefault();
-    //     try {
-    //         if (comment.trim() === '') {
-    //             toast.info("Can't post an empty comment");
-    //             return;
-    //         }
-    //         const data = {
-    //             "comment": comment,
-    //             "postId": postId._id,
-    //             "userId": commentUser._id,
-    //             "profileId": commentUser.profileId._id
-    //         };
-    //         const res = await axios.post(`${backendUrl}/comment`, data);
-    //         setAllComment(res.data.allPostComment);
-    //         setComment("");
-    //     } catch (error) {
-    //         console.log(error);
-    //     }
-    // }
 
     const handleComment = async (e) => {
         e.preventDefault();
@@ -929,13 +878,8 @@ function Hero() {
             const res = await axios.post(`${backendUrl}/comment`, data);
 
             if (res.status === 200) {
-                // 1. Update the list of comments dynamically
-                // Assuming res.data.allPostComment is the array of comments for this post
                 setAllComment(res.data.allPostComment);
-
-                // 2. Clear the input field so the user can type a new comment
                 setComment('');
-
                 toast.success("Comment posted!");
             }
         } catch (error) {
@@ -980,14 +924,11 @@ function Hero() {
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-
-        console.log(name, value);
         if (name === "postAbout") {
             setPostAbout(value);
         } else if (name === "editMedia" && files[0]) {
-            console.log(files);
             const selected = files[0];
-            setFile(URL.createObjectURL(selected));
+            setFile(URL.createObjectURL(selected))
             setSelectedFile(selected);
         } else if (name === "comment") {
             setComment(value);
@@ -996,47 +937,89 @@ function Hero() {
 
     const savePost = async (items) => {
         try {
-            const resolvedItem = resolveItem(items);
-            const postToSave = resolvedItem.post; // This gets the original post
+            const { post } = resolveItem(items); // Get the base post object
+            setWait(true);
 
-            console.log(items);
             const postIds = {
                 UserId: token.id,
                 PostId: items._id,
                 PostUserId: items.userId?._id || items.userId,
                 ProfileId: items.profileId?._id || items.profileId,
-                isPostSave: true,
-            }
-            const sendPost = await axios.post(`${backendUrl}/savePost`, postIds);
-            console.log(sendPost);
+            };
 
-            setAllPost(prevPost =>
-                prevPost.map(item => {
-                    // Check if this is a repost
-                    if (item.isRepost || item.postId) {
-                        // If it's a repost, check if its original post matches the saved post
-                        const originalPostId = item.postId?._id || item._id;
-                        if (originalPostId === postToSave._id) {
+            const response = await axios.post(`${backendUrl}/savePost`, postIds);
+            const newSavedArray = response.data.savePost.isPostSave;
+
+            setAllPost(prevPosts =>
+                prevPosts.map(item => {
+                    const currentId = item.postId?._id || item._id;
+
+                    if (currentId === post._id) {
+                        if (item.postId) {
                             return {
                                 ...item,
-                                postId: { ...item.postId, isPostSave: true }
+                                postId: { ...item.postId, isPostSave: newSavedArray }
+                            };
+                        } else {
+                            return {
+                                ...item,
+                                isPostSave: newSavedArray
                             };
                         }
-                        return item;
-                    }
-                    // If it's a regular post
-                    else if (item._id === postToSave._id) {
-                        return { ...item, isPostSave: true };
                     }
                     return item;
                 })
             );
+            setWait(false);
 
-            console.log(sendPost);
         } catch (error) {
-            console.log(error);
+            console.error("Error toggling save:", error);
         }
-    }
+    };
+
+    // const savePost = async (items) => {
+    //     try {
+    //         const resolvedItem = resolveItem(items);
+    //         const postToSave = resolvedItem.post; // This gets the original post
+
+    //         console.log(items);
+    //         const postIds = {
+    //             UserId: token.id,
+    //             PostId: items._id,
+    //             PostUserId: items.userId?._id || items.userId,
+    //             ProfileId: items.profileId?._id || items.profileId,
+    //         }
+    //         console.log(postIds);
+    //         const sendPost = await axios.post(`${backendUrl}/savePost`, postIds);
+    //         console.log(sendPost);
+
+    //         setAllPost(prevPost =>
+    //             prevPost.map(item => {
+    //                 // Check if this is a repost
+    //                 if (item.isRepost || item.postId) {
+    //                     // If it's a repost, check if its original post matches the saved post
+    //                     const originalPostId = item.postId?._id || item._id;
+    //                     if (originalPostId === postToSave._id) {
+    //                         return {
+    //                             ...item,
+    //                             postId: { ...item.postId, isPostSave: true }
+    //                         };
+    //                     }
+    //                     return item;
+    //                 }
+    //                 // If it's a regular post
+    //                 else if (item._id === postToSave._id) {
+    //                     return { ...item, isPostSave: true };
+    //                 }
+    //                 return item;
+    //             })
+    //         );
+
+    //         console.log(sendPost);
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // }
 
 
     const editPost = (items) => {
@@ -1047,7 +1030,6 @@ function Hero() {
     const deleteComment = async (id) => {
         try {
             const deletedComment = await axios.post("http://localhost:3001/deletePostComment", { id: id });
-            console.log(deletedComment);
             setAllComment(deletedComment.data.allComment);
         } catch (error) {
             console.log(error);
@@ -1115,33 +1097,36 @@ function Hero() {
             const resolvedItem = resolveItem(items);
             const postToUnsave = resolvedItem.post; // This gets the original post
 
-            console.log(items);
             const postIds = {
                 UserId: token.id,
                 postId: items._id,
             }
 
-            console.log(postIds);
             const sendPost = await axios.post(`${backendUrl}/UnSavePostfromHome`, postIds);
-            console.log(sendPost);
 
             setAllPost(prevPost =>
                 prevPost.map(item => {
-                    // Check if this is a repost
-                    if (item.isRepost || item.postId) {
-                        // If it's a repost, check if its original post matches the saved post
-                        const originalPostId = item.postId?._id || item._id;
-                        if (originalPostId === postToUnsave._id) {
+                    const originalPostId = item.postId?._id || item._id;
+
+                    if (originalPostId === postToUnsave._id) {
+                        const currentSaves = item.postId?.isPostSave || item.isPostSave || [];
+
+                        const updatedSaves = currentSaves.filter(id => id !== token.id);
+
+                        if (item.isRepost || item.postId) {
                             return {
                                 ...item,
-                                postId: { ...item.postId, isPostSave: false }
+                                postId: {
+                                    ...item.postId,
+                                    isPostSave: updatedSaves
+                                }
+                            };
+                        } else {
+                            return {
+                                ...item,
+                                isPostSave: updatedSaves
                             };
                         }
-                        return item;
-                    }
-                    // If it's a regular post
-                    else if (item._id === postToUnsave._id) {
-                        return { ...item, isPostSave: false };
                     }
                     return item;
                 })
@@ -1154,10 +1139,7 @@ function Hero() {
 
     const repostContent = async (post) => {
         try {
-            console.log(post);
-
             const repostUser = await axios.post(`${backendUrl}/user`, { id: token.id });
-            console.log(repostUser);
 
             const data = {
                 postId: post._id,
@@ -1168,7 +1150,6 @@ function Hero() {
             }
 
             const repost = await axios.post("http://localhost:3001/repost", data);
-            console.log(repost);
 
         } catch (error) {
             console.log(error);
@@ -1177,10 +1158,8 @@ function Hero() {
 
     const deletePost = async (items) => {
         try {
-            console.log(items);
             if (window.confirm("Are you want to delete this post...."));
             const res = await axios.delete(`${backendUrl}/deletePost/${items._id}`);
-            console.log(res);
             toast.success("Post Deleted Successfully");
             setTimeout(() => { window.location.reload() }, 3000);
         } catch (error) {
@@ -1206,34 +1185,29 @@ function Hero() {
         fetchAllPost();
     }, []);
 
-    // const resolveItem = (items) => {
-    //     if (items.isRepost) {
-    //         return {
-    //             type: "repost",
-    //             createdAt: items.createdAt,
-    //             post: items.postId,
-    //             user: items.postOwnerId,
-    //             profile: items.postOwnerProfileId,
-    //             repostUser: items.repostFromUserId,
-    //             repostProfile: items.repostFromProfileId
-    //         };
-    //     }
+    const removeRepostContent = async (data) => {
+        try {
+            console.log(data);
+            const ids = {
+                postId: data.post._id,
+                repostId: data.id,
+                userId: data.user._id,
+            }
 
-    //     return {
-    //         type: "post",
-    //         createdAt: items.createdAt,
-    //         post: items,
-    //         user: items.userId,
-    //         profile: items.profileId
-    //     };
-    // };
-    // 
-
+            console.log(ids);
+            const removeRepost = await axios.post("http://localhost:3001/removeRepostContent", ids );
+            // console.log(removeRepost);
+        } catch (error) {
+            console.log(error);
+        }
+    }
     const resolveItem = (items) => {
         // Check if this is a repost (has postId and isRepost flag)
+        console.log(items);
         if (items.isRepost || items.postId) {
             const post = {
                 type: "repost",
+                id: items._id,
                 createdAt: items.createdAt || items.postId?.createdAt,
                 post: items.postId || items, // The original post content
                 user: items.postOwnerId || items.userId,
@@ -1242,10 +1216,9 @@ function Hero() {
                 repostProfile: items.repostFromProfileId || items.repostUserProfileId
             }
 
-            console.log(post);
-
             return {
                 type: "repost",
+                id: items._id,
                 createdAt: items.createdAt || items.postId?.createdAt,
                 post: items.postId || items, // The original post content
                 user: items.postOwnerId || items.userId,
@@ -1307,7 +1280,7 @@ function Hero() {
                                     mixBlendMode: "multiply", // Blends video background if it's white
                                     filter: "grayscale(20%)"   // Gives it a slightly more professional tone
                                 }}
-                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/empty-cart-animation-gif-download-8514509.mp4'}
+                                src={'https://cdnl.iconscout.com/lottie/premium/preview-watermark/man-doing-kayaking-animation-gif-download-10656617.mp4'}
                             />
                         </div>
                         {/* Text Content */}
@@ -1380,7 +1353,12 @@ function Hero() {
                                                     <img src={resolvedItem.profile2?.profileImage} alt="User Avatar" className="repostavatar" />
                                                 </Link>
                                                 &nbsp;&nbsp;
-                                                <b className="repostUsername">{resolvedItem.repostUser?.username}</b>&nbsp;
+                                                <Link to={`/userProfile/${resolvedItem.user1?._id}`} style={{ textDecoration: "none", color: "black" }}>
+                                                    <b className="repostUsername">{resolvedItem?.user1?.username}</b>&nbsp; and &nbsp;
+                                                </Link>
+                                                <Link to={`/userProfile/${resolvedItem.user2?._id}`} style={{ textDecoration: "none", color: "black" }}>
+                                                    <b className="repostUsername">{resolvedItem?.user2?.username}</b>&nbsp;
+                                                </Link>
                                                 <small className="text-muted" style={{ fontSize: "16px" }}> connected to each other </small>
                                             </div>
                                         )}
@@ -1397,14 +1375,19 @@ function Hero() {
                                                     •••
                                                 </label>
                                                 <ul className="dropdown-menu-list">
-                                                    {resolvedItem.post?.isPostSave ?
-                                                        <li onClick={() => { UnsavePost(resolvedItem.post) }}>
-                                                            <i class="fa-solid fa-bookmark"></i> Remove from save
+                                                    {resolvedItem?.post?.isPostSave?.includes(token.id) ? (
+                                                        wait ? <li>
+                                                            <i className="fa-solid fa-bookmark text-muted"></i> Removed
+                                                        </li> : <li onClick={() => savePost(resolvedItem.post)}>
+                                                            <i className="fa-solid fa-bookmark"></i> Remove from save
                                                         </li>
-                                                        :
-                                                        <li onClick={() => { savePost(resolvedItem.post) }}>
-                                                            <i class="fa-regular fa-bookmark"></i> Save for later
+                                                    ) : (
+                                                        wait ? <li>
+                                                            <i className="fa-solid fa-bookmark text-muted"></i> Saved
+                                                        </li> : <li onClick={() => savePost(resolvedItem.post)}>
+                                                            <i className="fa-solid fa-bookmark"></i> Save for later
                                                         </li>
+                                                    )
                                                     }
                                                     <li onClick={() => { copyPostLink(resolvedItem.post?._id || items._id) }}>
                                                         <i className="fas fa-link"></i> Copy link
@@ -1481,9 +1464,14 @@ function Hero() {
                                                 <span className="icon">💬</span> Comment
                                             </button>
 
-                                            <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
-                                                <span className="icon">🔁</span> Repost
-                                            </button>
+                                            {resolveItem.post?.repost?.includes(token.id) ? <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
+                                                <span className="icon">🔁</span> Repost{resolveItem.repostUser?._id}
+                                            </button> :
+                                                <button className="action-item" onClick={() => { removeRepostContent(resolvedItem) }}>
+                                                    <span className="icon">🔁</span> Reposted
+                                                </button>
+                                            }
+
                                             <button className="action-item">
                                                 <span className="icon">✈️</span> Send
                                             </button>

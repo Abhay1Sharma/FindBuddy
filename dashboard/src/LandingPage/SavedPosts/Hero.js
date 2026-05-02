@@ -163,9 +163,11 @@ function Hero() {
                 SavePostId: items._id,
                 postId: items.postId._id,
             }
+
             console.log(postIds);
-            const sendPost = await axios.post(`${backendUrl}/UnSavePost`, postIds);
+            const sendPost = await axios.post(`${backendUrl}/unSavePost`, postIds);
             console.log(sendPost);
+            
             setIsRemove(true);
             setTimeout(() => { window.location.reload(); }, 1000);
         } catch (error) {
