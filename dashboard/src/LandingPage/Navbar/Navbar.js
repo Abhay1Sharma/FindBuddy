@@ -482,10 +482,8 @@ const Navbar = ({ setSearch }) => {
       const decode = jwtDecode(token).id;
 
       setUserData(res.data);
-      console.log(res.data);
       if (res.data.connectionId) {
         const connection = await axios.post("http://localhost:3001/checkConnections", { connectionId: res.data.connectionId });
-        console.log(connection);
         setCheckConnection(connection.data.userConnection);
         setRequestFromArr(connection.data.userConnection.requestFrom);
       }
@@ -504,8 +502,6 @@ const Navbar = ({ setSearch }) => {
       window.location.href = `${frontendUrl}/login`;
     }
   }, []);
-
-  console.log(requestFromArr);
 
   // Handle Token from URL and Initialization
   useEffect(() => {
@@ -621,7 +617,6 @@ const Navbar = ({ setSearch }) => {
   const connectUser = async () => {
     try {
       setWait(true);
-      console.log("Connect User");
       const data = {
         loggedUserId: userData._id,
         userId: checkConnection.requestFrom[0]._id,
@@ -629,7 +624,6 @@ const Navbar = ({ setSearch }) => {
         userConnectionId: checkConnection.requestFrom[0].connectionId,
       }
 
-      console.log(data);
       const res = await axios.post("http://localhost:3001/acceptConnection", data);
       setCheckConnection(prev => ({
         ...prev,
@@ -646,10 +640,8 @@ const Navbar = ({ setSearch }) => {
 
   const rejectRequest = async () => {
     try {
-      console.log("Connection Rejected by users");
       const connectionsIds = { connectionId: userData.connectionId };
       const deleteConnection = await axios.post("http://localhost:3001/rejectRequest", connectionsIds);
-      console.log(deleteConnection);
     } catch (error) {
       console.log(error);
     }

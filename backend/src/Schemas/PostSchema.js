@@ -38,6 +38,11 @@ const PostSchema = mongoose.Schema(
             ref: "user"
         }],
 
+        formId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "form",
+        },
+
         isEdited: {
             type: Boolean,
             default: false,

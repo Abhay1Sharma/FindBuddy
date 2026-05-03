@@ -434,6 +434,13 @@ i {
   background: transparent !important;
 }
 
+.allCard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
 .card {
   /* Remove fixed width: 20rem; */
   width: 100%;
@@ -614,6 +621,17 @@ i {
   display: inline-block;
   margin-right: 6px;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.red-dot {
+  height: 8px;
+  width: 8px;
+  background-color: #c52222;
+  /* Green for "Active" */
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+  box-shadow: 0 0 8px rgba(201, 69, 69, 0.6);
 }
 
 .searchbar {

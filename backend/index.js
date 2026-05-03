@@ -114,22 +114,14 @@ io.on("connection", (socket) => {
     });
 
     socket.on("register_user", (userId) => {
+        socket.userId = userId;
         userSocketMap.set(userId, socket.id);
         console.log(`User ${userId} registered with socket ${socket.id}`);
     });
 
-
-    // socket.on("send_message", (data) => { // data should have: { roomId, text, senderId }
-    //     socket.to(data.roomId).emit("receive_message", data);
-    // });
-
     socket.on("send_message", async (data) => {
         // data: { roomId, senderId, text, messageType, sharedPostId }
         try {
-            // 1. Logic to save message to DB could go here
-            // const savedMsg = await Message.create({...}); 
-
-            // 2. Emit to the room
             socket.to(data.roomId).emit("receive_message", data);
 
             console.log(`Message sent in room ${data.roomId} by ${data.senderId}`);
@@ -211,13 +203,25 @@ app.post("/formdata", upload.single("profilePicture"), async (req, res) => {
 
 app.post("/removeRepostContent", async (req, res) => {
     try {
-        const { repostId, postId } = req.body; 
+        const { postId, userId } = req.body;
         console.log(req.body);
-        const findRepostContent = await Repost.findById({ _id: repostId });
-        const findPost = await Post.findById({ _id: postId });
-        console.log(findRepostContent);
+        const repost = await Repost.findById({ repostFromUserId: userId, postId: postId });
+        if (!repost) return res.status(404).json({ message: "RePost not found" });
+        let updatedPost = await Post.findByIdAndUpdate(
+            postId,
+            { $pull: { repost: userId } },
+            { new: true }
+        );
+        console.log
+
+        await Repost.findByIdAndDelete({ repostFromUserId: userId, postId: postId });
+
+        const message = "Post Reposted Successfully";
+        console.log(findPost);
+        res.status(200).json({ message: message });
     } catch (error) {
         console.log(error);
+        res.status(404).json({ error: error });
     }
 })
 
@@ -414,50 +418,77 @@ app.post("/like", async (req, res) => {
 
 app.post("/repost", async (req, res) => {
     try {
-
-        const { profileId, userId, postId, repostuserId, repostUserProfileId } = req.body;
+        console.log("Start Go...");
+        const { profileId, userId, postId, repostBy, repostuserId, repostUserProfileId } = req.body;
         const repost = {
             postOwnerId: userId,
             postOwnerProfileId: profileId,
             postId: postId,
-            repostFromUserId: repostuserId,
+            repostFromUserId: repostBy,
             repostFromProfileId: repostUserProfileId,
         }
 
-        const post = await Post.findById(postId);
+        let post = await Post.findById({ _id: postId });
         if (!post) return res.status(404).json({ message: "This Post does not exist" });
+        console.log("Goal 1");
 
-        const isAlreadySaved = post.repost.includes(userId);
+        const isAlreadySaved = post.repost.includes(repostBy);
         let message = "";
         let updatedPost;
-        let newRepost;
+        let newSave;
+
 
         if (isAlreadySaved) {
             updatedPost = await Post.findByIdAndUpdate(
                 postId,
-                { $pull: { repost: userId } },
+                { $pull: { repost: repostBy } },
                 { new: true }
             );
 
-            await SavePost.findOneAndDelete({ userId: userId, postId: postId });
+            await Repost.findOneAndDelete({ postId: postId, repostFromUserId: repostBy });
 
-            message = "Post Repost Successfully";
+            message = "Repost Remove Successfully";
+            console.log("Goal 2");
+            console.log(post.repost);
+            newSave = await Post.findById({ _id: postId });
         } else {
             updatedPost = await Post.findByIdAndUpdate(
                 postId,
-                { $addToSet: { repost: userId } },
+                { $addToSet: { repost: repostBy } },
                 { new: true }
             );
 
-            newRepost = await new Repost(repost).save();
-            message = "Post Saved Successfully";
+            console.log("Goal 3");
+
+            newSave = new Repost(repost);
+            await newSave.save();
+            message = "Repost Successfully";
         }
 
-        res.status(200).json({ message: message, newRepost });
+        post = await Post.findById({ _id: postId });
+        console.log(post);
+
+        res.status(200).json({ message: message, newSave });
     } catch (error) {
         console.log(error);
     }
 });
+
+app.get("/getPost/:Id", async (req, res) => {
+    try {
+        console.log(req.params.Id);
+        const Id = req.params.Id;
+        let post = await Post.find({ _id: Id }).populate('profileId userId');
+        console.log(post);
+        if (post.length === 0) {
+            post = await Repost.find({ _id: Id }).populate('postOwnerId postId postOwnerProfileId repostFromUserId repostFromProfileId');
+        }
+        res.status(200).json({ message: "Post Fetch Successfully!!!", post });
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: "No Content Find" });
+    }
+})
 
 app.get("/allRePost", async (req, res) => {
     try {

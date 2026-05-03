@@ -772,6 +772,7 @@
 
 
 import axios from "axios";
+import { io } from "socket.io-client";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
@@ -779,15 +780,16 @@ import { formatDistanceToNow } from 'date-fns';
 import React, { useState, useEffect } from "react";
 import imageCompression from "browser-image-compression";
 
-function Hero() {
+function Hero({ search }) {
     const [ready, setReady] = useState(false);
     const [postId, setPostId] = useState();
     const [comment, setComment] = useState("");
     const token = jwtDecode(localStorage.token);
     const [postUser, setPostUser] = useState([]);
-    const [allPost, setAllPost] = useState(null);
+    const [allPost, setAllPost] = useState([]);
     const [allComment, setAllComment] = useState();
     const [commentUser, setCommentUser] = useState();
+    const [isRepost, setIsRepost] = useState(false);
     const [wait, setWait] = useState(false);
     const [activePostId, setActivePostId] = useState(null);
     const [commentId, setCommentId] = useState();
@@ -800,6 +802,7 @@ function Hero() {
 
     const dashboardUrl = "http://localhost:3002";
     const backendUrl = "http://localhost:3001";
+
 
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
@@ -1140,17 +1143,22 @@ function Hero() {
     const repostContent = async (post) => {
         try {
             const repostUser = await axios.post(`${backendUrl}/user`, { id: token.id });
-
+            setIsRepost(true);
             const data = {
                 postId: post._id,
+                repostBy: token.id,
                 profileId: post.profileId._id,
                 userId: post.userId._id,
-                repostuserId: repostUser.data._id,
+                repostuserId: token.id,
                 repostUserProfileId: repostUser.data.profileId._id,
             }
 
-            const repost = await axios.post("http://localhost:3001/repost", data);
+            console.log(data);
 
+            const repost = await axios.post("http://localhost:3001/repost", data);
+            console.log(repost);
+            fetchAllPost();
+            setIsRepost(false);
         } catch (error) {
             console.log(error);
         }
@@ -1158,10 +1166,11 @@ function Hero() {
 
     const deletePost = async (items) => {
         try {
-            if (window.confirm("Are you want to delete this post...."));
-            const res = await axios.delete(`${backendUrl}/deletePost/${items._id}`);
-            toast.success("Post Deleted Successfully");
-            setTimeout(() => { window.location.reload() }, 3000);
+            if (window.confirm("Are you want to delete this post....")) {
+                const res = await axios.delete(`${backendUrl}/deletePost/${items._id}`);
+                toast.success("Post Deleted Successfully");
+                setTimeout(() => { window.location.reload() }, 3000);
+            }
         } catch (error) {
             console.log(error);
             toast.error("Some Error Occurred");
@@ -1169,7 +1178,7 @@ function Hero() {
     }
 
     const copyPostLink = (postId) => {
-        const postUrl = `${window.location.origin}/allContent`;
+        const postUrl = `${window.location.origin}/viewPost/${postId}`;
 
         navigator.clipboard.writeText(postUrl)
             .then(() => {
@@ -1190,31 +1199,44 @@ function Hero() {
             console.log(data);
             const ids = {
                 postId: data.post._id,
-                repostId: data.id,
                 userId: data.user._id,
             }
 
             console.log(ids);
-            const removeRepost = await axios.post("http://localhost:3001/removeRepostContent", ids );
-            // console.log(removeRepost);
+            const removeRepost = await axios.post("http://localhost:3001/removeRepostContent", ids);
+            console.log(removeRepost);
+            setTimeout(() => { window.location.reload(); }, 3000);
         } catch (error) {
             console.log(error);
         }
     }
+
+    const sendPost = async (post) => {
+        try {
+            console.log(post);
+        } catch (error) {
+
+        }
+    }
+
+const posts = allPost?.filter((item) => {
+    // 1. Always check if the search query exists
+    const query = search ? search.toLowerCase() : "";
+    console.log(item);
+
+    // 2. Access the nested username safely
+    // Since your JSON is { userId: { username: "Abhay Sharma" } }
+    const username = item.userId?.username ? item.userId.username.toLowerCase() : "";
+
+    // 3. Return the match
+    return username.includes(query);
+}) || [];
+
+
     const resolveItem = (items) => {
         // Check if this is a repost (has postId and isRepost flag)
         console.log(items);
         if (items.isRepost || items.postId) {
-            const post = {
-                type: "repost",
-                id: items._id,
-                createdAt: items.createdAt || items.postId?.createdAt,
-                post: items.postId || items, // The original post content
-                user: items.postOwnerId || items.userId,
-                profile: items.postOwnerProfileId || items.profileId,
-                repostUser: items.repostFromUserId || items.repostuserId,
-                repostProfile: items.repostFromProfileId || items.repostUserProfileId
-            }
 
             return {
                 type: "repost",
@@ -1229,8 +1251,22 @@ function Hero() {
 
         } else if (items.isConnectionPost) {
 
+            const data = {
+                type: "connectionpost",
+                repost: items.repost,
+                createdAt: items.createdAt,
+                post: items,
+                user1: items.user1,
+                user2: items.user2,
+                profile1: items?.user1?.profileId,
+                profile2: items?.user2?.profileId,
+            }
+
+            console.log(data);
+
             return {
                 type: "connectionpost",
+                repost: items.repost,
                 createdAt: items.createdAt,
                 post: items,
                 user1: items.user1,
@@ -1240,13 +1276,25 @@ function Hero() {
             }
         }
 
+        const regularPost = {
+            type: "post",
+            post: items,
+            repost: items.repost,
+            user: items.userId,
+            profile: items.profileId,
+            createdAt: items.createdAt,
+        }
+
+        console.log(regularPost);
+
         // Regular post
         return {
             type: "post",
-            createdAt: items.createdAt,
             post: items,
+            repost: items.repost,
             user: items.userId,
-            profile: items.profileId
+            profile: items.profileId,
+            createdAt: items.createdAt,
         };
     };
 
@@ -1301,7 +1349,7 @@ function Hero() {
 
     return (
         <>
-            {allPost.map((items) => {
+            {posts.map((items) => {
                 // Resolve the item to determine if it's a post or repost
                 const resolvedItem = resolveItem(items);
 
@@ -1464,15 +1512,16 @@ function Hero() {
                                                 <span className="icon">💬</span> Comment
                                             </button>
 
-                                            {resolveItem.post?.repost?.includes(token.id) ? <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
-                                                <span className="icon">🔁</span> Repost{resolveItem.repostUser?._id}
-                                            </button> :
-                                                <button className="action-item" onClick={() => { removeRepostContent(resolvedItem) }}>
-                                                    <span className="icon">🔁</span> Reposted
+                                            {resolvedItem.type !== "repost" && resolvedItem.repost?.includes(token?.id) ?
+                                                <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
+                                                    {!isRepost ? <span className="icon">🔁 Reposted </span> : <span className="icon">🔁 wait... </span>}
+                                                </button> :
+                                                resolvedItem.type !== "repost" && <button className="action-item" onClick={() => { repostContent(resolvedItem.post) }}>
+                                                    {!isRepost ? <span className="icon">🔁 Repost</span> : <span className="icon">🔁 wait... </span>}
                                                 </button>
                                             }
 
-                                            <button className="action-item">
+                                            <button className="action-item" onClick={() => { copyPostLink(items._id) }}>
                                                 <span className="icon">✈️</span> Send
                                             </button>
                                         </div>

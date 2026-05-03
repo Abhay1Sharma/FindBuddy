@@ -16,6 +16,7 @@ import CreatePost from './LandingPage/CreatePost/CreatePost';
 import AllContent from './LandingPage/AllContent/AllContent';
 import SavedPosts from "./LandingPage/SavedPosts/SavedPosts"
 import Notification from "./LandingPage/Notifications/Notifications";
+import ShowSharePost from './LandingPage/ShowSharePost/ShowSharePost';
 
 const frontendUrl = "http://localhost:3000";
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -60,15 +61,16 @@ function App() {
         <Navbar setSearch={setSearch} />
         <div className="content">
           <Routes>
-            <Route path="/" element={<AllContent />} />
+            <Route path="/allContent" element={<Home search={search} />} />
+            <Route path="/" element={<AllContent search={search} />} />
             <Route path="/userChats/:id" element={<Chats />} />
             <Route path="/createPost" element={<CreatePost />} />
             <Route path="/savedPosts" element={<SavedPosts />} />
-            <Route path="/allContent" element={<Home search={search} />} />
             <Route path="/logout-sync" element={<LogoutSync />} />
             <Route path="/complete-profile" element={<FormData />} />
             <Route path="/update-profile" element={<UpdateForm />} />
             <Route path="/userProfile/:id" element={<UserProfile />} />
+            <Route path="/viewPost/:Id" element={<ShowSharePost />} />
             <Route path="/notifications/:userId" element={<Notification />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -197,6 +197,9 @@ function Hero() {
                                 <div className="mt-3">
                                     <h6>Exercise Information</h6>
 
+                                    <label htmlFor="gymName" className="gymName">Gym Name</label>
+                                    <input name="gymname" id="gymName" className="form-control" placeholder="Enter gym name" onChange={handleChange} required />
+
                                     <div className="shifts mb-2">
                                         <label htmlFor="Shifts" className="form-label" name="shift">Select Shifts</label>
                                         <select className="form-control" name="shifts" defaultValue="" onChange={handleChange} value={formData.shift} required>
