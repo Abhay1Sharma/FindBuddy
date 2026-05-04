@@ -42,8 +42,8 @@ function Hero() {
     const [connectionProfile, setConnectionProfile] = useState([]);
     const [backgroundImageFile, setBackgroundImageFile] = useState(null);
 
-    const backendUrl = "http://localhost:3001";
-    const dashboardUrl = "http://localhost:3002";
+    const backendUrl = "https://findbuddy-back.onrender.com";
+    const dashboardUrl = "https://findbuddy-dash.onrender.com";
 
     const toggleComments = async (postId) => {
         setActivePostId(prevId => (prevId === postId ? null : postId));
@@ -140,10 +140,10 @@ function Hero() {
             try {
                 const user = await axios.post(`${backendUrl}/user`, { id: Id.id });
                 const posts = await axios.post(`${backendUrl}/userPosts`, { id: Id.id });
-                const loggedUser = await axios.post("http://localhost:3001/user", { id: token.id });
-                const connection = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: user.data.connectionId });
-                const loggedConnection = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: loggedUser.data.connectionId });
-                const userConnection = await axios.post("http://localhost:3001/fetchUserConnections", { connectionId: loggedUser.data.connectionId });
+                const loggedUser = await axios.post("https://findbuddy-back.onrender.com/user", { id: token.id });
+                const connection = await axios.post("https://findbuddy-back.onrender.com/connectionsProfile", { connectionId: user.data.connectionId });
+                const loggedConnection = await axios.post("https://findbuddy-back.onrender.com/connectionsProfile", { connectionId: loggedUser.data.connectionId });
+                const userConnection = await axios.post("https://findbuddy-back.onrender.com/fetchUserConnections", { connectionId: loggedUser.data.connectionId });
                 console.log(userConnection);
                 setCheckRequest(loggedConnection.data.userConnection);
                 setRequest(userConnection.data.fetchConnection);
@@ -288,7 +288,7 @@ function Hero() {
     const showFollowers = async (userProfileId) => {
         try {
             console.log(userProfileId);
-            const allFollowers = await axios.post("http://localhost:3001/allUserFollowers", { userProfileId });
+            const allFollowers = await axios.post("https://findbuddy-back.onrender.com/allUserFollowers", { userProfileId });
             console.log(allFollowers);
             setAllFollowers(allFollowers.data.data);
         } catch (error) {
@@ -301,7 +301,7 @@ function Hero() {
     const showFollowings = async (userProfileId) => {
         try {
             console.log(userProfileId);
-            const allFollowers = await axios.post("http://localhost:3001/allUserFollowings", { userProfileId });
+            const allFollowers = await axios.post("https://findbuddy-back.onrender.com/allUserFollowings", { userProfileId });
             console.log(allFollowers);
             setAllFollowings(allFollowers.data.data);
         } catch (error) {
@@ -481,8 +481,8 @@ function Hero() {
     const connectWithMe = async () => {
         try {
             const user = await axios.post(`${backendUrl}/user`, { id: Id.id });
-            const connection = await axios.post("http://localhost:3001/makeConnection", { ownerId: userInfo._id, loggedUserId: loggedUser._id });
-            const connectionProfile = await axios.post("http://localhost:3001/connectionsProfile", { connectionId: user.data.connectionId });
+            const connection = await axios.post("https://findbuddy-back.onrender.com/makeConnection", { ownerId: userInfo._id, loggedUserId: loggedUser._id });
+            const connectionProfile = await axios.post("https://findbuddy-back.onrender.com/connectionsProfile", { connectionId: user.data.connectionId });
             setConnectionProfile(connectionProfile.data.userConnection);
             setRequest(connection.data.makeRequest);
         } catch (error) {
@@ -502,7 +502,7 @@ function Hero() {
     const leaveConnection = async () => {
         try {
             const connectionsIds = { userInfos: userInfo, loggedUsers: loggedUser };
-            const deleteConnection = await axios.post("http://localhost:3001/leaveConnection", connectionsIds);
+            const deleteConnection = await axios.post("https://findbuddy-back.onrender.com/leaveConnection", connectionsIds);
             console.log(deleteConnection);
             window.location.reload();
         } catch (error) {
@@ -514,7 +514,7 @@ function Hero() {
         try {
             console.log("Connection Rejected by users");
             const connectionsIds = { loggedUsersConnectionId: loggedUser.connectionId };
-            const deleteConnection = await axios.post("http://localhost:3001/rejectRequest", connectionsIds);
+            const deleteConnection = await axios.post("https://findbuddy-back.onrender.com/rejectRequest", connectionsIds);
             console.log(deleteConnection);
         } catch (error) {
             console.log(error);
@@ -533,7 +533,7 @@ function Hero() {
             }
 
             console.log(data);
-            const res = await axios.post("http://localhost:3001/acceptConnection", data);
+            const res = await axios.post("https://findbuddy-back.onrender.com/acceptConnection", data);
             setCheckConnection(prev => ({
                 ...prev,
                 isAnyRequest: false

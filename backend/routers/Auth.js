@@ -9,7 +9,7 @@ import { jwtAuthMiddleware, generateToken } from "../jwt.js";
 const googleClient = new OAuth2Client(process.env.REACT_APP_CLIENTID);
 const resend = new Resend(process.env.REACT_APP_RESEND_API_KEY);
 const jwtsecret = process.env.REACT_APP_JWT_SECRET;
-const frontendUrl = "http://localhost:3000";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
 
 const router = express.Router();
 
@@ -201,7 +201,7 @@ router.post('/api/forgot-password', async (req, res) => {
         const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
         await resend.emails.send({
-            from: 'FindBuddy <security@resend.dev>',
+            from: 'FindBuddy <security@findbuddy.dev>',
             to: email,
             subject: 'FindBuddy: Reset your password',
             html: `<div style="height: auto; width: 85vh">

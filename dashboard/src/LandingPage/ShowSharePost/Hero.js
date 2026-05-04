@@ -29,8 +29,8 @@ function Hero() {
     const { Id } = useParams();
     console.log(Id);
 
-    const dashboardUrl = "http://localhost:3002";
-    const backendUrl = "http://localhost:3001";
+    const dashboardUrl = "https://findbuddy-dash.onrender.com";
+    const backendUrl = "https://findbuddy-back.onrender.com";
 
 
     const toggleComments = async (postId) => {
@@ -227,7 +227,7 @@ function Hero() {
 
     const deleteComment = async (id) => {
         try {
-            const deletedComment = await axios.post("http://localhost:3001/deletePostComment", { id: id });
+            const deletedComment = await axios.post("https://findbuddy-back.onrender.com/deletePostComment", { id: id });
             setAllComment(deletedComment.data.allComment);
         } catch (error) {
             console.log(error);
@@ -350,7 +350,7 @@ function Hero() {
 
             console.log(data);
 
-            const repost = await axios.post("http://localhost:3001/repost", data);
+            const repost = await axios.post("https://findbuddy-back.onrender.com/repost", data);
             console.log(repost);
             fetchAllPost();
             setIsRepost(false);
@@ -381,7 +381,7 @@ function Hero() {
             }
 
             console.log(ids);
-            const removeRepost = await axios.post("http://localhost:3001/removeRepostContent", ids);
+            const removeRepost = await axios.post("https://findbuddy-back.onrender.com/removeRepostContent", ids);
             console.log(removeRepost);
             setTimeout(() => { window.location.reload(); }, 3000);
         } catch (error) {

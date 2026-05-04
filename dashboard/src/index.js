@@ -18,7 +18,7 @@ import SavedPosts from "./LandingPage/SavedPosts/SavedPosts"
 import Notification from "./LandingPage/Notifications/Notifications";
 import ShowSharePost from './LandingPage/ShowSharePost/ShowSharePost';
 
-const frontendUrl = "http://localhost:3000";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 function App() {

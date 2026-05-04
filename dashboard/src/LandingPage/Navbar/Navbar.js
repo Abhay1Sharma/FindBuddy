@@ -446,9 +446,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
 import { jwtDecode } from 'jwt-decode';
 
-const frontendUrl = "http://localhost:3000";
-const backendUrl = "http://localhost:3001";
-const dashboardUrl = "http://localhost:3002";
+const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+const backendUrl = "https://findbuddy-back.onrender.com";
+const dashboardUrl = "https://findbuddy-dash.onrender.com";
 
 // Initialize socket outside or in a useMemo to prevent multiple instances
 const socket = io(backendUrl, { autoConnect: false });
@@ -483,7 +483,7 @@ const Navbar = ({ setSearch }) => {
 
       setUserData(res.data);
       if (res.data.connectionId) {
-        const connection = await axios.post("http://localhost:3001/checkConnections", { connectionId: res.data.connectionId });
+        const connection = await axios.post("https://findbuddy-back.onrender.com/checkConnections", { connectionId: res.data.connectionId });
         setCheckConnection(connection.data.userConnection);
         setRequestFromArr(connection.data.userConnection.requestFrom);
       }
@@ -624,7 +624,7 @@ const Navbar = ({ setSearch }) => {
         userConnectionId: checkConnection.requestFrom[0].connectionId,
       }
 
-      const res = await axios.post("http://localhost:3001/acceptConnection", data);
+      const res = await axios.post("https://findbuddy-back.onrender.com/acceptConnection", data);
       setCheckConnection(prev => ({
         ...prev,
         isAnyRequest: false
@@ -641,7 +641,7 @@ const Navbar = ({ setSearch }) => {
   const rejectRequest = async () => {
     try {
       const connectionsIds = { connectionId: userData.connectionId };
-      const deleteConnection = await axios.post("http://localhost:3001/rejectRequest", connectionsIds);
+      const deleteConnection = await axios.post("https://findbuddy-back.onrender.com/rejectRequest", connectionsIds);
     } catch (error) {
       console.log(error);
     }

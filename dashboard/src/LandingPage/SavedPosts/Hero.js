@@ -8,7 +8,7 @@ import imageCompression from "browser-image-compression";
 
 function Hero() {
 
-    const backendUrl = "http://localhost:3001";
+    const backendUrl = "https://findbuddy-back.onrender.com";
 
     const [postId, setPostId] = useState();
     const [ready, setReady] = useState(false);

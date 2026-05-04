@@ -800,8 +800,8 @@ function Hero({ search }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [editingPost, setEditingPost] = useState(null);
 
-    const dashboardUrl = "http://localhost:3002";
-    const backendUrl = "http://localhost:3001";
+    const dashboardUrl = "https://findbuddy-dash.onrender.com";
+    const backendUrl = "https://findbuddy-back.onrender.com";
 
 
     const toggleComments = async (postId) => {
@@ -1032,7 +1032,7 @@ function Hero({ search }) {
 
     const deleteComment = async (id) => {
         try {
-            const deletedComment = await axios.post("http://localhost:3001/deletePostComment", { id: id });
+            const deletedComment = await axios.post("https://findbuddy-back.onrender.com/deletePostComment", { id: id });
             setAllComment(deletedComment.data.allComment);
         } catch (error) {
             console.log(error);
@@ -1155,7 +1155,7 @@ function Hero({ search }) {
 
             console.log(data);
 
-            const repost = await axios.post("http://localhost:3001/repost", data);
+            const repost = await axios.post("https://findbuddy-back.onrender.com/repost", data);
             console.log(repost);
             fetchAllPost();
             setIsRepost(false);
@@ -1203,7 +1203,7 @@ function Hero({ search }) {
             }
 
             console.log(ids);
-            const removeRepost = await axios.post("http://localhost:3001/removeRepostContent", ids);
+            const removeRepost = await axios.post("https://findbuddy-back.onrender.com/removeRepostContent", ids);
             console.log(removeRepost);
             setTimeout(() => { window.location.reload(); }, 3000);
         } catch (error) {
@@ -1219,18 +1219,15 @@ function Hero({ search }) {
         }
     }
 
-const posts = allPost?.filter((item) => {
-    // 1. Always check if the search query exists
-    const query = search ? search.toLowerCase() : "";
-    console.log(item);
+    const posts = allPost?.filter((item) => {
+        const query = search ? search.toLowerCase() : "";
+        console.log(item);
 
-    // 2. Access the nested username safely
-    // Since your JSON is { userId: { username: "Abhay Sharma" } }
-    const username = item.userId?.username ? item.userId.username.toLowerCase() : "";
+        const username = item.userId?.username ? item.userId.username.toLowerCase() : "";
+        console.log(username?.includes(query));
 
-    // 3. Return the match
-    return username.includes(query);
-}) || [];
+        return username?.includes(query) ? item : [];
+    });
 
 
     const resolveItem = (items) => {

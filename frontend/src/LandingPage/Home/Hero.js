@@ -11,9 +11,10 @@ function Hero() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const backendUrl = "http://localhost:3001";
-  const dashboardUrl = "http://localhost:3002";
-  const frontendUrl = "http://localhost:3000";
+  const frontendUrl = "https://findbuddy-lsdc.onrender.com";
+  const backendUrl = "https://findbuddy-back.onrender.com";
+  const dashboardUrl = "https://findbuddy-dash.onrender.com";
+
 
   const start = async () => {
     if (!user) {
