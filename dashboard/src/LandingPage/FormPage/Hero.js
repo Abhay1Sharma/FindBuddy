@@ -143,8 +143,8 @@ function Hero() {
                                     <div className="row g-3 mb-3">
                                         <div className="col-md-8">
                                             <label htmlFor="gender" type="number" className="form-label">Gender</label>
-                                            <select id="gender" className="form-control" name="gender" onChange={handleChange} required>
-                                                <option value="" disabled selected>Select Gender</option>
+                                            <select id="gender" defaultValue="" className="form-control" name="gender" onChange={handleChange} required>
+                                                <option value="" disabled >Select Gender</option>
                                                 <option value="male">Male</option>
                                                 <option value="female">Female</option>
                                                 <option value="non-binary">Non-binary</option>
