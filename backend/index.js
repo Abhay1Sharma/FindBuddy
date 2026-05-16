@@ -1193,6 +1193,7 @@ import multer from 'multer';
 import bodyParser from "body-parser";
 import flash from "connect-flash";
 import LocalStrategy from "passport-local";
+import { GoogleGenAI } from "@google/genai";
 
 // Import your models and routers
 import Auth from "./routers/Auth.js";
@@ -1209,6 +1210,7 @@ import { Repost } from "./src/models/RepostModel.js"
 import { Connection } from './src/models/ConnectionModel.js';
 import { populate } from 'dotenv';
 import { ConnectionPost } from './src/models/ConnectionPostModel.js';
+import { handleChat } from './chatbotController.js';
 
 const userSocketMap = new Map(); // userId -> socketId
 
@@ -1221,6 +1223,7 @@ if (!fs.existsSync(uploadDir)) {
 const PORT = 3001;
 const app = express();
 const httpServer = createServer(app); // Create the HTTP server
+const ai = new GoogleGenAI({ apiKey: "AIzaSyC5gzSgdEZnmANn_ZkUlJydNicL9MKTWto"});
 
 const frontendUrl = "https://find-buddy-frontend.vercel.app";
 const backendUrl = "https://findbuddy-back.onrender.com";
