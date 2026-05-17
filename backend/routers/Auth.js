@@ -10,6 +10,7 @@ const googleClient = new OAuth2Client(process.env.REACT_APP_CLIENTID);
 const resend = new Resend(process.env.REACT_APP_RESEND_API_KEY);
 const jwtsecret = process.env.REACT_APP_JWT_SECRET;
 const frontendUrl = process.env.REACT_APP_FRONTEND_URL;
+console.log(frontendUrl);
 
 const router = express.Router();
 
