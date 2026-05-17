@@ -1223,7 +1223,7 @@ if (!fs.existsSync(uploadDir)) {
 const PORT = 3001;
 const app = express();
 const httpServer = createServer(app); // Create the HTTP server
-const ai = new GoogleGenAI({ apiKey: "AIzaSyC5gzSgdEZnmANn_ZkUlJydNicL9MKTWto" });
+const ai = new GoogleGenAI({ apiKey: process.env.REACT_APP_BOT_API });
 
 const frontendUrl = process.env.REACT_APP_FRONTEND_URL;
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
@@ -2364,9 +2364,9 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
 });
 
 app.post("/api/chatbot", async (req, res) => {
+    console.log(req.body);
     // 1. Destructure the request body coming from Hero.js
     const { message, history } = req.body;
-    console.log(req.body);
 
     // Safety fallback: Validate that a message actually arrived
     if (!message) {
