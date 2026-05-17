@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Initialize the SDK (it automatically picks up process.env.GEMINI_API_KEY)
-const ai = new GoogleGenAI({ apiKey: "AIzaSyC5gzSgdEZnmANn_ZkUlJydNicL9MKTWto" });
+const ai = new GoogleGenAI({ apiKey: process.env.REACT_APP_BOT_API });
 
 export const handleChat = async (req, res) => {
     const { message, history } = req.body;
