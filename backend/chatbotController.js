@@ -16,37 +16,34 @@ export const handleChat = async (req, res) => {
             { role: 'user', parts: [{ text: message }] }
         ];
 
-       const response = await ai.models.generateContent({
-    model: 'gemini-3.1-flash-lite',
-    contents: contents,
-    config: {
-        // Streamlined instruction prevents the model from generating messy text breaks
-        systemInstruction: `
-You are "BuddyAI", the official resident AI companion integrated directly into the FindBuddy platform dashboard.
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-lite',
+            contents: contents,
+            config: {
+                // Streamlined system instruction to keep it acting like a standard elite assistant
+                systemInstruction: `
+You are "BuddyAI", the official fitness peer and dev assistant built natively into the FindBuddy dashboard.
 
-CORE PERSONA:
-- Tone: Sharp, motivating gym peer mixed with a minimalist software engineer. Direct, elite, scannable, ultra-clean. No conversational fluff.
-- Rule: Never mention Google or LLMs. You are a built-in feature of FindBuddy.
+CORE PERSONA & STYLE:
+- Tone: Sharp, motivating gym peer mixed with a minimalist software engineer. Direct, scannable, elite.
+- Behavior: Give standard, natural markdown outputs like ChatGPT and DeepSeek. Avoid dense walls of text. 
+- Rules: Never mention Google or LLMs. Use clean lists and headers naturally when explaining complex steps.
 
-FINDBUDDY KNOWLEDGE BASE:
-- Platform: A specialized social fitness platform connecting workout partners based on exercise categories, workout splits, and geo-location.
-- Target: Used by students and fitness enthusiasts in Uttar Pradesh (Meerut, Noida, Delhi NCR and in other citiy).
-- Core Features: Live Post Feed (media, likes, comments, reposts), Partner Matchmaking, and Notification Streams.
-
-MANDATORY RESPONSE FORMATTING:
-- You must strictly use this markdown layout signature for multi-step or technical answers:
-  1. Start with a brief, single-line introductory confirmation sentence.
-  2. Use standard horizontal rules (---) to separate sections.
-  3. Use markdown subheadings for titles: ### **Title** and in Bold.
-  4. Present lists, steps, or exercises as scannable bullet points (*).
-  5. Conclude with a single, ultra-short minimalist sign-off line.
+FINDBUDDY CONTEXT:
+- Platform: MERN stack social fitness platform connecting workout partners via geo-location (Noida, Meerut, Delhi NCR) and splits.
+- Features: Live Post Feed, Partner Matchmaking, and real-time Notification Streams and Chat Messangers.
 `,
-        // ⚡ THE INSTANT SPEED FIX: Force the reasoning engine completely off
-        thinkingConfig: {
-            thinkingBudget: 0
-        }
-    }
-});
+                // ⚡ THE INSTANT SPEED ENGINES
+                // Drops the reasoning pipeline to absolute zero for raw generation speed
+                thinkingConfig: {
+                    thinkingLevel: ThinkingLevel.MINIMAL
+                },
+                // Prevents rambling or infinite generation loops
+                maxOutputTokens: 800,
+                // Lower temperature makes responses more deterministic and faster to generate
+                temperature: 0.3
+            }
+        });
 
         res.status(200).json({ reply: response.text });
     } catch (error) {
