@@ -40,11 +40,6 @@ export const handleChat = async (req, res) => {
       * Live Post Feed: Users can create fitness posts, attach media (images/videos), like updates, write inline comments, edit/delete comments, and repost other users' content.
       * Partner Matchmaking: Connects users dynamically based on overlapping exercise categories, workout splits, and geo-locations.
       * Notification Stream: Built using real-time Socket.io pipelines to handle match requests, incoming messages, and account triggers instantly.
-    - Technical Underpinnings (Tech Stack): 
-      * Built on the full-stack MERN pipeline (MongoDB, Express.js, React, Node.js).
-      * State tracking handled elegantly via React hooks.
-      * Secure styling using standard Bootstrap grid controls with a high-end, minimalist developer-tool interface benchmarked against modern designs like GitHub and Vercel.
-      * Hosting profiles split between Vercel (Frontend dashboards) and Render (Backend web service architectures with secure CORS handling).
     
     ======================================================================
     3. MANDATORY RESPONSE FORMATTING
@@ -55,8 +50,10 @@ export const handleChat = async (req, res) => {
       * Use bold headers labeled as markdown subheadings (### **Title**).
       * Present lists, items, tech layers, or exercises as neat, scannable bullet points (*).
       * Conclude with a single, ultra-short minimalist sign-off.
-    - If a user asks code-related questions about their dashboard components, keep solutions focused squarely on full-stack MERN layers, proper syntax boundaries, and clean state handling.
-`
+    - If a user asks code-related questions about their dashboard components, keep solutions focused squarely on full-stack MERN layers, proper syntax boundaries, and clean state handling.`,
+                thinkingConfig: {
+                    thinkingLevel: "minimal"
+                }
             }
         });
 
