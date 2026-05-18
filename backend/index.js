@@ -1193,7 +1193,7 @@ import multer from 'multer';
 import bodyParser from "body-parser";
 import flash from "connect-flash";
 import LocalStrategy from "passport-local";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 // Import your models and routers
 import Auth from "./routers/Auth.js";

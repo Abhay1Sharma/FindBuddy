@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 // Initialize the SDK (it automatically picks up process.env.GEMINI_API_KEY)
 const ai = new GoogleGenAI({ apiKey: process.env.REACT_APP_BOT_API });
