@@ -17,7 +17,7 @@ export const handleChat = async (req, res) => {
         ];
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.1-flash-lite',
             contents: contents,
             config: {
                 // This system instruction keeps FindBuddy context in its memory forever
