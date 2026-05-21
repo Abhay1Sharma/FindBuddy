@@ -2367,7 +2367,7 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
 app.post("/api/chatbot", async (req, res) => {
     console.log(req.body);
     // 1. Destructure the request body coming from Hero.js
-    const { message, history } = req.body;
+    const { message, history, userId } = req.body;
 
     // Safety fallback: Validate that a message actually arrived
     if (!message) {
@@ -2376,6 +2376,9 @@ app.post("/api/chatbot", async (req, res) => {
 
     try {
         // 2. Map your React chat logs format to the structured format the SDK expects
+
+        const userInfo = await User.findById({ _id: userId }).populate('formId');
+        // console.log(userInfo);
         const contents = [
             ...history.map(msg => ({
                 role: msg.sender === 'user' ? 'user' : 'model',
@@ -2390,9 +2393,18 @@ app.post("/api/chatbot", async (req, res) => {
             contents: contents,
             config: {
                 // Streamlined system instruction to keep it acting like a standard elite assistant
-                systemInstruction: `
-You are "BuddyAI", a helpful and direct fitness assistant for the FindBuddy platform.
-
+                systemInstruction: 
+                    `You are "BuddyAI", a helpful and direct fitness assistant for the FindBuddy platform.
+name of the user : ${userInfo.formId.name}
+gender of the user : ${userInfo.formId.gender}
+age of the user : ${userInfo.formId.age}
+goal of the user : ${userInfo.formId.goal}
+typeOfBuddy of the user : ${userInfo.formId.typeOfBuddy}
+country of the user : ${userInfo.formId.country}
+state of the user : ${userInfo.formId.state}
+city of the user : ${userInfo.formId.city}
+shifts of the user : ${userInfo.formId.shifts}
+gymname of the user : ${userInfo.formId.gymname}
 CRITICAL RULES:
 - Be straightforward, concise, and direct. 
 - Answer the user's question immediately without conversational fluff or lecturing.
