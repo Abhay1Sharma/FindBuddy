@@ -1461,7 +1461,6 @@ app.post("/editPost", upload.single("editMedia"), async (req, res) => {
 
 app.post("/user", async (req, res) => {
     try {
-        console.log(req.body);
         const Id = req.body.id;
         const logged = await User.findById(Id).populate('formId profileId');
         res.status(200).json(logged);
@@ -1828,7 +1827,7 @@ app.post("/messageIds", async (req, res) => {
                 recipient: senderId.toString(),
                 sender: ownerId.toString(),
                 type: 'CHAT',
-                content: "wants to talk you"
+                content: "sent you a message"
             }).save();
 
             // Find socket using string ID
@@ -1837,7 +1836,7 @@ app.post("/messageIds", async (req, res) => {
             if (recipientSocketId) {
                 io.to(recipientSocketId).emit("new_notification", {
                     type: 'CHAT',
-                    content: `${owner.username} wants talk to you`,
+                    content: `${owner.username} sent you a message`,
                     _id: newNotif._id
                 });
             }
@@ -2119,7 +2118,7 @@ app.post("/makeConnection", async (req, res) => {
                 recipientProfile: profileOwner?.profileId.toString(),
                 senderProfile: loggedUser?.profileId.toString(),
                 type: 'CONNECT',
-                content: "wants to make you as gym buddy"
+                content: "wants to make you as a gym buddy"
             }).save();
 
 
@@ -2129,7 +2128,7 @@ app.post("/makeConnection", async (req, res) => {
             if (recipientSocketId) {
                 io.to(recipientSocketId).emit("new_notification", {
                     type: 'CONNECT',
-                    content: `${loggedUser?.username} wants to make you as gym buddy`,
+                    content: `${loggedUser?.username} wants to make you as a gym buddy`,
                     _id: newNotif._id
                 });
             }
@@ -2179,7 +2178,7 @@ app.post("/acceptConnection", async (req, res) => {
             recipientProfile: user?.profileId.toString(),
             senderProfile: loggedUser?.profileId.toString(),
             type: 'CONNECT',
-            content: "accept to make you as gym buddy"
+            content: "accept to make you as a gym buddy"
         }).save();
 
 
@@ -2393,7 +2392,7 @@ app.post("/api/chatbot", async (req, res) => {
             contents: contents,
             config: {
                 // Streamlined system instruction to keep it acting like a standard elite assistant
-                systemInstruction: 
+                systemInstruction:
                     `You are "BuddyAI", a helpful and direct fitness assistant for the FindBuddy platform.
 name of the user : ${userInfo.formId.name}
 gender of the user : ${userInfo.formId.gender}
@@ -2411,19 +2410,14 @@ CRITICAL RULES:
 - If the user says "Hello" or "Hi", reply with a simple, friendly one-sentence greeting. Do not list features or menus.
 - Use standard, clean markdown formatting only when necessary.
 `,
-                // ⚡ THE INSTANT SPEED ENGINES
-                // Drops the reasoning pipeline to absolute zero for raw generation speed
                 thinkingConfig: {
                     thinkingLevel: ThinkingLevel.MINIMAL
                 },
-                // Prevents rambling or infinite generation loops
                 maxOutputTokens: 800,
-                // Lower temperature makes responses more deterministic and faster to generate
                 temperature: 0.3
             }
         });
 
-        // 4. Return the text string answer directly back to Axios
         res.status(200).json({ reply: response.text });
 
     } catch (error) {
