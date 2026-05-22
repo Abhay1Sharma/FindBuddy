@@ -1827,7 +1827,7 @@ app.post("/messageIds", async (req, res) => {
                 recipient: senderId.toString(),
                 sender: ownerId.toString(),
                 type: 'CHAT',
-                content: "sent you a message"
+                content: "wants to talks to you"
             }).save();
 
             // Find socket using string ID
@@ -1836,7 +1836,7 @@ app.post("/messageIds", async (req, res) => {
             if (recipientSocketId) {
                 io.to(recipientSocketId).emit("new_notification", {
                     type: 'CHAT',
-                    content: `${owner.username} sent you a message`,
+                    content: `${owner.username} wants to talks to you`,
                     _id: newNotif._id
                 });
             }
