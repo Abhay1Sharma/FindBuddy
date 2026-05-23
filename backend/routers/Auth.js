@@ -278,7 +278,7 @@ router.post("/api/reset-password", async (req, res) => {
 router.get("/user/me", jwtAuthMiddleware, async (req, res) => {
     try {
         // Find user by ID extracted from the token (provided by your middleware)
-        const user = await User.findById(req.user.id).select("-password");
+        const user = await User.findById(req.user.id).select("-password").populate("formId");
         res.status(200).json(user);
     } catch (err) {
         res.status(500).json({ message: "Server error" });
