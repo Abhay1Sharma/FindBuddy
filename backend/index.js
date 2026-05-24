@@ -1462,7 +1462,7 @@ app.post("/editPost", upload.single("editMedia"), async (req, res) => {
 app.post("/user", async (req, res) => {
     try {
         const Id = req.body.id;
-        const logged = await User.findById(Id).populate('formId profileId');
+        const logged = await User.findById(Id).populate('formId profileId connectionId');
         res.status(200).json(logged);
     } catch (error) {
         console.log(error);
@@ -2256,14 +2256,15 @@ app.get("/allConnectionsPosts", async (req, res) => {
 
 app.post("/leaveConnection", async (req, res) => {
     try {
-        const user1ConnectionId = req.body.userInfos.connectionId;
+        const user1ConnectionId = req.body.userInfos.connectionId._id;
+        console.log(req.body);
         const user = await Connection.findById({ _id: user1ConnectionId }).populate({
             path: 'connectedTo',
             populate: {
                 path: 'userId',
             }
         });
-        const user2ConnectionId = user.connectedTo.userId.connectionId;
+        const user2ConnectionId = user.connectedTo.userId.connectionId._id;
         const deletedConnection1 = await Connection.findByIdAndUpdate(user1ConnectionId, { isConnected: false, connectedTo: null });
         const deletedConnection2 = await Connection.findByIdAndUpdate(user2ConnectionId, { isConnected: false, connectedTo: null });
         res.status(200).json({ message: "Connection deleted successfully !!!" });
