@@ -1208,6 +1208,7 @@ import { Comment } from './src/models/CommentModel.js';
 import { SavePost } from "./src/models/SavaPostModel.js";
 import { Repost } from "./src/models/RepostModel.js"
 import { Connection } from './src/models/ConnectionModel.js';
+import { Review } from "./src/models/ReviewModel.js";
 import { populate } from 'dotenv';
 import { ConnectionPost } from './src/models/ConnectionPostModel.js';
 import { handleChat } from './chatbotController.js';
@@ -1248,6 +1249,7 @@ const io = new Server(httpServer, {
 
 // 2. Database Connection
 const mongoDbUrl = process.env.REACT_APP_MONGODB_URL;
+
 async function main() {
     await mongoose.connect(mongoDbUrl);
 }
@@ -1713,65 +1715,6 @@ app.get("/notifications/:userId", async (req, res) => {
     }
 });
 
-// app.post("/postContent", upload.single("media"), async (req, res) => {
-//     try {
-//         console.log("File received:", req.file);
-//         console.log("Body received:", req.body);
-
-//         const data = {
-//             userId: req.body.userId,
-//             profileId: req.body.profileId,
-//             about: req.body.about?.trim()
-//         };
-
-//         if (req.file) {
-//             data.media = req.file ? req.file.path : null;
-//         }
-
-//         console.log(data);
-
-//         const savePost = await new Post(data).save();
-//         res.status(200).json({ message: "Post Created", savePost });
-//     } catch (error) {
-//         console.error("Error:", error);
-//         res.status(500).json({ error: error.message });
-//     }
-// });
-
-// app.post("/postContent", upload.single("media"), async (req, res) => {
-//     try {
-//         // 1. Check if a file was actually uploaded
-//         if (!req.file) {
-//             return res.status(400).json({ error: "No media file provided" });
-//         }
-
-//         const data = {
-//             userId: req.body.userId,
-//             profileId: req.body.profileId,
-//             about: req.body.about?.trim(),
-//             // req.file.path contains the Cloudinary URL
-//             media: req.file.path
-//         };
-
-//         // 2. Log for debugging
-//         console.log("Saving post with media:", data.media);
-
-//         const savePost = await new Post(data).save();
-
-//         res.status(200).json({
-//             message: "Post Created Successfully! ✅",
-//             savePost
-//         });
-
-//     } catch (error) {
-//         // If Cloudinary rejects the video (e.g., too large), it hits this block
-//         console.error("Upload Error:", error);
-//         res.status(500).json({
-//             error: "Upload failed. Ensure the video is under 100MB and a valid format."
-//         });
-//     }
-// });
-
 app.post("/postContent", async (req, res) => {
     try {
         const { userId, profileId, about, media } = req.body;
@@ -2149,63 +2092,140 @@ app.post("/makeConnection", async (req, res) => {
     }
 })
 
+// app.post("/acceptConnection", async (req, res) => {
+//     try {
+//         const { userId, userConnectionId, loggedUserId, loggedUserConnectionId } = req.body;
+
+//         const user = await User.findById({ _id: userId });
+//         const loggedUser = await User.findById({ _id: loggedUserId });
+
+//         if (!user || !loggedUser) {
+//             return res.status(404).json({ message: " User Not Found " });
+//         }
+
+//         const userConnection = await Connection.findById({ _id: userConnectionId });
+//         const loggedUserConnection = await Connection.findById({ _id: loggedUserConnectionId });
+
+//         if (!userConnection || !loggedUserConnection) {
+//             return res.status.json({ message: "Connection Status Not Found" });
+//         }
+
+//         let recipientSocketId = null;
+
+//         const updatedUserConnection = await Connection.findByIdAndUpdate(loggedUserConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: user.profileId  });
+//         const updatedLoggedUserConnection = await Connection.findByIdAndUpdate(userConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: loggedUser.profileId });
+
+//         const newNotif = await new Notification({
+//             recipient: user?._id.toString(),
+//             sender: loggedUser?._id.toString(),
+//             recipientProfile: user?.profileId.toString(),
+//             senderProfile: loggedUser?.profileId.toString(),
+//             type: 'CONNECT',
+//             content: "accept to make you as a gym buddy"
+//         }).save();
+
+
+//         recipientSocketId = userSocketMap.get(user?._id.toString());
+//         console.log(recipientSocketId);
+
+//         if (recipientSocketId) {
+//             io.to(recipientSocketId).emit("new_notification", {
+//                 type: 'CONNECT',
+//                 content: `${loggedUser?.username} accept to make you as gym buddy`,
+//                 _id: newNotif._id,
+//             });
+//         }
+
+//         const data = {
+//             about: `⚡ Energy alert! ${user.username} and ${loggedUser.username} just became workout buddies, and this duo is about to set the gym on fire! 🔥 No more dragging through sets alone or finding excuses to skip — these two are locking in, leveling up, and pushing each other harder than ever before. Think stronger lifts, faster runs, bigger energy, and zero days off. This isn't just a buddy match; it's a full-on power move. Watch them crush goals, break limits, and bring the heat every single workout. Who else feels the hype? Drop a 💪 to cheer them on! 🚀`,
+//             media: "https://cdnl.iconscout.com/lottie/premium/preview-watermark/celebration-ribbon-animation-gif-download-5829504.mp4",
+//             user1: user._id,
+//             user2: loggedUser._id,
+//             isConnectionPost: true,
+//         }
+
+//         const successConnectionsPost = await new ConnectionPost(data).save();
+//         res.status(200).json({ message: "Connection estabilshed successfully!" });
+//     } catch (error) {
+//         console.log(error);
+//         res.status(404).json({ error: error });
+//     }
+// });
+
 app.post("/acceptConnection", async (req, res) => {
     try {
         const { userId, userConnectionId, loggedUserId, loggedUserConnectionId } = req.body;
 
-        const user = await User.findById({ _id: userId });
-        const loggedUser = await User.findById({ _id: loggedUserId });
+        // 1. Verify both gym users exist
+        const user = await User.findById(userId);
+        const loggedUser = await User.findById(loggedUserId);
 
         if (!user || !loggedUser) {
-            return res.status(404).json({ message: " User Not Found " });
+            return res.status(404).json({ message: "User Not Found" });
         }
 
-        const userConnection = await Connection.findById({ _id: userConnectionId });
-        const loggedUserConnection = await Connection.findById({ _id: loggedUserConnectionId });
+        // 2. Verify both connection state profiles exist
+        const userConnection = await Connection.findById(userConnectionId);
+        const loggedUserConnection = await Connection.findById(loggedUserConnectionId);
 
+        // FIXED: Added the 404 status code parameter to prevent your server from crashing
         if (!userConnection || !loggedUserConnection) {
-            return res.status.json({ message: "Connection Status Not Found" });
+            return res.status(404).json({ message: "Connection Status Not Found" });
         }
 
-        let recipientSocketId = null;
+        // 3. Update Mutual Connections (FIXED: Properly aligned IDs to point at each other)
 
-        const updatedUserConnection = await Connection.findByIdAndUpdate(loggedUserConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: user.profileId });
-        const updatedLoggedUserConnection = await Connection.findByIdAndUpdate(userConnectionId, { isAnyRequest: false, isConnected: true, connectedTo: loggedUser.profileId });
+        // Update Logged-In User's connection document to point to the Target User's Profile
+        await Connection.findByIdAndUpdate(loggedUserConnectionId, {
+            $set: { isAnyRequest: false, isConnected: true, connectedTo: user.profileId },
+            $addToSet: { totalConnection: user.profileId }
+        });
 
+        // Update Target User's connection document to point to the Logged-In User's Profile
+        await Connection.findByIdAndUpdate(userConnectionId, {
+            $set: { isAnyRequest: false, isConnected: true, connectedTo: loggedUser.profileId },
+            $addToSet: { totalConnection: loggedUser.profileId }
+        });
+
+        // 4. Record the notification history item
         const newNotif = await new Notification({
-            recipient: user?._id.toString(),
-            sender: loggedUser?._id.toString(),
-            recipientProfile: user?.profileId.toString(),
-            senderProfile: loggedUser?.profileId.toString(),
+            recipient: user._id.toString(),
+            sender: loggedUser._id.toString(),
+            recipientProfile: user.profileId.toString(),
+            senderProfile: loggedUser.profileId.toString(),
             type: 'CONNECT',
-            content: "accept to make you as a gym buddy"
+            content: "accepted to be your gym buddy"
         }).save();
 
-
-        recipientSocketId = userSocketMap.get(user?._id.toString());
-        console.log(recipientSocketId);
+        // 5. Fire off real-time WebSockets event
+        const recipientSocketId = userSocketMap.get(user._id.toString());
+        console.log("Recipient Socket ID:", recipientSocketId);
 
         if (recipientSocketId) {
             io.to(recipientSocketId).emit("new_notification", {
                 type: 'CONNECT',
-                content: `${loggedUser?.username} accept to make you as gym buddy`,
+                content: `${loggedUser.username} accepted to be your gym buddy`,
                 _id: newNotif._id,
             });
         }
 
+        // 6. Generate Social Feed Event Post
         const data = {
             about: `⚡ Energy alert! ${user.username} and ${loggedUser.username} just became workout buddies, and this duo is about to set the gym on fire! 🔥 No more dragging through sets alone or finding excuses to skip — these two are locking in, leveling up, and pushing each other harder than ever before. Think stronger lifts, faster runs, bigger energy, and zero days off. This isn't just a buddy match; it's a full-on power move. Watch them crush goals, break limits, and bring the heat every single workout. Who else feels the hype? Drop a 💪 to cheer them on! 🚀`,
             media: "https://cdnl.iconscout.com/lottie/premium/preview-watermark/celebration-ribbon-animation-gif-download-5829504.mp4",
             user1: user._id,
             user2: loggedUser._id,
             isConnectionPost: true,
-        }
+        };
 
-        const successConnectionsPost = await new ConnectionPost(data).save();
-        res.status(200).json({ message: "Connection estabilshed successfully!" });
+        await new ConnectionPost(data).save();
+
+        return res.status(200).json({ message: "Connection established successfully!" });
+
     } catch (error) {
-        console.log(error);
-        res.status(404).json({ error: error });
+        console.error("Accept Connection Error:", error);
+        // Changed fallback status code to standard 500 Server Error
+        return res.status(500).json({ error: error.message || "Internal Server Error" });
     }
 });
 
@@ -2256,17 +2276,41 @@ app.get("/allConnectionsPosts", async (req, res) => {
 
 app.post("/leaveConnection", async (req, res) => {
     try {
+        const { ratings, reviews, userInfos, loggedUsers, username, profilePicture } = req.body;
         const user1ConnectionId = req.body.userInfos.connectionId._id;
-        console.log(req.body);
-        const user = await Connection.findById({ _id: user1ConnectionId }).populate({
+        const userData = await Connection.findById({ _id: user1ConnectionId }).populate({
             path: 'connectedTo',
             populate: {
                 path: 'userId',
             }
         });
-        const user2ConnectionId = user.connectedTo.userId.connectionId._id;
+
+        const userId = userData.connectedTo.userId._id;
+        const user2ConnectionId = userData.connectedTo.userId.connectionId._id;
         const deletedConnection1 = await Connection.findByIdAndUpdate(user1ConnectionId, { isConnected: false, connectedTo: null });
         const deletedConnection2 = await Connection.findByIdAndUpdate(user2ConnectionId, { isConnected: false, connectedTo: null });
+
+        const user = await User.findById({ _id: userInfos._id }).populate("profileId formId");
+        if (!user) { return res.status(404).json({ message: "User not Found" }) };
+        const data = {
+            rating: ratings,
+            review: reviews,
+            userId: userId,
+            username: username,
+            reviewUserId: userData.ownerId,
+            profileImage: profilePicture,
+        }
+
+        const connection = Number(userData.connectedTo.userId.totalConnection || 0) + 1;
+        const increaseRating = Number(userData.connectedTo.userId.totalRating || 0) + Number(ratings);
+        const averageRating = Number(increaseRating / connection);
+
+        console.log(connection);
+        console.log(increaseRating);
+        console.log(averageRating);
+
+        const review = await new Review(data).save();
+        const updateUser = await User.findByIdAndUpdate(userId, { totalRating: averageRating, totalConnection: connection }, { new: true });
         res.status(200).json({ message: "Connection deleted successfully !!!" });
     } catch (error) {
         console.log(error);
@@ -2363,6 +2407,58 @@ app.post("/updateIntro", uploadFields, async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+app.post("/feedback", async (req, res) => {
+    try {
+
+        const { ratings, reviews, userId } = req.body;
+        const user = await User.findById({ _id: userId }).populate("profileId formId");
+        if (!user) { return res.status(404).json({ message: "User not Found" }) };
+        const data = {
+            rating: ratings,
+            review: reviews,
+            userId: userId,
+            username: user.formId.name,
+            profileImage: user.profileId.profileImage,
+        }
+
+        const connection = Number(user.totalConnection || 0) + 1;
+        const increaseRating = Number(user.totalRating || 0) + ratings;
+        const averageRating = Number(increaseRating / connection);
+        const review = await new Review(data).save();
+        const updateUser = await User.findByIdAndUpdate(userId, { totalRating: averageRating, totalConnection: connection }, { new: true });
+
+        console.log(review);
+        console.log(updateUser);
+
+        res.status(200).json({ message: "Review Addded" });
+    } catch (err) {
+        console.error(err);
+    }
+});
+
+app.post("/allFeedback", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const allReview = await Review.find({ userId: userId });
+        res.status(200).json({ message: "All user review", allReview });
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+app.post("/editReview", async (req, res) => {
+    try {
+        console.log(req.body);
+        const { reviewId, content } = req.body;
+        const id = reviewId;
+        const review = await Review.findByIdAndUpdate(id, { review: content, isEdited: true }, { new: true });
+        console.log(review);
+        res.status(200).json({ message: "Review Updated " });
+    } catch (error) {
+        console.log(error);
+    }
+})
 
 app.post("/api/chatbot", async (req, res) => {
     console.log(req.body);

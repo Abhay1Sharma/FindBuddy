@@ -27,10 +27,10 @@ const ConnectionSchema = new Schema(
             ref: "user",
         }],
 
-        // requestTo: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: "user",
-        // },
+        totalConnection: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "user",
+        }],
 
         ownerId: {
             type: mongoose.Schema.Types.ObjectId,

@@ -42,6 +42,16 @@ const UserSchema = mongoose.Schema(
             ref: "connection",
         },
 
+        totalRating: {
+            type: Number,
+            default: 0
+        },
+
+        totalConnection: {
+            type: Number,
+            default: 0
+        }
+
     }, { timestamps: true }
 );
 
